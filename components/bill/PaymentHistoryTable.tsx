@@ -8,9 +8,10 @@ import { PaymentHistory } from "@/lib/types";
 interface PaymentHistoryTableProps {
     paymentHistory: PaymentHistory[];
     onEdit: (index: number) => void;
+    onMarkPaid?: (index: number) => void;
 }
 
-export const PaymentHistoryTable = ({ paymentHistory, onEdit }: PaymentHistoryTableProps) => (
+export const PaymentHistoryTable = ({ paymentHistory, onEdit, onMarkPaid }: PaymentHistoryTableProps) => (
     <Card>
         <CardHeader>
             <CardTitle>Payment History</CardTitle>
@@ -43,7 +44,12 @@ export const PaymentHistoryTable = ({ paymentHistory, onEdit }: PaymentHistoryTa
                                 <Badge className={payment.status === "Paid" ? "bg-green-500" : "bg-red-500"}>{payment.status}</Badge>
                             </TableCell>
                             <TableCell className="text-right">
-                                <Button size="sm" variant="outline" onClick={() => onEdit(index)}>Edit</Button>
+                                                                <Button size="sm" variant="outline" onClick={() => onEdit(index)}>Edit</Button>
+                                                                {onMarkPaid && payment.status !== "Paid" && (
+                                                                    <Button size="sm" className="ml-2" variant="secondary" onClick={() => onMarkPaid(index)}>
+                                                                        Mark Paid
+                                                                    </Button>
+                                                                )}
                             </TableCell>
                         </TableRow>
                     ))}

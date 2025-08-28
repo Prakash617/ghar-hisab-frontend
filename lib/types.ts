@@ -9,6 +9,7 @@ export type PaymentHistory = {
   status: "Paid" | "Unpaid";
 };
 
+
 export type Bill = {
     id: number;
     type: string;

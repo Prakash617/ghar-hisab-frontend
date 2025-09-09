@@ -2,10 +2,9 @@
 
 import { useState, useMemo, use } from "react";
 import { TenantInfoCard } from "@/components/bill/TenantInfoCard";
-import { ElectricityBillCard } from "@/components/bill/ElectricityBillCard";
-import { BillsTable } from "@/components/bill/BillsTable";
+import { Button } from "@/components/ui/button";
 import { PaymentHistoryTable } from "@/components/bill/PaymentHistoryTable";
-import { Bill, PaymentHistory } from "@/lib/types";
+import { PaymentHistory, BillItem } from "@/lib/types";
 
 // --- DUMMY DATA ---
 const tenants: Record<string, { name: string; contact: string; moveInDate: string }> = {
@@ -19,46 +18,50 @@ const fakePaymentHistory: PaymentHistory[] = [
     month: "January 2025",
     previousUnits: 1000,
     currentUnits: 1100,
-    electricity: 1300,
-    water: 500,
-    rent: 10000,
+    electricity: { amount: 1500, status: "Paid" },
+    water: { amount: 500, status: "Paid" },
+    rent: { amount: 10000, status: "Paid" },
     status: "Paid",
   },
   {
     month: "February 2025",
     previousUnits: 1100,
     currentUnits: 1220,
-    electricity: 1560,
-    water: 500,
-    rent: 10000,
+    electricity: { amount: 1800, status: "Paid" },
+    water: { amount: 500, status: "Paid" },
+    rent: { amount: 10000, status: "Paid" },
     status: "Paid",
   },
   {
     month: "March 2025",
     previousUnits: 1220,
     currentUnits: 1340,
-    electricity: 1560,
-    water: 500,
-    rent: 10000,
-    status: "Unpaid",
+    electricity: { amount: 1800, status: "Unpaid" },
+    water: { amount: 500, status: "Paid" },
+    rent: { amount: 10000, status: "Unpaid" },
+    status: "Partial",
   },
   {
     month: "April 2025",
     previousUnits: 1340,
     currentUnits: 1450,
-    electricity: 1430,
-    water: 500,
-    rent: 10000,
+    electricity: { amount: 1650, status: "Unpaid" },
+    water: { amount: 500, status: "Unpaid" },
+    rent: { amount: 10000, status: "Unpaid" },
     status: "Unpaid",
   },
 ];
 
-// --- INITIAL BILLS ---
-const initialBills: Bill[] = [
-  { id: 1, type: "Rent", amount: 10000, status: "Pending" },
-  { id: 2, type: "Electricity", amount: 1500, status: "Pending" },
-  { id: 3, type: "Water", amount: 500, status: "Paid" },
-];
+const ELECTRICITY_RATE = 15;
+
+// --- UTILITY to calculate overall status ---
+const getOverallStatus = (bill: PaymentHistory): "Paid" | "Unpaid" | "Partial" => {
+    const items: (keyof PaymentHistory)[] = ['electricity', 'water', 'rent'];
+    const statuses = items.map(item => (bill[item] as BillItem).status);
+    if (statuses.every(s => s === 'Paid')) return 'Paid';
+    if (statuses.every(s => s === 'Unpaid')) return 'Unpaid';
+    return 'Partial';
+}
 
 // --- MAIN PAGE COMPONENT ---
 export default function BillsDetailPage({
@@ -67,103 +70,114 @@ export default function BillsDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: roomId } = use(params);
-  const electricityRate = 13;
-  const waterFixed = 500;
-  const rentAmount = 10000;
-
   const tenant = useMemo(() => tenants[roomId], [roomId]);
 
-  const [paymentHistory, setPaymentHistory] =
-    useState<PaymentHistory[]>(fakePaymentHistory);
-  const [bills, setBills] = useState<Bill[]>(initialBills);
-
-  const [previousUnits, setPreviousUnits] = useState(() =>
-    paymentHistory.length > 0
-      ? paymentHistory[paymentHistory.length - 1].currentUnits
-      : 0
-  );
-  const [currentUnits, setCurrentUnits] = useState(0);
-  const [unitsConsumed, setUnitsConsumed] = useState(0);
-  const [calculatedAmount, setCalculatedAmount] = useState(0);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>(fakePaymentHistory);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editedData, setEditedData] = useState<PaymentHistory | null>(null);
 
-  // --- Calculate Electricity ---
-  const calculateElectricity = () => {
-    if (currentUnits < previousUnits) {
-      alert("Current reading cannot be less than previous reading");
-      return;
-    }
-    const consumed = currentUnits - previousUnits;
-    const amount = consumed * electricityRate;
-    setUnitsConsumed(consumed);
-    setCalculatedAmount(amount);
+  const [showEditItemDialog, setShowEditItemDialog] = useState(false);
+  const [itemToEditIndex, setItemToEditIndex] = useState<number | null>(null);
+  const [itemToEditType, setItemToEditType] = useState<'electricity' | 'water' | 'rent' | null>(null);
+  const [itemToEditData, setItemToEditData] = useState<BillItem | null>(null);
+
+  const handleAddBill = () => {
+    const lastBill = paymentHistory[0]; // Get the first bill for previous units
+    const newBill: PaymentHistory = {
+      month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }),
+      previousUnits: lastBill ? lastBill.currentUnits : 0,
+      currentUnits: lastBill ? lastBill.currentUnits : 0,
+      electricity: { amount: 0, status: "Unpaid" },
+      water: { amount: lastBill ? lastBill.water.amount : 500, status: "Unpaid" },
+      rent: { amount: lastBill ? lastBill.rent.amount : 10000, status: "Unpaid" },
+      status: "Unpaid",
+    };
+    setPaymentHistory([newBill, ...paymentHistory]); // Add to top
+    setEditingIndex(0); // Set editing index to 0 for the new top item
+    setEditedData(newBill);
   };
 
-  // --- Save new month bill ---
-  const saveBillForNewMonth = () => {
-    if (currentUnits <= previousUnits) {
-      alert(
-        "Current reading must be greater than previous reading to save a new bill."
-      );
-      return;
-    }
-    const now = new Date();
-    const month = now.toLocaleString("default", { month: "long", year: "numeric" });
-
-    setPaymentHistory([
-      ...paymentHistory,
-      {
-        month,
-        previousUnits,
-        currentUnits,
-        electricity: calculatedAmount,
-        water: waterFixed,
-        rent: rentAmount,
-        status: "Unpaid",
-      },
-    ]);
-
-    setPreviousUnits(currentUnits);
-    setCurrentUnits(0);
-    setUnitsConsumed(0);
-    setCalculatedAmount(0);
-  };
-
-  // --- Mark Bill Paid ---
-  const handleMarkBillPaid = (billId: number) => {
-    setBills(
-      bills.map((bill) =>
-        bill.id === billId ? { ...bill, status: "Paid" } : bill
-      )
-    );
-  };
-
-  // --- Edit Payment ---
-  const editPayment = (index: number) => {
-    const payment = paymentHistory[index];
-    setPreviousUnits(payment.previousUnits);
-    setCurrentUnits(payment.currentUnits);
-    setUnitsConsumed(payment.currentUnits - payment.previousUnits);
-    setCalculatedAmount(payment.electricity);
+  const handleEdit = (index: number) => {
     setEditingIndex(index);
+    setEditedData({ ...paymentHistory[index] });
   };
 
-  // --- Save Edited Payment ---
-  const saveEditedPayment = (
-    index: number,
-    data: Partial<PaymentHistory>
-  ) => {
-    const updatedHistory = [...paymentHistory];
-    const electricity =
-      (data.currentUnits! - updatedHistory[index].previousUnits) *
-      electricityRate;
-    updatedHistory[index] = { ...updatedHistory[index], ...data, electricity };
+  const handleCancel = () => {
+    setEditingIndex(null);
+    setEditedData(null);
+  };
 
-    if (index + 1 < updatedHistory.length) {
-      updatedHistory[index + 1].previousUnits = data.currentUnits!;
+  const handleSave = () => {
+    if (editedData && editingIndex !== null) {
+      const updatedHistory = [...paymentHistory];
+      const finalData = { ...editedData, status: getOverallStatus(editedData) };
+      updatedHistory[editingIndex] = finalData;
+      setPaymentHistory(updatedHistory);
+      setEditingIndex(null);
+      setEditedData(null);
     }
+  };
 
+  const handleFieldChange = (fieldName: keyof PaymentHistory, value: any) => {
+    if (editedData) {
+      let newData = { ...editedData };
+
+      if (fieldName === 'currentUnits') {
+        newData.currentUnits = value;
+        const consumed = value - newData.previousUnits;
+        newData.electricity = { ...newData.electricity, amount: consumed * ELECTRICITY_RATE };
+      } else if (fieldName === 'electricity') { // Added this condition
+        newData.electricity = { ...newData.electricity, amount: value };
+      } else if (fieldName === 'water' || fieldName === 'rent') {
+        newData[fieldName] = { ...newData[fieldName], amount: value };
+      } else {
+        newData = { ...newData, [fieldName]: value };
+      }
+
+      setEditedData(newData);
+    }
+  };
+
+  const handleDelete = (index: number) => {
+    const updatedHistory = paymentHistory.filter((_, i) => i !== index);
     setPaymentHistory(updatedHistory);
+    if (editingIndex === index) {
+        setEditingIndex(null);
+        setEditedData(null);
+    } else if (editingIndex !== null && index < editingIndex) { // Adjust editingIndex if item above is deleted
+        setEditingIndex(editingIndex - 1);
+    }
+  };
+
+  const handleEditItem = (index: number, itemType: 'electricity' | 'water' | 'rent', itemData: BillItem) => {
+    setItemToEditIndex(index);
+    setItemToEditType(itemType);
+    setItemToEditData(itemData);
+    setShowEditItemDialog(true);
+  };
+
+  const handleSaveItemEdit = (index: number, itemType: 'electricity' | 'water' | 'rent', updatedItem: BillItem) => {
+    const updatedHistory = paymentHistory.map((bill, idx) => {
+      if (idx === index) {
+        const newBill = { ...bill };
+        newBill[itemType] = updatedItem;
+        newBill.status = getOverallStatus(newBill);
+        return newBill;
+      }
+      return bill;
+    });
+    setPaymentHistory(updatedHistory);
+    setShowEditItemDialog(false);
+    setItemToEditIndex(null);
+    setItemToEditType(null);
+    setItemToEditData(null);
+  };
+
+  const handleCloseEditItemDialog = () => {
+    setShowEditItemDialog(false);
+    setItemToEditIndex(null);
+    setItemToEditType(null);
+    setItemToEditData(null);
   };
 
   return (
@@ -174,47 +188,21 @@ export default function BillsDetailPage({
 
       <TenantInfoCard tenant={tenant} />
 
-      <ElectricityBillCard
-        previousUnits={previousUnits}
-        currentUnits={currentUnits}
-        setCurrentUnits={setCurrentUnits}
-        calculateElectricity={calculateElectricity}
-        saveBill={saveBillForNewMonth}
-        editing={editingIndex !== null}
-        saveEdited={() => {
-          if (editingIndex !== null) {
-            saveEditedPayment(editingIndex, {
-              currentUnits: currentUnits,
-            });
-            setEditingIndex(null);
-            const lastReading =
-              paymentHistory.length > 0
-                ? paymentHistory[paymentHistory.length - 1].currentUnits
-                : 0;
-            setPreviousUnits(lastReading); // ✅ fixed typo
-            setCurrentUnits(0);
-            setUnitsConsumed(0);
-            setCalculatedAmount(0);
-          }
-        }}
-        electricityRate={electricityRate}
-        unitsConsumed={unitsConsumed}
-        calculatedAmount={calculatedAmount}
-        editingMonth={
-          editingIndex !== null ? paymentHistory[editingIndex].month : undefined
-        }
-      />
-
-      <BillsTable bills={bills} onMarkPaid={handleMarkBillPaid} />
+      <div className="flex justify-end">
+        <Button onClick={handleAddBill}>Add Bill</Button>
+      </div>
 
       <PaymentHistoryTable
         paymentHistory={paymentHistory}
-        onEdit={editPayment}
-        onMarkPaid={(index: number) => {
-          const updated = [...paymentHistory];
-          updated[index].status = "Paid";
-          setPaymentHistory(updated);
-        }}
+        editingIndex={editingIndex}
+        editedData={editedData}
+        onEdit={handleEdit}
+        onSave={handleSave}
+        onCancel={handleCancel}
+        onFieldChange={handleFieldChange}
+        onDelete={handleDelete}
+        onEditItem={handleEditItem}
+        onSaveItemEdit={handleSaveItemEdit}
       />
     </div>
   );

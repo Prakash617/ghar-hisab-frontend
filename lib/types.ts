@@ -1,12 +1,16 @@
+export interface BillItem {
+  amount: number;
+  status: "Paid" | "Unpaid";
+}
 
 export type PaymentHistory = {
   month: string;
   previousUnits: number;
   currentUnits: number;
-  electricity: number;
-  water: number;
-  rent: number;
-  status: "Paid" | "Unpaid";
+  electricity: BillItem;
+  water: BillItem;
+  rent: BillItem;
+  status: "Paid" | "Unpaid" | "Partial";
 };
 
 

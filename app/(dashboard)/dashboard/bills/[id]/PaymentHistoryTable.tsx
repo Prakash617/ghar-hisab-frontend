@@ -37,7 +37,7 @@ export function PaymentHistoryTable({ history, onEdit, onMarkPaid }: Props) {
 
           {history.map((payment, index) => {
             const consumed = payment.currentUnits - payment.previousUnits;
-            const total = payment.electricity + payment.water + payment.rent;
+            const total = payment.electricity.amount + payment.water.amount + payment.rent.amount;
 
             return (
               <tr key={index} className="border-t hover:bg-gray-50">
@@ -45,9 +45,9 @@ export function PaymentHistoryTable({ history, onEdit, onMarkPaid }: Props) {
                 <td className="p-3">{payment.previousUnits}</td>
                 <td className="p-3">{payment.currentUnits}</td>
                 <td className="p-3">{consumed}</td>
-                <td className="p-3">Rs. {payment.electricity}</td>
-                <td className="p-3">Rs. {payment.water}</td>
-                <td className="p-3">Rs. {payment.rent}</td>
+                <td className="p-3">Rs. {payment.electricity.amount}</td>
+                <td className="p-3">Rs. {payment.water.amount}</td>
+                <td className="p-3">Rs. {payment.rent.amount}</td>
                 <td className="p-3 font-semibold">Rs. {total}</td>
                 <td
                   className={`p-3 font-semibold ${

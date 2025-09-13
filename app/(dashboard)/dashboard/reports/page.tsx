@@ -30,7 +30,18 @@ const recentActivities = [
     { id: 4, type: 'payment', description: 'Jane Smith paid security deposit.' },
 ];
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+type CustomTooltipProps = {
+    active?: boolean;
+    payload?: Array<{
+      value: number;
+      payload: {
+        total: number;
+      };
+    }>;
+    label?: string;
+  };
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="p-2 bg-background border rounded-md shadow-md">

@@ -5,52 +5,13 @@ import { TenantInfoCard } from "@/components/bill/TenantInfoCard";
 import { Button } from "@/components/ui/button";
 import { PaymentHistoryTable } from "@/components/bill/PaymentHistoryTable";
 import { PaymentHistory, BillItem } from "@/lib/types";
+import { useGetPaymentHistories } from "@/hooks/bills/useGetPaymentHistories";
 
 // --- DUMMY DATA ---
 const tenants: Record<string, { name: string; contact: string; moveInDate: string }> = {
   "101": { name: "John Doe", contact: "9812345678", moveInDate: "2025-01-15" },
   "102": { name: "Jane Smith", contact: "9876543210", moveInDate: "2025-02-01" },
 };
-
-// --- FAKE PAYMENT HISTORY ---
-const fakePaymentHistory: PaymentHistory[] = [
-  {
-    month: "January 2025",
-    previousUnits: 1000,
-    currentUnits: 1100,
-    electricity: { amount: 1500, status: "Paid" },
-    water: { amount: 500, status: "Paid" },
-    rent: { amount: 10000, status: "Paid" },
-    status: "Paid",
-  },
-  {
-    month: "February 2025",
-    previousUnits: 1100,
-    currentUnits: 1220,
-    electricity: { amount: 1800, status: "Paid" },
-    water: { amount: 500, status: "Paid" },
-    rent: { amount: 10000, status: "Paid" },
-    status: "Paid",
-  },
-  {
-    month: "March 2025",
-    previousUnits: 1220,
-    currentUnits: 1340,
-    electricity: { amount: 1800, status: "Unpaid" },
-    water: { amount: 500, status: "Paid" },
-    rent: { amount: 10000, status: "Unpaid" },
-    status: "Partial",
-  },
-  {
-    month: "April 2025",
-    previousUnits: 1340,
-    currentUnits: 1450,
-    electricity: { amount: 1650, status: "Unpaid" },
-    water: { amount: 500, status: "Unpaid" },
-    rent: { amount: 10000, status: "Unpaid" },
-    status: "Unpaid",
-  },
-];
 
 const ELECTRICITY_RATE = 15;
 
@@ -72,7 +33,9 @@ export default function BillsDetailPage({
   const { id: roomId } = use(params);
   const tenant = useMemo(() => tenants[roomId], [roomId]);
 
-  const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>(fakePaymentHistory);
+  const { data: paymentHistoryData, isLoading, isError } = useGetPaymentHistories();
+
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>(paymentHistoryData || []);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editedData, setEditedData] = useState<PaymentHistory | null>(null);
 
@@ -81,9 +44,16 @@ export default function BillsDetailPage({
   const [itemToEditType, setItemToEditType] = useState<'electricity' | 'water' | 'rent' | null>(null);
   const [itemToEditData, setItemToEditData] = useState<BillItem | null>(null);
 
+  useMemo(() => {
+    if (paymentHistoryData) {
+      setPaymentHistory(paymentHistoryData);
+    }
+  }, [paymentHistoryData]);
+
   const handleAddBill = () => {
     const lastBill = paymentHistory[0]; // Get the first bill for previous units
     const newBill: PaymentHistory = {
+      id: Math.random(),
       month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }),
       previousUnits: lastBill ? lastBill.currentUnits : 0,
       currentUnits: lastBill ? lastBill.currentUnits : 0,
@@ -91,6 +61,8 @@ export default function BillsDetailPage({
       water: { amount: lastBill ? lastBill.water.amount : 500, status: "Unpaid" },
       rent: { amount: lastBill ? lastBill.rent.amount : 10000, status: "Unpaid" },
       status: "Unpaid",
+      total: 0,
+      room: parseInt(roomId)
     };
     setPaymentHistory([newBill, ...paymentHistory]); // Add to top
     setEditingIndex(0); // Set editing index to 0 for the new top item
@@ -179,6 +151,14 @@ export default function BillsDetailPage({
     setItemToEditType(null);
     setItemToEditData(null);
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isError) {
+    return <div>Error fetching data</div>;
+  }
 
   return (
     <div className="p-6 space-y-6">

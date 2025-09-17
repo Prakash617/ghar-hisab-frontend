@@ -14,6 +14,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import ProtectedPage from '@/components/ProtectedPage'
 
 type Props = {
   children: React.ReactNode
@@ -21,6 +22,7 @@ type Props = {
 
 const Layout = ({ children }: Props) => {
   return (
+  <ProtectedPage>
   <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
@@ -52,6 +54,7 @@ const Layout = ({ children }: Props) => {
     </div>
       </SidebarInset>
     </SidebarProvider>
+    </ProtectedPage>
   )
 }
 

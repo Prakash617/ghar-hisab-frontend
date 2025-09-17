@@ -78,7 +78,7 @@ const Navbar = () => {
   );
 };
 
-function MenuIcon(props: any) {
+function MenuIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}

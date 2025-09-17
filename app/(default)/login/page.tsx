@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,8 +13,31 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import Image from "next/image";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
+  const { login } = useAuth();
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+
+    try {
+      // Call login from context
+      await login(email, password);
+      // Redirect after login
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Invalid credentials");
+    }
+  }
+
   return (
     <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
       <div className="flex items-center justify-center py-12">
@@ -22,11 +49,21 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              {error && <p className="text-red-500">{error}</p>}
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="m@example.com" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
+
               <div className="space-y-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
@@ -37,15 +74,23 @@ export default function LoginPage() {
                     Forgot your password?
                   </Link>
                 </div>
-                <Input id="password" type="password" />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
+
               <Button type="submit" className="w-full">
                 Login
               </Button>
               <Button variant="outline" className="w-full">
                 Login with Google
               </Button>
-            </div>
+            </form>
+
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
               <Link href="/signup" className="underline">
@@ -56,8 +101,8 @@ export default function LoginPage() {
         </Card>
       </div>
       <div className="hidden bg-muted lg:block">
-        <img
-          src="/placeholder.svg"
+        <Image
+          src="https://msgwords.com/wp-content/uploads/2024/10/Have-a-Good-Day-Words.jpeg"
           alt="Image"
           width="1920"
           height="1080"

@@ -14,10 +14,13 @@ type ApiPaymentHistory = {
   room: number;
 };
 
-export async function apiFetch(url: string, options: RequestInit = {}) {
-  const token = localStorage.getItem("access");
+import { refreshToken } from "./auth";
 
-  const response = await fetch(`${url}`, {
+
+export async function apiFetch(url: string, options: RequestInit = {}) {
+  let token = localStorage.getItem("access");
+
+  let response = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -26,9 +29,25 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
     },
   });
 
+  if (response.status === 401) {
+    const newAccessToken = await refreshToken();
+    if (newAccessToken) {
+      token = newAccessToken;
+      response = await fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...options.headers,
+        },
+      });
+    }
+  }
+
   if (!response.ok) {
     throw new Error("Network response was not ok");
   }
+
   return response.json();
 }
 

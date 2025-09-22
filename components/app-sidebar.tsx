@@ -42,9 +42,23 @@ const data = {
       isActive: true,
     },
     {
-      title: "Houses",
-      url: "/dashboard/houses",
-      icon: Building,
+      title: "Rooms",
+      url: "/dashboard/rooms",
+      icon: DoorOpen,
+      items: [
+        {
+          title: "All Rooms",
+          url: "/dashboard/rooms",
+        },
+        {
+          title: "Add New",
+          url: "/dashboard/rooms/new",
+        },
+        {
+          title: "Room Types",
+          url: "/dashboard/rooms/types",
+        },
+      ],
     },
     {
       title: "Bills",
@@ -88,7 +102,23 @@ const data = {
       icon: Send,
     },
   ],
-  projects: [],
+  projects: [
+    {
+      name: "Main Hotel",
+      url: "#",
+      icon: Hotel,
+    },
+    {
+      name: "Guest House",
+      url: "#",
+      icon: Building,
+    },
+    {
+      name: "Dormitory",
+      url: "#",
+      icon: Bed,
+    },
+  ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

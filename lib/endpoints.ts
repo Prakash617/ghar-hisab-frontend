@@ -10,8 +10,11 @@ export const ENDPOINTS = {
   bills: {
     list: `${API_BASE}/api/bills/`,
     detail: (id: number | string) => `${API_BASE}/api/bills/${id}/`,
-    create: `${API_BASE}/api/bills/create/`,
-    paymentHistories: `${API_BASE}/api/payment-histories/`,
+  },
+  paymentHistories: {
+    list: `${API_BASE}/api/payment-histories/`,
+    create: `${API_BASE}/api/payment-histories/`,
+    detail: (id: number | string) => `${API_BASE}/api/payment-histories/${id}/`,
   },
   reports: {
     list: `${API_BASE}/api/reports/`,
@@ -20,5 +23,11 @@ export const ENDPOINTS = {
   rooms: {
     list: `${API_BASE}/api/rooms/`,
     detail: (id: number | string) => `${API_BASE}/api/rooms/${id}/`,
+  },
+  houses: {
+    list: `${API_BASE}/api/houses/`,
+  },
+  tenants: {
+    list: `${API_BASE}/api/tenants/`,
   },
 };

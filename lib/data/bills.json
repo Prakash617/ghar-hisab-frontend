@@ -1,0 +1,65 @@
+[
+  {
+    "id": 1,
+    "roomId": 101,
+    "month": "January 2025",
+    "previousUnits": 0,
+    "currentUnits": 100,
+    "electricity": {
+      "amount": 1500,
+      "status": "Paid"
+    },
+    "water": {
+      "amount": 500,
+      "status": "Paid"
+    },
+    "rent": {
+      "amount": 10000,
+      "status": "Paid"
+    },
+    "status": "Paid",
+    "total": 12000
+  },
+  {
+    "id": 2,
+    "roomId": 101,
+    "month": "February 2025",
+    "previousUnits": 100,
+    "currentUnits": 250,
+    "electricity": {
+      "amount": 2250,
+      "status": "Paid"
+    },
+    "water": {
+      "amount": 500,
+      "status": "Unpaid"
+    },
+    "rent": {
+      "amount": 10000,
+      "status": "Paid"
+    },
+    "status": "Partial",
+    "total": 12750
+  },
+  {
+    "id": 3,
+    "roomId": 102,
+    "month": "February 2025",
+    "previousUnits": 0,
+    "currentUnits": 120,
+    "electricity": {
+      "amount": 1800,
+      "status": "Paid"
+    },
+    "water": {
+      "amount": 500,
+      "status": "Paid"
+    },
+    "rent": {
+      "amount": 12000,
+      "status": "Paid"
+    },
+    "status": "Paid",
+    "total": 14300
+  }
+]

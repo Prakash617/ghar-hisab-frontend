@@ -8,26 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
-
-// --- DUMMY DATA (similar to [id]/page.tsx) ---
-const tenants: Record<string, { name: string; contact: string; moveInDate: string }> = {
-  "101": { name: "John Doe", contact: "9812345678", moveInDate: "2025-01-15" },
-  "102": { name: "Jane Smith", contact: "9876543210", moveInDate: "2025-02-01" },
-};
-
-const initialPaymentHistory: Record<string, any[]> = {
-    "101": [
-        { month: "January 2025", previousUnits: 1100, currentUnits: 1200, electricity: 1300, water: 500, rent: 10000, status: "Paid" },
-        { month: "February 2025", previousUnits: 1200, currentUnits: 1300, electricity: 1200, water: 500, rent: 10000, status: "Paid" },
-        { month: "March 2025", previousUnits: 1300, currentUnits: 1400, electricity: 1100, water: 500, rent: 10000, status: "Unpaid" },
-    ],
-    "102": [],
-};
-
+import { useCreatePaymentHistory } from "@/hooks/bills/useCreatePaymentHistory";
+import { useGetAllRooms } from "@/hooks/rooms/useGetAllRooms";
+import { PaymentHistoryPayload } from "@/lib/bills";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CreateBillPage() {
   const router = useRouter();
-  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
+  const { data: rooms, isLoading: isLoadingRooms, isError: isErrorRooms } = useGetAllRooms();
+  const { mutate: createPaymentHistory, isPending: isCreatingBill } = useCreatePaymentHistory();
+
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [previousUnits, setPreviousUnits] = useState(0);
   const [currentUnits, setCurrentUnits] = useState(0);
   const [unitsConsumed, setUnitsConsumed] = useState(0);
@@ -35,10 +26,10 @@ export default function CreateBillPage() {
   const electricityRate = 13;
 
   const handleRoomSelect = (roomId: string) => {
-    setSelectedRoom(roomId);
-    const history = initialPaymentHistory[roomId] || [];
-    const lastReading = history.length > 0 ? history[history.length - 1].currentUnits : 0;
-    setPreviousUnits(lastReading);
+    setSelectedRoomId(roomId);
+    // In a real application, you might fetch the last reading for this room from the API
+    // For now, we'll reset it.
+    setPreviousUnits(0);
     setCurrentUnits(0);
     setUnitsConsumed(0);
     setCalculatedAmount(0);
@@ -56,26 +47,51 @@ export default function CreateBillPage() {
   };
 
   const saveBill = () => {
-    if (!selectedRoom) {
-        alert("Please select a room first.");
-        return;
+    if (!selectedRoomId) {
+      alert("Please select a room first.");
+      return;
     }
     if (currentUnits <= previousUnits) {
-        alert("Current reading must be greater than previous reading to save a new bill.");
-        return;
+      alert("Current reading must be greater than previous reading to save a new bill.");
+      return;
     }
-    
-    // Here you would typically update your backend or state management
-    console.log("Saving bill for room:", selectedRoom, {
-        previousUnits,
-        currentUnits,
-        electricity: calculatedAmount,
-        // ... other bill details
-    });
 
-    alert(`Bill for room ${selectedRoom} has been created successfully!`);
-    router.push(`/dashboard/bills/${selectedRoom}`);
+    const billPayload: PaymentHistoryPayload = {
+      room: parseInt(selectedRoomId),
+      month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }), // Example month
+      previousUnits,
+      currentUnits,
+      electricity: calculatedAmount,
+      water: 0, // Assuming 0 for now, or add input fields for water
+      rent: 0, // Assuming 0 for now, or fetch from room details
+      total: calculatedAmount, // Assuming total is just electricity for now
+      status: "Unpaid", // Default status
+    };
+
+    createPaymentHistory(billPayload, {
+      onSuccess: () => {
+        alert(`Bill for room ${selectedRoomId} has been created successfully!`);
+        router.push(`/dashboard/bills/${selectedRoomId}`);
+      },
+      onError: (error) => {
+        alert(`Failed to create bill: ${error.message}`);
+      },
+    });
   };
+
+  if (isLoadingRooms) {
+    return (
+      <div className="p-6 space-y-6">
+        <h1 className="text-2xl font-bold">Create a New Bill</h1>
+        <Skeleton className="h-[100px] w-full" />
+        <Skeleton className="h-[300px] w-full" />
+      </div>
+    );
+  }
+
+  if (isErrorRooms) {
+    return <div>Error loading rooms.</div>;
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -91,9 +107,9 @@ export default function CreateBillPage() {
                     <SelectValue placeholder="Select a room..." />
                 </SelectTrigger>
                 <SelectContent>
-                    {Object.keys(tenants).map(roomId => (
-                        <SelectItem key={roomId} value={roomId}>
-                            Room {roomId} ({tenants[roomId].name})
+                    {rooms?.map(room => (
+                        <SelectItem key={room.id} value={room.id.toString()}>
+                            Room {room.room_number}
                         </SelectItem>
                     ))}
                 </SelectContent>
@@ -101,10 +117,10 @@ export default function CreateBillPage() {
         </CardContent>
       </Card>
 
-      {selectedRoom && (
+      {selectedRoomId && (
         <Card>
             <CardHeader>
-                <CardTitle>Electricity Bill for Room {selectedRoom}</CardTitle>
+                <CardTitle>Electricity Bill for Room {selectedRoomId}</CardTitle>
                 <CardDescription>Calculate and save the monthly electricity bill.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -124,7 +140,9 @@ export default function CreateBillPage() {
                 </div>
                 <p className="text-lg font-bold">Total Electricity Bill: Rs. {calculatedAmount}</p>
                 <div className="flex justify-end">
-                    <Button onClick={saveBill} className="bg-blue-600 hover:bg-blue-700 text-white">Save Bill</Button>
+                    <Button onClick={saveBill} className="bg-blue-600 hover:bg-blue-700 text-white" disabled={isCreatingBill}>
+                      {isCreatingBill ? "Saving..." : "Save Bill"}
+                    </Button>
                 </div>
             </CardContent>
         </Card>

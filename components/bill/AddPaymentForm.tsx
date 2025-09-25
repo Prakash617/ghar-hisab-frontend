@@ -11,21 +11,32 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PaymentHistory } from "@/lib/types";
 
+import { PaymentHistoryPayload } from "@/lib/bills"; // Import PaymentHistoryPayload
+
 interface AddPaymentFormProps {
-  onAddPayment: (payment: Omit<PaymentHistory, "bills" | "electricity">) => void;
+  onAddPayment: (payload: PaymentHistoryPayload) => void;
   lastPayment?: PaymentHistory;
+  roomId: number; // Added roomId
 }
 
 const ELECTRICITY_RATE = 12;
 
-export const AddPaymentForm = ({ onAddPayment, lastPayment }: AddPaymentFormProps) => {
+export const AddPaymentForm = ({ onAddPayment, lastPayment, roomId }: AddPaymentFormProps) => {
   const [month, setMonth] = useState("");
   const [previousUnits, setPreviousUnits] = useState(0);
   const [currentUnits, setCurrentUnits] = useState(0);
   const [water, setWater] = useState(500);
   const [rent, setRent] = useState(10000);
+  const [status, setStatus] = useState<"Paid" | "Unpaid" | "Partial">("Unpaid");
   const [electricityCost, setElectricityCost] = useState(0);
 
   useEffect(() => {
@@ -45,17 +56,23 @@ export const AddPaymentForm = ({ onAddPayment, lastPayment }: AddPaymentFormProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const total = electricityCost + water + rent; // Calculate total
     onAddPayment({
+      room: roomId, // Use the new roomId prop
       month,
       previousUnits,
       currentUnits,
+      electricity: electricityCost, // Pass electricityCost as electricity
       water,
       rent,
+      total, // Pass the calculated total
+      status,
     });
     // Reset form
     setMonth("");
     setPreviousUnits(currentUnits);
     setCurrentUnits(0);
+    setStatus("Unpaid");
   };
 
   return (
@@ -130,6 +147,21 @@ export const AddPaymentForm = ({ onAddPayment, lastPayment }: AddPaymentFormProp
             className="w-full border rounded px-3 py-2"
             required
           />
+        </div>
+        <div>
+          <label className="block font-medium mb-1" htmlFor="status">
+            Status
+          </label>
+          <Select value={status} onValueChange={(value: "Paid" | "Unpaid" | "Partial") => setStatus(value)}>
+            <SelectTrigger id="status" className="w-full">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Paid">Paid</SelectItem>
+              <SelectItem value="Unpaid">Unpaid</SelectItem>
+              <SelectItem value="Partial">Partial</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <div className="mt-4">

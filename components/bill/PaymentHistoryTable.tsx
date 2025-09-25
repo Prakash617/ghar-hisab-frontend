@@ -14,9 +14,9 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { EditBillItemDialog } from "./EditBillItemDialog";
+import { useDeletePaymentHistory } from "@/hooks/bills/useDeletePaymentHistory";
 
 interface PaymentHistoryTableProps {
     paymentHistory: PaymentHistory[];
@@ -25,10 +25,9 @@ interface PaymentHistoryTableProps {
     onEdit: (index: number) => void;
     onSave: () => void;
     onCancel: () => void;
-    onFieldChange: (fieldName: keyof PaymentHistory, value: any) => void;
-    onDelete: (index: number) => void;
-    onEditItem: (index: number, itemType: 'electricity' | 'water' | 'rent', itemData: BillItem) => void;
+    onFieldChange: (fieldName: keyof PaymentHistory, value: string | number) => void;
     onSaveItemEdit: (index: number, itemType: 'electricity' | 'water' | 'rent', updatedItem: BillItem) => void;
+    billId: string;
 }
 
 const BillItemCell = ({ item, isEditing, onFieldChange, onClick }: { item: BillItem, isEditing: boolean, onFieldChange: (value: number) => void, onClick: () => void }) => {
@@ -48,37 +47,36 @@ const BillItemCell = ({ item, isEditing, onFieldChange, onClick }: { item: BillI
     )
 }
 
-export const PaymentHistoryTable = ({ 
-    paymentHistory, 
-    editingIndex, 
+export const PaymentHistoryTable = ({
+    paymentHistory,
+    editingIndex,
     editedData,
-    onEdit, 
-    onSave, 
-    onCancel, 
-    onFieldChange, 
-    onDelete,
-    onEditItem,
-    onSaveItemEdit
+    onEdit,
+    onSave,
+    onCancel,
+    onFieldChange,
+    onSaveItemEdit,
+    billId
 }: PaymentHistoryTableProps) => {
-
+    const { mutate: deletePaymentHistory } = useDeletePaymentHistory(billId);
     const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
-    const [itemToDeleteIndex, setItemToDeleteIndex] = useState<number | null>(null);
+    const [itemToDelete, setItemToDelete] = useState<PaymentHistory | null>(null);
 
     const [showEditItemDialog, setShowEditItemDialog] = useState(false);
     const [itemToEditIndex, setItemToEditIndex] = useState<number | null>(null);
     const [itemToEditType, setItemToEditType] = useState<'electricity' | 'water' | 'rent' | null>(null);
     const [itemToEditData, setItemToEditData] = useState<BillItem | null>(null);
 
-    const handleDeleteClick = (index: number) => {
-        setItemToDeleteIndex(index);
+    const handleDeleteClick = (item: PaymentHistory) => {
+        setItemToDelete(item);
         setShowDeleteConfirmDialog(true);
     };
 
     const handleConfirmDelete = () => {
-        if (itemToDeleteIndex !== null) {
-            onDelete(itemToDeleteIndex);
+        if (itemToDelete) {
+            deletePaymentHistory(itemToDelete.id);
             setShowDeleteConfirmDialog(false);
-            setItemToDeleteIndex(null);
+            setItemToDelete(null);
         }
     };
 
@@ -188,7 +186,7 @@ export const PaymentHistoryTable = ({
                                         ) : (
                                             <>
                                                 <Button size="sm" variant="outline" onClick={() => onEdit(index)}>Edit</Button>
-                                                <Button size="sm" variant="destructive" onClick={() => handleDeleteClick(index)} className="ml-2">Delete</Button>
+                                                <Button size="sm" variant="destructive" onClick={() => handleDeleteClick(payment)} className="ml-2">Delete</Button>
                                             </>
                                         )}
                                     </TableCell>

@@ -20,6 +20,8 @@ import { refreshToken } from "./auth";
 export async function apiFetch(url: string, options: RequestInit = {}) {
   let token = localStorage.getItem("access");
 
+  console.log("apiFetch: Sending request to", url, "with options:", options);
+
   let response = await fetch(url, {
     ...options,
     headers: {
@@ -29,10 +31,14 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
     },
   });
 
+  console.log("apiFetch: Received response with status", response.status, response.statusText);
+
   if (response.status === 401) {
+    console.log("apiFetch: Token expired, attempting refresh...");
     const newAccessToken = await refreshToken();
     if (newAccessToken) {
       token = newAccessToken;
+      console.log("apiFetch: Token refreshed, retrying request...");
       response = await fetch(url, {
         ...options,
         headers: {
@@ -41,11 +47,14 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
           ...options.headers,
         },
       });
+      console.log("apiFetch: Retried request received response with status", response.status, response.statusText);
     }
   }
 
   if (!response.ok) {
-    throw new Error("Network response was not ok");
+    const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+    console.error("apiFetch: Network response was not ok", response.status, response.statusText, errorData);
+    throw new Error(errorData.message || "Network response was not ok");
   }
 
   return response.json();

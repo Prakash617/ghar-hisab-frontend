@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -14,6 +13,9 @@ import { BillForm } from "@/components/bill/BillForm"
 import { AddPaymentForm } from "@/components/bill/AddPaymentForm"
 
 import { PaymentHistory } from "@/lib/types"
+import { useCreatePaymentHistory } from "@/hooks/bills/useCreatePaymentHistory"; // Import the hook
+import { PaymentHistoryPayload } from "@/lib/bills"; // Import the payload type
+import { Button } from "@/components/ui/button";
 
 interface AddBillModalProps {
   isOpen: boolean
@@ -23,17 +25,25 @@ interface AddBillModalProps {
 }
 
 export function AddBillModal({ isOpen, onClose, lastBill, roomId }: AddBillModalProps) {
-  const handleAddPayment = (paymentData: any) => {
-    console.log("Payment added:", paymentData);
-    // Here you would typically handle the submission of payment data
-    // e.g., call an API, update state, etc.
+  const createPaymentMutation = useCreatePaymentHistory(); // Initialize the mutation
+
+  const handleAddPayment = (paymentData: PaymentHistoryPayload) => {
+    createPaymentMutation.mutate(paymentData, {
+      onSuccess: () => {
+        console.log("Payment added successfully!");
+        onClose(); // Close the modal on success
+      },
+      onError: (error) => {
+        console.error("Error adding payment:", error);
+      },
+    });
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <BillForm lastBill={lastBill} roomId={roomId} />
-        <AddPaymentForm onAddPayment={handleAddPayment} lastPayment={lastBill} />
+        <AddPaymentForm onAddPayment={handleAddPayment} lastPayment={lastBill} roomId={roomId} />
       </DialogContent>
     </Dialog>
   )

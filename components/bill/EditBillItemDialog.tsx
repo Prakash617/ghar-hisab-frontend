@@ -18,24 +18,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BillItem } from "@/lib/types";
+import { useUpdateBillItem } from "@/hooks/bills/useUpdateBillItem";
 
 interface EditBillItemDialogProps {
   isOpen: boolean;
   onClose: () => void;
   itemData: BillItem | null;
-  onSave: (updatedItem: BillItem) => void;
-  itemType: string; // e.g., "Electricity", "Water", "Rent"
+  itemType: 'electricity' | 'water' | 'rent' | 'waste' | null;
+  billId: string;
+  paymentId: number | null;
+  
 }
 
 export function EditBillItemDialog({
   isOpen,
   onClose,
   itemData,
-  onSave,
   itemType,
+  billId,
+  paymentId,
 }: EditBillItemDialogProps) {
   const [amount, setAmount] = useState(itemData?.amount || 0);
   const [status, setStatus] = useState(itemData?.status || "Unpaid");
+  const { mutate: updateBillItem, isPending } = useUpdateBillItem(billId);
 
   useEffect(() => {
     if (itemData) {
@@ -45,8 +50,21 @@ export function EditBillItemDialog({
   }, [itemData]);
 
   const handleSave = () => {
-    onSave({ amount, status: status as "Paid" | "Unpaid" });
-    onClose();
+    console.log("handleSave called. paymentId:", paymentId, "itemType:", itemType);
+    if (paymentId && itemType) {
+      updateBillItem(
+        {
+          paymentId,
+          itemType,
+          updatedItem: { amount, status: status as "Paid" | "Unpaid" },
+        },
+        {
+          onSuccess: () => {
+            onClose();
+          },
+        }
+      );
+    }
   };
 
   return (
@@ -87,7 +105,9 @@ export function EditBillItemDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Changes</Button>
+          <Button onClick={handleSave} disabled={isPending}>
+            {isPending ? "Saving..." : "Save Changes"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

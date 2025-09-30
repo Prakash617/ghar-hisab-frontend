@@ -36,6 +36,7 @@ export const AddPaymentForm = ({ onAddPayment, lastPayment, roomId }: AddPayment
   const [currentUnits, setCurrentUnits] = useState(0);
   const [water, setWater] = useState(500);
   const [rent, setRent] = useState(10000);
+  const [waste, setWaste] = useState(100);
   const [status, setStatus] = useState<"Paid" | "Unpaid" | "Partial">("Unpaid");
   const [electricityCost, setElectricityCost] = useState(0);
 
@@ -56,7 +57,7 @@ export const AddPaymentForm = ({ onAddPayment, lastPayment, roomId }: AddPayment
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const total = electricityCost + water + rent; // Calculate total
+    const total = electricityCost + water + rent + waste; // Calculate total
     onAddPayment({
       room: roomId, // Use the new roomId prop
       month,
@@ -65,6 +66,7 @@ export const AddPaymentForm = ({ onAddPayment, lastPayment, roomId }: AddPayment
       electricity: electricityCost, // Pass electricityCost as electricity
       water,
       rent,
+      waste,
       total, // Pass the calculated total
       status,
     });
@@ -144,6 +146,19 @@ export const AddPaymentForm = ({ onAddPayment, lastPayment, roomId }: AddPayment
             type="number"
             value={rent}
             onChange={(e) => setRent(Number(e.target.value))}
+            className="w-full border rounded px-3 py-2"
+            required
+          />
+        </div>
+        <div>
+          <label className="block font-medium mb-1" htmlFor="waste">
+            Waste
+          </label>
+          <input
+            id="waste"
+            type="number"
+            value={waste}
+            onChange={(e) => setWaste(Number(e.target.value))}
             className="w-full border rounded px-3 py-2"
             required
           />

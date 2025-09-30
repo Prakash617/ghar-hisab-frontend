@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { TenantInfoCard } from "@/components/bill/TenantInfoCard";
+import { TenantDocumentsCard } from "@/components/bill/TenantDocumentsCard";
 import { BillDetails } from "./BillDetails";
 import { useGetTenantByRoomId } from "@/hooks/tenants/useGetTenantByRoomId";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,7 +37,8 @@ export default function BillsDetailPage({
         Room <span className="text-primary">{roomId}</span> Bill Details
       </h1>
 
-      <TenantInfoCard tenant={tenant} />
+      <TenantInfoCard tenant={tenant} roomId={roomId} />
+      <TenantDocumentsCard tenant={tenant} roomId={roomId} />
 
       <BillDetails roomId={parseInt(roomId)} />
     </div>

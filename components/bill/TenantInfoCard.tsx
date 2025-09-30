@@ -2,67 +2,67 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Tenant } from "@/lib/types";
+import { useUpdateTenant } from "@/hooks/tenants/useUpdateTenant";
 
-export const TenantInfoCard = ({ tenant }: { tenant: { name: string; contact: string; moveInDate: string } | undefined }) => {
-    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-    const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+export const TenantInfoCard = ({ tenant, roomId }: { tenant: Tenant | undefined, roomId: string }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedTenant, setEditedTenant] = useState<Tenant | undefined>(tenant);
+    const { mutate: updateTenant } = useUpdateTenant(roomId);
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files) {
-            setSelectedFiles(Array.from(event.target.files));
-        } else {
-            setSelectedFiles([]);
+    useEffect(() => {
+        setEditedTenant(tenant);
+    }, [tenant]);
+
+    const handleEdit = () => {
+        setIsEditing(true);
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setEditedTenant(tenant);
+    };
+
+    const handleSave = () => {
+        if (editedTenant && tenant) {
+            const { documents, ...tenantData } = editedTenant;
+            updateTenant({ tenantId: tenant.id, tenantData });
+            setIsEditing(false);
         }
     };
 
-    const handleUpload = () => {
-        if (selectedFiles.length > 0) {
-            const fileNames = selectedFiles.map(file => file.name).join(', ');
-            setUploadMessage(`Files '${fileNames}' uploaded successfully!`);
-            setTimeout(() => {
-                setUploadMessage(null);
-                setSelectedFiles([]); // Clear selected files after simulated upload
-            }, 3000); // Clear message and files after 3 seconds
-        } else {
-            setUploadMessage("Please select files to upload.");
-            setTimeout(() => {
-                setUploadMessage(null);
-            }, 3000);
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (editedTenant) {
+            setEditedTenant({ ...editedTenant, [e.target.name]: e.target.value });
         }
     };
 
     return (
         <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Tenant Information</CardTitle>
+                <div className="flex space-x-2">
+                    {isEditing ? (
+                        <>
+                            <Button onClick={handleSave}>Save</Button>
+                            <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                        </>
+                    ) : (
+                        <Button onClick={handleEdit}>Edit</Button>
+                    )}
+                </div>
             </CardHeader>
             <CardContent className="space-y-2">
                 {tenant ? (
                     <>
-                        <p><strong>Name:</strong> {tenant.name}</p>
-                        <p><strong>Contact:</strong> {tenant.contact}</p>
-                        <p><strong>Move-in Date:</strong> {tenant.moveInDate}</p>
-                        <div className="space-y-2">
-                            <label htmlFor="tenant-files" className="block text-sm font-medium text-gray-700">Upload Tenant Documents</label>
-                            <div className="flex items-center space-x-2">
-                                <Input id="tenant-files" type="file" multiple onChange={handleFileChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-                                <Button onClick={handleUpload} disabled={selectedFiles.length === 0}>Upload</Button>
-                            </div>
-                            {selectedFiles.length > 0 && (
-                                <div className="text-sm text-gray-600">
-                                    <p>Selected files:</p>
-                                    <ul className="list-disc list-inside">
-                                        {selectedFiles.map((file, index) => (
-                                            <li key={index} className="font-semibold">{file.name}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                            {uploadMessage && (
-                                <p className="text-sm text-green-600 font-semibold">{uploadMessage}</p>
-                            )}
-                        </div>
+                        <div><strong>Name:</strong> {isEditing ? <Input name="name" value={editedTenant?.name} onChange={handleChange} /> : tenant.name}</div>
+                        <div><strong>Contact:</strong> {isEditing ? <Input name="contact" value={editedTenant?.contact} onChange={handleChange} /> : tenant.contact}</div>
+                        <div><strong>Move-in Date:</strong> {isEditing ? <Input name="moveInDate" value={editedTenant?.moveInDate} onChange={handleChange} /> : tenant.moveInDate}</div>
+                        <div><strong>Electricity Price Per Unit:</strong> {isEditing ? <Input name="electricityPricePerUnit" value={editedTenant?.electricityPricePerUnit} onChange={handleChange} /> : tenant.electricityPricePerUnit}</div>
+                        <div><strong>Water Price:</strong> {isEditing ? <Input name="water_price" value={editedTenant?.water_price} onChange={handleChange} /> : tenant.water_price}</div>
+                        <div><strong>Rent Price:</strong> {isEditing ? <Input name="rent_price" value={editedTenant?.rent_price} onChange={handleChange} /> : tenant.rent_price}</div>
+                        <div><strong>Waste Price:</strong> {isEditing ? <Input name="waste_price" value={editedTenant?.waste_price} onChange={handleChange} /> : tenant.waste_price}</div>
                     </>
                 ) : <p>No tenant information found for this room.</p>}
             </CardContent>

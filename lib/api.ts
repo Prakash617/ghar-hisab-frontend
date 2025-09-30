@@ -22,13 +22,18 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
 
   console.log("apiFetch: Sending request to", url, "with options:", options);
 
+  const headers: Record<string, string> = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
+  };
+
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+
   let response = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
+    headers,
   });
 
   console.log("apiFetch: Received response with status", response.status, response.statusText);

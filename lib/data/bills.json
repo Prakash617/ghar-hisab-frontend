@@ -17,8 +17,19 @@
       "amount": 10000,
       "status": "Paid"
     },
+    "waste": {
+      "amount": 100,
+      "status": "Paid"
+    },
+    "total": {
+      "amount": 12100,
+      "status": "Paid"
+    },
     "status": "Paid",
-    "total": 12000
+    "electricity_status": "Paid",
+    "water_status": "Paid",
+    "rent_status": "Paid",
+    "waste_status": "Paid"
   },
   {
     "id": 2,
@@ -38,8 +49,19 @@
       "amount": 10000,
       "status": "Paid"
     },
+    "waste": {
+      "amount": 100,
+      "status": "Unpaid"
+    },
+    "total": {
+      "amount": 12850,
+      "status": "Partial"
+    },
     "status": "Partial",
-    "total": 12750
+    "electricity_status": "Paid",
+    "water_status": "Unpaid",
+    "rent_status": "Paid",
+    "waste_status": "Unpaid"
   },
   {
     "id": 3,
@@ -59,7 +81,18 @@
       "amount": 12000,
       "status": "Paid"
     },
+    "waste": {
+      "amount": 100,
+      "status": "Paid"
+    },
+    "total": {
+      "amount": 14400,
+      "status": "Paid"
+    },
     "status": "Paid",
-    "total": 14300
+    "electricity_status": "Paid",
+    "water_status": "Paid",
+    "rent_status": "Paid",
+    "waste_status": "Paid"
   }
 ]

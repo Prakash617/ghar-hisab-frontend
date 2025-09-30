@@ -12,8 +12,13 @@ export type PaymentHistory = {
   electricity: BillItem;
   water: BillItem;
   rent: BillItem;
-  total: number;
+  waste: BillItem;
+  total: BillItem;
   status: "Paid" | "Unpaid" | "Partial";
+  electricity_status: "Paid" | "Unpaid";
+  water_status: "Paid" | "Unpaid";
+  rent_status: "Paid" | "Unpaid";
+  waste_status: "Paid" | "Unpaid";
 };
 
 export type Tenant = {
@@ -22,6 +27,11 @@ export type Tenant = {
   name: string;
   contact: string;
   moveInDate: string;
+  electricityPricePerUnit: string;
+  water_price: string;
+  rent_price: string;
+  waste_price: string;
+  documents: { id: number; document: string; }[];
 };
 
 export type Room = {

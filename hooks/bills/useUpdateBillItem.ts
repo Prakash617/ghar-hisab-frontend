@@ -10,14 +10,29 @@ interface UpdateBillItemPayload {
   updatedItem: BillItem;
 }
 
+type PatchPayload = {
+    rent?: number;
+    rent_status?: string;
+    electricity?: { amount: number; status: string };
+    water?: { amount: number; status: string };
+}
+
 export const useUpdateBillItem = (billId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ paymentId, itemType, updatedItem }: UpdateBillItemPayload) => {
-      const payload = {
-        [itemType]: { amount: updatedItem.amount, status: updatedItem.status },
-      };
+      let payload: PatchPayload;
+      if (itemType === 'rent') {
+        payload = {
+          rent: updatedItem.amount,
+          rent_status: updatedItem.status,
+        };
+      } else {
+        payload = {
+          [itemType]: { amount: updatedItem.amount, status: updatedItem.status },
+        };
+      }
       console.log("Sending PATCH payload:", payload);
       console.log("Sending PATCH to URL:", ENDPOINTS.paymentHistories.detail(paymentId));
       return apiFetch(ENDPOINTS.paymentHistories.detail(paymentId), {

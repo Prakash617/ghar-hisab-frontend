@@ -41,7 +41,7 @@ export function HowItWorks() {
               </div>
             </CardHeader>
             <CardContent>
-              <h3 className="text-xl font-semibold">3. You're All Set</h3>
+              <h3 className="text-xl font-semibold">3. You&apos;re All Set</h3>
               <p className="mt-2 text-gray-600">
                 Receive a confirmation and a calendar invite. Your room is reserved and ready for your meeting.
               </p>

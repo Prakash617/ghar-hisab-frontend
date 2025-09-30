@@ -29,5 +29,10 @@ export const ENDPOINTS = {
   },
   tenants: {
     list: `${API_BASE}/api/tenants/`,
+    detail: (id: number | string) => `${API_BASE}/api/tenants/${id}/`,
+  },
+  tenantDocuments: {
+    create: `${API_BASE}/api/tenant-documents/`,
+    delete: (id: number | string) => `${API_BASE}/api/tenant-documents/${id}/`,
   },
 };

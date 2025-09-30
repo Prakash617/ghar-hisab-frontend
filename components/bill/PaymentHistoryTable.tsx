@@ -15,7 +15,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { EditBillItemDialog } from "./EditBillItemDialog";
 import { useDeletePaymentHistory } from "@/hooks/bills/useDeletePaymentHistory";
 
 interface PaymentHistoryTableProps {
@@ -26,7 +25,7 @@ interface PaymentHistoryTableProps {
     onSave: () => void;
     onCancel: () => void;
     onFieldChange: (fieldName: keyof PaymentHistory, value: string | number) => void;
-    onSaveItemEdit: (index: number, itemType: 'electricity' | 'water' | 'rent', updatedItem: BillItem) => void;
+    onEditItem: (paymentId: number, itemType: 'electricity' | 'water' | 'rent' | 'waste', itemData: BillItem) => void;
     billId: string;
 }
 
@@ -55,17 +54,12 @@ export const PaymentHistoryTable = ({
     onSave,
     onCancel,
     onFieldChange,
-    onSaveItemEdit,
+    onEditItem,
     billId
 }: PaymentHistoryTableProps) => {
     const { mutate: deletePaymentHistory } = useDeletePaymentHistory(billId);
     const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<PaymentHistory | null>(null);
-
-    const [showEditItemDialog, setShowEditItemDialog] = useState(false);
-    const [itemToEditIndex, setItemToEditIndex] = useState<number | null>(null);
-    const [itemToEditType, setItemToEditType] = useState<'electricity' | 'water' | 'rent' | null>(null);
-    const [itemToEditData, setItemToEditData] = useState<BillItem | null>(null);
 
     const handleDeleteClick = (item: PaymentHistory) => {
         setItemToDelete(item);
@@ -78,30 +72,6 @@ export const PaymentHistoryTable = ({
             setShowDeleteConfirmDialog(false);
             setItemToDelete(null);
         }
-    };
-
-    const handleBillItemClick = (index: number, type: 'electricity' | 'water' | 'rent', itemData: BillItem) => {
-        setItemToEditIndex(index);
-        setItemToEditType(type);
-        setItemToEditData(itemData);
-        setShowEditItemDialog(true);
-    };
-
-    const handleSaveBillItemEdit = (updatedItem: BillItem) => {
-        if (itemToEditIndex !== null && itemToEditType !== null) {
-            onSaveItemEdit(itemToEditIndex, itemToEditType, updatedItem);
-            setShowEditItemDialog(false);
-            setItemToEditIndex(null);
-            setItemToEditType(null);
-            setItemToEditData(null);
-        }
-    };
-
-    const handleCloseEditItemDialog = () => {
-        setShowEditItemDialog(false);
-        setItemToEditIndex(null);
-        setItemToEditType(null);
-        setItemToEditData(null);
     };
 
     const getBadgeClass = (status: string) => {
@@ -129,6 +99,7 @@ export const PaymentHistoryTable = ({
                             <TableHead>Electricity</TableHead>
                             <TableHead>Water</TableHead>
                             <TableHead>Rent</TableHead>
+                            <TableHead>Waste</TableHead>
                             <TableHead>Total</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Action</TableHead>
@@ -138,7 +109,6 @@ export const PaymentHistoryTable = ({
                         {paymentHistory.map((payment, index) => {
                             const isEditing = index === editingIndex;
                             const data = isEditing && editedData ? editedData : payment;
-                            const total = data.electricity.amount + data.water.amount + data.rent.amount;
 
                             return (
                                 <TableRow key={index}>
@@ -158,22 +128,28 @@ export const PaymentHistoryTable = ({
                                         item={data.electricity} 
                                         isEditing={isEditing} 
                                         onFieldChange={(value) => onFieldChange('electricity', value)} 
-                                        onClick={() => handleBillItemClick(index, 'electricity', data.electricity)} 
+                                        onClick={() => { console.log("Payment ID from table:", payment.id); onEditItem(payment.id, 'electricity', data.electricity); }} 
                                     />
                                     <BillItemCell 
                                         item={data.water} 
                                         isEditing={isEditing} 
                                         onFieldChange={(value) => onFieldChange('water', value)} 
-                                        onClick={() => handleBillItemClick(index, 'water', data.water)} 
+                                        onClick={() => { console.log("Payment ID from table:", payment.id); onEditItem(payment.id, 'water', data.water); }} 
                                     />
                                     <BillItemCell 
                                         item={data.rent} 
                                         isEditing={isEditing} 
                                         onFieldChange={(value) => onFieldChange('rent', value)} 
-                                        onClick={() => handleBillItemClick(index, 'rent', data.rent)} 
+                                        onClick={() => { console.log("Payment ID from table:", payment.id); onEditItem(payment.id, 'rent', data.rent); }} 
+                                    />
+                                    <BillItemCell 
+                                        item={data.waste} 
+                                        isEditing={isEditing} 
+                                        onFieldChange={(value) => onFieldChange('waste', value)} 
+                                        onClick={() => { console.log("Payment ID from table:", payment.id); onEditItem(payment.id, 'waste', data.waste); }} 
                                     />
 
-                                    <TableCell>Rs. {total}</TableCell>
+                                    <TableCell>Rs. {data.total.amount}</TableCell>
                                     <TableCell>
                                         <Badge className={getBadgeClass(data.status)}>{data.status}</Badge>
                                     </TableCell>
@@ -211,14 +187,6 @@ export const PaymentHistoryTable = ({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
-            <EditBillItemDialog
-                isOpen={showEditItemDialog}
-                onClose={handleCloseEditItemDialog}
-                itemData={itemToEditData}
-                onSave={handleSaveBillItemEdit}
-                itemType={itemToEditType || ""}
-            />
         </Card>
     );
 };

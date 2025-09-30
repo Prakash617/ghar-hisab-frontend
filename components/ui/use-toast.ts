@@ -98,12 +98,7 @@ function dispatch(action: Action) {
   listeners.forEach((listener) => listener(memoryState))
 }
 
-type Toast = Pick<ToasterToast, "id" | "duration" | "promise"> &
-  {
-    content: React.ReactNode
-  } & {
-    [key: string]: any
-  }
+type Toast = ToasterToast
 
 type ToastOptions = Partial<ToasterToast>
 

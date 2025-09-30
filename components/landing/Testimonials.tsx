@@ -21,7 +21,7 @@ export function Testimonials() {
                 </div>
               </div>
               <p className="mt-4 text-gray-600">
-                “SmartSpace has revolutionized how we manage our meeting rooms. It's simple, powerful, and has saved us countless hours.”
+                “SmartSpace has revolutionized how we manage our meeting rooms. It&apos;s simple, powerful, and has saved us countless hours.”
               </p>
             </CardContent>
           </Card>
@@ -38,7 +38,7 @@ export function Testimonials() {
                 </div>
               </div>
               <p className="mt-4 text-gray-600">
-                “The analytics feature is a game-changer. We've optimized our space usage and saved costs. Highly recommended!”
+                “The analytics feature is a game-changer. We&apos;ve optimized our space usage and saved costs. Highly recommended!”
               </p>
             </CardContent>
           </Card>
@@ -55,7 +55,7 @@ export function Testimonials() {
                 </div>
               </div>
               <p className="mt-4 text-gray-600">
-                “I love the clean interface and mobile app. Booking a room takes seconds, whether I'm at my desk or on the go.”
+                “I love the clean interface and mobile app. Booking a room takes seconds, whether I&apos;m at my desk or on the go.”
               </p>
             </CardContent>
           </Card>

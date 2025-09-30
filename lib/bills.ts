@@ -10,6 +10,7 @@ export interface PaymentHistoryPayload {
   electricity: number;
   water: number;
   rent: number;
+  waste: number;
   total: number;
   status: string;
 }
@@ -21,11 +22,16 @@ type ApiPaymentHistory = {
   month: string;
   previous_units: number;
   current_units: number;
-  electricity: { amount: number; status: string; }; // Updated to match server response
-  water: { amount: number; status: string; };     // Updated to match server response
-  rent: { amount: number; status: string; };       // Updated to match server response
-  total: { amount: number; status: string; };      // Updated to match server response
+  electricity: { amount: number; status: string; };
+  water: { amount: number; status: string; };
+  rent: { amount: number; status: string; };
+  waste: { amount: number; status: string; };
+  total: { amount: number; status: string; };
   status: "Paid" | "Unpaid" | "Partial";
+  electricity_status: "Paid" | "Unpaid";
+  water_status: "Paid" | "Unpaid";
+  rent_status: "Paid" | "Unpaid";
+  waste_status: "Paid" | "Unpaid";
 };
 
 // Helper function to transform ApiPaymentHistory to PaymentHistory
@@ -39,8 +45,13 @@ const fromApiPaymentHistory = (apiPaymentHistory: ApiPaymentHistory): PaymentHis
     electricity: { amount: apiPaymentHistory.electricity.amount, status: apiPaymentHistory.electricity.status as "Paid" | "Unpaid" },
     water: { amount: apiPaymentHistory.water.amount, status: apiPaymentHistory.water.status as "Paid" | "Unpaid" },
     rent: { amount: apiPaymentHistory.rent.amount, status: apiPaymentHistory.rent.status as "Paid" | "Unpaid" },
-    total: apiPaymentHistory.total.amount,
+    waste: { amount: apiPaymentHistory.waste.amount, status: apiPaymentHistory.waste.status as "Paid" | "Unpaid" },
+    total: { amount: apiPaymentHistory.total.amount, status: apiPaymentHistory.total.status as "Paid" | "Unpaid" },
     status: apiPaymentHistory.status,
+    electricity_status: apiPaymentHistory.electricity_status,
+    water_status: apiPaymentHistory.water_status,
+    rent_status: apiPaymentHistory.rent_status,
+    waste_status: apiPaymentHistory.waste_status,
   };
 };
 
@@ -53,6 +64,7 @@ type ApiPaymentHistoryCreatePayload = {
   electricity: number;
   water: number;
   rent: number;
+  waste: number;
   total: number;
   status: string;
 };
@@ -67,6 +79,7 @@ const toApiPaymentHistoryCreatePayload = (payload: PaymentHistoryPayload): ApiPa
     electricity: payload.electricity,
     water: payload.water,
     rent: payload.rent,
+    waste: payload.waste,
     total: payload.total,
     status: payload.status,
   };

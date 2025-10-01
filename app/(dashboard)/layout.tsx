@@ -15,6 +15,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import ProtectedPage from '@/components/ProtectedPage'
+import { Toaster } from '@/components/ui/toaster'
 
 type Props = {
   children: React.ReactNode
@@ -54,6 +55,7 @@ const Layout = ({ children }: Props) => {
     </div>
       </SidebarInset>
     </SidebarProvider>
+    <Toaster />
     </ProtectedPage>
   )
 }

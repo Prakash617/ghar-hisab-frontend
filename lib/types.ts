@@ -1,24 +1,32 @@
-export interface BillItem {
-  amount: number;
-  status: "Paid" | "Unpaid";
-}
+export type PaymentStatus = "Paid" | "Unpaid" | "Partially Paid";
 
 export type PaymentHistory = {
   id: number;
   roomId: number;
-  month: string;
-  previousUnits: number;
-  currentUnits: number;
-  electricity: BillItem;
-  water: BillItem;
-  rent: BillItem;
-  waste: BillItem;
-  total: BillItem;
-  status: "Paid" | "Unpaid" | "Partial";
-  electricity_status: "Paid" | "Unpaid";
-  water_status: "Paid" | "Unpaid";
-  rent_status: "Paid" | "Unpaid";
-  waste_status: "Paid" | "Unpaid";
+  billing_month: string;
+  previous_units: number;
+  current_units: number;
+  electricity: string;
+  electricity_paid: string;
+  electricity_status: PaymentStatus;
+  electricity_updated_at: string | null;
+  water: string;
+  water_paid: string;
+  water_status: PaymentStatus;
+  water_updated_at: string | null;
+  rent: string;
+  rent_paid: string;
+  rent_status: PaymentStatus;
+  rent_updated_at: string | null;
+  waste: string;
+  waste_paid: string;
+  waste_status: PaymentStatus;
+  waste_updated_at: string | null;
+  total: string;
+  total_paid: string;
+  status: PaymentStatus;
+  created_at: string;
+  updated_at: string;
 };
 
 export type Tenant = {

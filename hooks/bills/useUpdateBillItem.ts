@@ -1,40 +1,33 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
-import { BillItem } from "@/lib/types";
 import { ENDPOINTS } from "@/lib/endpoints";
+import { PaymentStatus } from "@/lib/types";
 
 interface UpdateBillItemPayload {
   paymentId: number;
-  itemType: 'electricity' | 'water' | 'rent';
-  updatedItem: BillItem;
-}
-
-type PatchPayload = {
-    rent?: number;
-    rent_status?: string;
-    electricity?: { amount: number; status: string };
-    water?: { amount: number; status: string };
+  itemType: 'electricity' | 'water' | 'rent' | 'waste';
+  itemData: {
+    amount: string;
+    paid: string;
+    status: PaymentStatus;
+  };
 }
 
 export const useUpdateBillItem = (billId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ paymentId, itemType, updatedItem }: UpdateBillItemPayload) => {
-      let payload: PatchPayload;
-      if (itemType === 'rent') {
-        payload = {
-          rent: updatedItem.amount,
-          rent_status: updatedItem.status,
-        };
-      } else {
-        payload = {
-          [itemType]: { amount: updatedItem.amount, status: updatedItem.status },
-        };
-      }
+    mutationFn: async ({ paymentId, itemType, itemData }: UpdateBillItemPayload) => {
+      const payload = {
+        [itemType]: itemData.amount,
+        [`${itemType}_paid`]: itemData.paid,
+        [`${itemType}_status`]: itemData.status,
+      };
+      
       console.log("Sending PATCH payload:", payload);
       console.log("Sending PATCH to URL:", ENDPOINTS.paymentHistories.detail(paymentId));
+      
       return apiFetch(ENDPOINTS.paymentHistories.detail(paymentId), {
         method: 'PATCH',
         body: JSON.stringify(payload),

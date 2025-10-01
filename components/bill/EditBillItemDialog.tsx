@@ -17,17 +17,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BillItem } from "@/lib/types";
+import { PaymentStatus } from "@/lib/types";
 import { useUpdateBillItem } from "@/hooks/bills/useUpdateBillItem";
 
 interface EditBillItemDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  itemData: BillItem | null;
+  itemData: {
+    amount: string;
+    paid: string;
+    status: PaymentStatus;
+  } | null;
   itemType: 'electricity' | 'water' | 'rent' | 'waste' | null;
   billId: string;
   paymentId: number | null;
-  
 }
 
 export function EditBillItemDialog({
@@ -38,25 +41,26 @@ export function EditBillItemDialog({
   billId,
   paymentId,
 }: EditBillItemDialogProps) {
-  const [amount, setAmount] = useState(itemData?.amount || 0);
-  const [status, setStatus] = useState(itemData?.status || "Unpaid");
+  const [amount, setAmount] = useState("");
+  const [paid, setPaid] = useState("");
+  const [status, setStatus] = useState<PaymentStatus>("Unpaid");
   const { mutate: updateBillItem, isPending } = useUpdateBillItem(billId);
 
   useEffect(() => {
     if (itemData) {
       setAmount(itemData.amount);
+      setPaid(itemData.paid);
       setStatus(itemData.status);
     }
   }, [itemData]);
 
   const handleSave = () => {
-    console.log("handleSave called. paymentId:", paymentId, "itemType:", itemType);
     if (paymentId && itemType) {
       updateBillItem(
         {
           paymentId,
           itemType,
-          updatedItem: { amount, status: status as "Paid" | "Unpaid" },
+          itemData: { amount, paid, status },
         },
         {
           onSuccess: () => {
@@ -82,7 +86,19 @@ export function EditBillItemDialog({
               id="amount"
               type="number"
               value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
+              onChange={(e) => setAmount(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="paid" className="text-right">
+              Paid Amount
+            </label>
+            <Input
+              id="paid"
+              type="number"
+              value={paid}
+              onChange={(e) => setPaid(e.target.value)}
               className="col-span-3"
             />
           </div>
@@ -90,12 +106,13 @@ export function EditBillItemDialog({
             <label htmlFor="status" className="text-right">
               Status
             </label>
-            <Select value={status} onValueChange={setStatus}>
+            <Select value={status} onValueChange={(value) => setStatus(value as PaymentStatus)}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Paid">Paid</SelectItem>
+                <SelectItem value="Partially Paid">Partially Paid</SelectItem>
                 <SelectItem value="Unpaid">Unpaid</SelectItem>
               </SelectContent>
             </Select>

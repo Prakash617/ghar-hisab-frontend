@@ -36,22 +36,21 @@ export function PaymentHistoryTable({ history, onEdit, onMarkPaid }: Props) {
           )}
 
           {history.map((payment, index) => {
-            const consumed = payment.currentUnits - payment.previousUnits;
-            const total = payment.electricity.amount + payment.water.amount + payment.rent.amount;
+            const consumed = payment.current_units - payment.previous_units;
 
             return (
               <tr key={index} className="border-t hover:bg-gray-50">
-                <td className="p-3 font-medium">{payment.month}</td>
-                <td className="p-3">{payment.previousUnits}</td>
-                <td className="p-3">{payment.currentUnits}</td>
+                <td className="p-3 font-medium">{new Date(payment.billing_month).toLocaleDateString()}</td>
+                <td className="p-3">{payment.previous_units}</td>
+                <td className="p-3">{payment.current_units}</td>
                 <td className="p-3">{consumed}</td>
-                <td className="p-3">Rs. {payment.electricity.amount}</td>
-                <td className="p-3">Rs. {payment.water.amount}</td>
-                <td className="p-3">Rs. {payment.rent.amount}</td>
-                <td className="p-3 font-semibold">Rs. {total}</td>
+                <td className="p-3">Rs. {payment.electricity}</td>
+                <td className="p-3">Rs. {payment.water}</td>
+                <td className="p-3">Rs. {payment.rent}</td>
+                <td className="p-3 font-semibold">Rs. {payment.total}</td>
                 <td
                   className={`p-3 font-semibold ${
-                    payment.status === "Paid" ? "text-green-600" : "text-red-600"
+                    payment.status === "Paid" ? "text-green-600" : payment.status === "Partially Paid" ? "text-yellow-600" : "text-red-600"
                   }`}
                 >
                   {payment.status}
@@ -64,7 +63,7 @@ export function PaymentHistoryTable({ history, onEdit, onMarkPaid }: Props) {
                     Edit
                   </button>
 
-                  {payment.status === "Unpaid" && (
+                  {payment.status !== "Paid" && (
                     <button
                       onClick={() => onMarkPaid(index)}
                       className="px-3 py-1 text-xs rounded-md bg-green-600 text-white hover:bg-green-700"

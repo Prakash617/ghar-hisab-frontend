@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PaymentHistory, BillItem } from "@/lib/types";
+import { PaymentHistory, PaymentStatus } from "@/lib/types";
 import { useState } from "react";
 import {
     AlertDialog,
@@ -25,22 +25,26 @@ interface PaymentHistoryTableProps {
     onSave: () => void;
     onCancel: () => void;
     onFieldChange: (fieldName: keyof PaymentHistory, value: string | number) => void;
-    onEditItem: (paymentId: number, itemType: 'electricity' | 'water' | 'rent' | 'waste', itemData: BillItem) => void;
+    onEditItem: (paymentId: number, itemType: 'electricity' | 'water' | 'rent' | 'waste') => void;
     billId: string;
 }
 
-const BillItemCell = ({ item, isEditing, onFieldChange, onClick }: { item: BillItem, isEditing: boolean, onFieldChange: (value: number) => void, onClick: () => void }) => {
-    const statusColor = item.status === 'Paid' ? 'text-green-600' : 'text-red-600';
+const BillItemCell = ({ amount, status, updatedAt, createdAt, isEditing, onFieldChange, onClick }: { amount: string, status: PaymentStatus, updatedAt: string | null, createdAt: string, isEditing: boolean, onFieldChange: (value: string) => void, onClick: () => void }) => {
+    const statusColor = status === 'Paid' ? 'text-green-600' : status === 'Partially Paid' ? 'text-yellow-600' : 'text-red-600';
     const canClick = !isEditing;
+    const dateToShow = updatedAt || createdAt;
 
     return (
         <TableCell>
             {isEditing ? (
-                <Input type="number" value={item.amount} onChange={(e) => onFieldChange(Number(e.target.value))} />
+                <Input type="text" value={amount} onChange={(e) => onFieldChange(e.target.value)} />
             ) : (
-                <span className={`${statusColor} ${canClick ? 'cursor-pointer hover:underline' : ''}`} onClick={canClick ? onClick : undefined}>
-                    Rs. {item.amount}
-                </span>
+                <div>
+                    <span className={`${statusColor} ${canClick ? 'cursor-pointer hover:underline' : ''}`} onClick={canClick ? onClick : undefined}>
+                        Rs. {amount}
+                    </span>
+                    {dateToShow && <div className="text-xs text-gray-500">{new Date(dateToShow).toLocaleDateString()}</div>}
+                </div>
             )}
         </TableCell>
     )
@@ -78,7 +82,7 @@ export const PaymentHistoryTable = ({
         switch (status) {
             case 'Paid': return 'bg-green-500';
             case 'Unpaid': return 'bg-red-500';
-            case 'Partial': return 'bg-yellow-500';
+            case 'Partially Paid': return 'bg-yellow-500';
             default: return 'bg-gray-400';
         }
     }
@@ -114,42 +118,54 @@ export const PaymentHistoryTable = ({
                                 <TableRow key={index}>
                                     <TableCell>
                                         {isEditing ? (
-                                            <Input value={data.month} onChange={(e) => onFieldChange("month", e.target.value)} />
-                                        ) : ( data.month )}
+                                            <Input value={data.billing_month} onChange={(e) => onFieldChange("billing_month", e.target.value)} />
+                                        ) : ( new Date(data.billing_month).toLocaleDateString() )}
                                     </TableCell>
-                                    <TableCell>{data.previousUnits}</TableCell>
+                                    <TableCell>{data.previous_units}</TableCell>
                                     <TableCell>
                                         {isEditing ? (
-                                            <Input type="number" value={data.currentUnits} onChange={(e) => onFieldChange("currentUnits", Number(e.target.value))} />
-                                        ) : ( data.currentUnits )}
+                                            <Input type="number" value={data.current_units} onChange={(e) => onFieldChange("current_units", Number(e.target.value))} />
+                                        ) : ( data.current_units )}
                                     </TableCell>
                                     
                                     <BillItemCell 
-                                        item={data.electricity} 
+                                        amount={data.electricity} 
+                                        status={data.electricity_status}
+                                        updatedAt={data.electricity_updated_at}
+                                        createdAt={data.created_at}
                                         isEditing={isEditing} 
                                         onFieldChange={(value) => onFieldChange('electricity', value)} 
-                                        onClick={() => { console.log("Payment ID from table:", payment.id); onEditItem(payment.id, 'electricity', data.electricity); }} 
+                                        onClick={() => onEditItem(payment.id, 'electricity')} 
                                     />
                                     <BillItemCell 
-                                        item={data.water} 
+                                        amount={data.water}
+                                        status={data.water_status}
+                                        updatedAt={data.water_updated_at}
+                                        createdAt={data.created_at}
                                         isEditing={isEditing} 
                                         onFieldChange={(value) => onFieldChange('water', value)} 
-                                        onClick={() => { console.log("Payment ID from table:", payment.id); onEditItem(payment.id, 'water', data.water); }} 
+                                        onClick={() => onEditItem(payment.id, 'water')} 
                                     />
                                     <BillItemCell 
-                                        item={data.rent} 
+                                        amount={data.rent} 
+                                        status={data.rent_status}
+                                        updatedAt={data.rent_updated_at}
+                                        createdAt={data.created_at}
                                         isEditing={isEditing} 
                                         onFieldChange={(value) => onFieldChange('rent', value)} 
-                                        onClick={() => { console.log("Payment ID from table:", payment.id); onEditItem(payment.id, 'rent', data.rent); }} 
+                                        onClick={() => onEditItem(payment.id, 'rent')} 
                                     />
                                     <BillItemCell 
-                                        item={data.waste} 
+                                        amount={data.waste} 
+                                        status={data.waste_status}
+                                        updatedAt={data.waste_updated_at}
+                                        createdAt={data.created_at}
                                         isEditing={isEditing} 
                                         onFieldChange={(value) => onFieldChange('waste', value)} 
-                                        onClick={() => { console.log("Payment ID from table:", payment.id); onEditItem(payment.id, 'waste', data.waste); }} 
+                                        onClick={() => onEditItem(payment.id, 'waste')} 
                                     />
 
-                                    <TableCell>Rs. {data.total.amount}</TableCell>
+                                    <TableCell>Rs. {data.total}</TableCell>
                                     <TableCell>
                                         <Badge className={getBadgeClass(data.status)}>{data.status}</Badge>
                                     </TableCell>

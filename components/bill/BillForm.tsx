@@ -32,20 +32,20 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-import { PaymentHistory } from "@/lib/types"
+import { PaymentHistory, PaymentStatus } from "@/lib/types"
 
 const FormSchema = z.object({
   type: z.string({
-    required_error: "Please select an email to display.",
+    required_error: "Please select a bill type.",
   }),
-  month: z.string().min(1, {
-    message: "Month is required.",
+  billing_month: z.date({
+    required_error: "A date is required.",
   }),
   amount: z.string().min(2, {
     message: "Amount must be at least 2 characters.",
   }),
-  previousUnits: z.number().optional(),
-  currentUnits: z.number().optional(),
+  previous_units: z.number().optional(),
+  current_units: z.number().optional(),
   status: z.string().optional(),
 })
 
@@ -58,7 +58,7 @@ export function BillForm({ lastBill, roomId }: BillFormProps) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      previousUnits: lastBill?.currentUnits || 0,
+      previous_units: lastBill?.current_units || 0,
     },
   })
 
@@ -104,13 +104,41 @@ export function BillForm({ lastBill, roomId }: BillFormProps) {
         />
         <FormField
           control={form.control}
-          name="month"
+          name="billing_month"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Month</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., January" {...field} />
-              </FormControl>
+            <FormItem className="flex flex-col">
+              <FormLabel>Billing Month</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-[240px] pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
               <FormDescription>
                 The month for which the bill is generated.
               </FormDescription>
@@ -136,7 +164,7 @@ export function BillForm({ lastBill, roomId }: BillFormProps) {
         />
         <FormField
           control={form.control}
-          name="previousUnits"
+          name="previous_units"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Previous Units</FormLabel>
@@ -152,7 +180,7 @@ export function BillForm({ lastBill, roomId }: BillFormProps) {
         />
         <FormField
           control={form.control}
-          name="currentUnits"
+          name="current_units"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Current Units</FormLabel>
@@ -179,9 +207,9 @@ export function BillForm({ lastBill, roomId }: BillFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="unpaid">Unpaid</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="Paid">Paid</SelectItem>
+                  <SelectItem value="Unpaid">Unpaid</SelectItem>
+                  <SelectItem value="Partially Paid">Partially Paid</SelectItem>
                 </SelectContent>
               </Select>
               <FormDescription>

@@ -42,7 +42,6 @@ export function AddBillModal({ isOpen, onClose, lastBill, roomId }: AddBillModal
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
-        <BillForm lastBill={lastBill} roomId={roomId} />
         <AddPaymentForm onAddPayment={handleAddPayment} lastPayment={lastBill} roomId={roomId} />
       </DialogContent>
     </Dialog>

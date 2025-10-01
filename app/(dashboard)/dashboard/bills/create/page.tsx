@@ -19,8 +19,8 @@ export default function CreateBillPage() {
   const { mutate: createPaymentHistory, isPending: isCreatingBill } = useCreatePaymentHistory();
 
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
-  const [previousUnits, setPreviousUnits] = useState(0);
-  const [currentUnits, setCurrentUnits] = useState(0);
+  const [previous_units, setPreviousUnits] = useState(0);
+  const [current_units, setCurrentUnits] = useState(0);
   const [unitsConsumed, setUnitsConsumed] = useState(0);
   const [calculatedAmount, setCalculatedAmount] = useState(0);
   const electricityRate = 13;
@@ -36,11 +36,11 @@ export default function CreateBillPage() {
   };
 
   const calculateElectricity = () => {
-    if (currentUnits < previousUnits) {
+    if (current_units < previous_units) {
       alert("Current reading cannot be less than previous reading");
       return;
     }
-    const consumed = currentUnits - previousUnits;
+    const consumed = current_units - previous_units;
     const amount = consumed * electricityRate;
     setUnitsConsumed(consumed);
     setCalculatedAmount(amount);
@@ -51,21 +51,16 @@ export default function CreateBillPage() {
       alert("Please select a room first.");
       return;
     }
-    if (currentUnits <= previousUnits) {
+    if (current_units <= previous_units) {
       alert("Current reading must be greater than previous reading to save a new bill.");
       return;
     }
 
     const billPayload: PaymentHistoryPayload = {
       room: parseInt(selectedRoomId),
-      month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }), // Example month
-      previousUnits,
-      currentUnits,
-      electricity: calculatedAmount,
-      water: 0, // Assuming 0 for now, or add input fields for water
-      rent: 0, // Assuming 0 for now, or fetch from room details
-      total: calculatedAmount, // Assuming total is just electricity for now
-      status: "Unpaid", // Default status
+      billing_month: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+      previous_units,
+      current_units,
     };
 
     createPaymentHistory(billPayload, {
@@ -124,12 +119,12 @@ export default function CreateBillPage() {
                 <CardDescription>Calculate and save the monthly electricity bill.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <p className="font-semibold">Previous Reading: <span className="font-mono p-1 bg-muted rounded">{previousUnits}</span> units</p>
+                <p className="font-semibold">Previous Reading: <span className="font-mono p-1 bg-muted rounded">{previous_units}</span> units</p>
                 <div className="flex items-center gap-2">
                     <Input
                         type="number"
                         placeholder="Enter current meter reading"
-                        value={currentUnits || ''}
+                        value={current_units || ''}
                         onChange={(e) => setCurrentUnits(Number(e.target.value))}
                     />
                     <Button onClick={calculateElectricity}>Calculate</Button>

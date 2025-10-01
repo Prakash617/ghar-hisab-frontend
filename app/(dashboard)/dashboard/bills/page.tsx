@@ -17,8 +17,6 @@ import { useGetPaymentHistories } from "@/hooks/bills/useGetPaymentHistories";
 export default function Room() {
   const { data: paymentHistories, isLoading, isError } = useGetPaymentHistories();
 
-  const electricityRate = 13; // Rs per unit
-
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -26,17 +24,6 @@ export default function Room() {
   if (isError) {
     return <div>Error fetching data</div>;
   }
-
-  const rooms = paymentHistories?.map((history) => ({
-    id: history.id,
-    number: history.room.toString(),
-    tenant: "N/A", // Tenant info is not in PaymentHistory type
-    rent: history.rent.amount,
-    electricityUnits: history.currentUnits - history.previousUnits,
-    water: history.water.amount,
-    status: history.status,
-    month: history.month,
-  }));
 
   return (
     <div className="space-y-6">
@@ -47,7 +34,7 @@ export default function Room() {
             <CardTitle>Total Bills</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{rooms?.length}</p>
+            <p className="text-2xl font-bold">{paymentHistories?.length}</p>
           </CardContent>
         </Card>
         <Card>
@@ -56,7 +43,7 @@ export default function Room() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {rooms?.filter((r) => r.status === "Paid").length}
+              {paymentHistories?.filter((r) => r.status === "Paid").length}
             </p>
           </CardContent>
         </Card>
@@ -66,7 +53,7 @@ export default function Room() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {rooms?.filter((r) => r.status !== "Paid").length}
+              {paymentHistories?.filter((r) => r.status !== "Paid").length}
             </p>
           </CardContent>
         </Card>
@@ -82,7 +69,7 @@ export default function Room() {
             <TableHeader>
               <TableRow>
                 <TableHead>Room No</TableHead>
-                <TableHead>Tenant</TableHead>
+                <TableHead>Month</TableHead>
                 <TableHead>House Rent</TableHead>
                 <TableHead>Electricity Bill</TableHead>
                 <TableHead>Water Bill</TableHead>
@@ -91,25 +78,26 @@ export default function Room() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rooms?.map((room) => (
-                <TableRow key={room.id}>
-                  <TableCell>{room.number}</TableCell>
-                  <TableCell>{room.tenant}</TableCell>
-                  <TableCell>Rs. {room.rent}</TableCell>
+              {paymentHistories?.map((history) => (
+                <TableRow key={history.id}>
+                  <TableCell>{history.roomId}</TableCell>
+                  <TableCell>{new Date(history.billing_month).toLocaleDateString()}</TableCell>
+                  <TableCell>Rs. {history.rent}</TableCell>
+                  <TableCell>Rs. {history.electricity}</TableCell>
+                  <TableCell>Rs. {history.water}</TableCell>
                   <TableCell>
-                    Rs. {room.electricityUnits * electricityRate}
-                  </TableCell>
-                  <TableCell>Rs. {room.water}</TableCell>
-                  <TableCell>
-                    {room.status === "Paid" && (
-                      <Badge className="bg-green-500 text-white">Paid</Badge>
-                    )}
-                    {room.status !== "Paid" && (
-                      <Badge className="bg-red-500 text-white">Not Paid</Badge>
-                    )}
+                    <Badge 
+                      className={{
+                        "Paid": "bg-green-500",
+                        "Unpaid": "bg-red-500",
+                        "Partially Paid": "bg-yellow-500",
+                      }[history.status] || "bg-gray-400"}
+                    >
+                      {history.status}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link href={`/dashboard/bills/${room.number}`}>
+                    <Link href={`/dashboard/bills/${history.roomId}`}>
                       <Button size="sm" variant="outline">
                         View Detail
                       </Button>

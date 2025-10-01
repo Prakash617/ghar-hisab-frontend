@@ -1,7 +1,6 @@
 import * as React from "react"
 import { ToastActionElement, ToastProps } from "./toast"
 
-const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 10000
 
 type ToasterToast = ToastProps & {
@@ -53,7 +52,7 @@ const reducer = (state: State, action: Action): State => {
     case actionTypes.ADD_TOAST:
       return {
         ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+        toasts: [action.toast, ...state.toasts],
       }
 
     case actionTypes.UPDATE_TOAST:

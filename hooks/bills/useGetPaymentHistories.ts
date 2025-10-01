@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getPaymentHistories } from "@/lib/api";
+import { getPaymentHistories } from "@/lib/bills";
 import { queryKeys } from "@/lib/query-keys";
 
 export function useGetPaymentHistories() {

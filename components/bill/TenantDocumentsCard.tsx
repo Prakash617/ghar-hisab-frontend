@@ -18,12 +18,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useToast } from "@/components/ui/use-toast";
+import { FileText, Download, Trash2 } from "lucide-react"; // Import FileText and Download icons
 
 export const TenantDocumentsCard = ({ tenant, roomId }: { tenant: Tenant | undefined, roomId: string }) => {
+    const { toast } = useToast();
     const { mutate: uploadDocument } = useUploadTenantDocumentWithProgress(roomId);
-    const { mutate: deleteDocument } = useDeleteTenantDocument(roomId, () => {
-        setDocumentToDelete(null);
-    });
+    const { mutate: deleteDocument } = useDeleteTenantDocument(
+        roomId, 
+        () => {
+            setDocumentToDelete(null);
+            toast({ title: "Document deleted", description: "The document has been deleted successfully." });
+        },
+        (error) => {
+            setDocumentToDelete(null);
+            toast({
+                title: "Error deleting document",
+                description: error.message || "An unexpected error occurred.",
+                variant: "destructive",
+            });
+        }
+    );
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [uploadMessage, setUploadMessage] = useState<string | null>(null);
     const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
@@ -80,6 +95,12 @@ export const TenantDocumentsCard = ({ tenant, roomId }: { tenant: Tenant | undef
         }
     };
 
+    const isImage = (fileName: string) => {
+        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+        const ext = fileName.split('.').pop()?.toLowerCase();
+        return ext && imageExtensions.includes(ext);
+    };
+
     return (
         <Card>
             <CardHeader>
@@ -89,17 +110,33 @@ export const TenantDocumentsCard = ({ tenant, roomId }: { tenant: Tenant | undef
                 <div>
                     <strong>Documents:</strong>
                     {tenant && tenant.documents.length > 0 ? (
-                        <ul className="list-disc list-inside">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
                             {tenant.documents.map((doc) => {
                                 const fileName = doc.document.split('/').pop() || 'Document';
                                 return (
-                                    <li key={doc.id} className="flex items-center justify-between">
-                                        <a href={doc.document} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{fileName}</a>
-                                        <Button variant="destructive" size="sm" onClick={() => setDocumentToDelete(doc.id)}>Delete</Button>
-                                    </li>
+                                    <div key={doc.id} className="flex items-center justify-between p-2 border rounded-md shadow-sm bg-gray-50">
+                                        <a href={doc.document} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 flex-grow min-w-0">
+                                            {isImage(fileName) ? (
+                                                <img src={doc.document} alt={fileName} className="w-8 h-8 object-cover rounded flex-shrink-0" />
+                                            ) : (
+                                                <FileText className="w-5 h-5 flex-shrink-0 text-gray-500" />
+                                            )}
+                                            <span className="text-sm font-medium text-gray-700 truncate">{fileName}</span>
+                                        </a>
+                                        <div className="flex items-center space-x-1 flex-shrink-0">
+                                            <Button variant="ghost" size="icon" asChild>
+                                                <a href={doc.document} target="_blank" rel="noopener noreferrer">
+                                                    <Download className="h-4 w-4" />
+                                                </a>
+                                            </Button>
+                                            <Button variant="destructive" size="icon" onClick={() => setDocumentToDelete(doc.id)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
                                 );
                             })}
-                        </ul>
+                        </div>
                     ) : (
                         <p>No documents uploaded.</p>
                     )}

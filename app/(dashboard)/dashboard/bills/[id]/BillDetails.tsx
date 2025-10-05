@@ -94,6 +94,7 @@ export function BillDetails({ roomId }: { roomId: number }) {
   if (isLoading) {
     return <Skeleton className="h-[300px] w-full" />;
   }
+  
 
   if (isError) {
     return <div>Error fetching bill details.</div>;

@@ -3,32 +3,12 @@
 import React from "react"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, RadialBarChart, RadialBar } from "recharts"
-import { DollarSign, Users, Wrench, Activity } from 'lucide-react';
-
-const incomeData = [
-  { month: "Jan", rent: 4000, bills: 1200, total: 5200 },
-  { month: "Feb", rent: 4200, bills: 1100, total: 5300 },
-  { month: "Mar", rent: 4100, bills: 1300, total: 5400 },
-  { month: "Apr", rent: 4500, bills: 1400, total: 5900 },
-  { month: "May", rent: 4800, bills: 1500, total: 6300 },
-  { month: "Jun", rent: 5000, bills: 1600, total: 6600 },
-]
-
-const occupancyData = [{ name: 'Occupied', value: 80, fill: '#3b82f6' }];
-
-const maintenanceData = [
-    { name: 'Open', value: 3, fill: '#f87171' },
-    { name: 'In Progress', value: 5, fill: '#f59e0b' },
-    { name: 'Closed', value: 12, fill: '#4ade80' },
-];
-
-const recentActivities = [
-    { id: 1, type: 'payment', description: 'John Doe paid rent for Room 101.' },
-    { id: 2, type: 'tenant', description: 'New tenant, Jane Smith, moved into Room 201.' },
-    { id: 3, type: 'maintenance', description: 'Maintenance request for Room 102 (leaky faucet) was closed.' },
-    { id: 4, type: 'payment', description: 'Jane Smith paid security deposit.' },
-];
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, RadialBarChart, RadialBar } from "recharts"
+import { DollarSign, Users, Activity } from 'lucide-react';
+import { useGetAllRooms } from "@/hooks/rooms/useGetAllRooms"
+import { useGetPaymentHistories } from "@/hooks/bills/useGetPaymentHistories"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useGetAllTenants } from "@/hooks/tenants/useGetAllTenants"
 
 type CustomTooltipProps = {
     active?: boolean;
@@ -57,19 +37,84 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   };
 
 export default function ReportsPage() {
+  const { data: roomsData, isLoading: isLoadingRooms } = useGetAllRooms()
+  const { data: paymentHistoriesData, isLoading: isLoadingPayments } = useGetPaymentHistories()
+  const { data: tenantsData, isLoading: isLoadingTenants } = useGetAllTenants()
+
+  const isLoading = isLoadingRooms || isLoadingPayments || isLoadingTenants;
+
+  // Calculations
+  const totalRooms = roomsData?.length || 0;
+  const occupiedRooms = roomsData?.filter(room => room.is_occupied).length || 0;
+  const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
+
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+
+  const totalRevenue = paymentHistoriesData
+    ?.filter(history => {
+      const billingDate = new Date(history.billing_month);
+      return billingDate.getMonth() === currentMonth && billingDate.getFullYear() === currentYear;
+    })
+    .reduce((total, history) => total + parseFloat(history.total_paid), 0) || 0;
+
+  const incomeData = Array.from({ length: 6 }).map((_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const month = d.toLocaleString('default', { month: 'short' });
+    const year = d.getFullYear();
+
+    const monthlyPayments = paymentHistoriesData?.filter(h => {
+        const paymentDate = new Date(h.billing_month);
+        return paymentDate.getMonth() === d.getMonth() && paymentDate.getFullYear() === year;
+    });
+
+    const rent = monthlyPayments?.reduce((sum, p) => sum + parseFloat(p.rent_paid), 0) || 0;
+    const bills = monthlyPayments?.reduce((sum, p) => sum + (parseFloat(p.electricity_paid) + parseFloat(p.water_paid) + parseFloat(p.waste_paid)), 0) || 0;
+    
+    return {
+        month,
+        rent,
+        bills,
+        total: rent + bills,
+    }
+  }).reverse();
+
+  const occupancyChartData = [{ name: 'Occupied', value: occupancyRate, fill: '#3b82f6' }];
+
+  const recentActivities = [
+    ...(paymentHistoriesData?.slice(0, 2).map(p => ({ id: `p-${p.id}`, type: 'payment', description: `Payment of Rs. ${p.total_paid} received for Room ${p.roomId}.` })) || []),
+    ...(tenantsData?.slice(0, 2).map(t => ({ id: `t-${t.id}`, type: 'tenant', description: `New tenant, ${t.name}, moved into Room ${t.roomId}.` })) || [])
+  ].sort(() => Math.random() - 0.5).slice(0, 4); // Shuffle and pick 4 for variety
+
+  if (isLoading) {
+    return (
+        <div className="p-6 space-y-6">
+            <h1 className="text-3xl font-bold">Reports & Analytics</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+            </div>
+            <Skeleton className="h-96" />
+            <Skeleton className="h-48" />
+        </div>
+    )
+  }
+
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-3xl font-bold">Reports & Analytics</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Revenue (This Month)</CardTitle>
                 <DollarSign className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">Rs. 34,700</div>
-                <p className="text-xs text-muted-foreground">+12% from last month</p>
+                <div className="text-2xl font-bold">Rs. {totalRevenue.toLocaleString()}</div>
+                {/* <p className="text-xs text-muted-foreground">+12% from last month</p> */}
             </CardContent>
         </Card>
         <Card>
@@ -78,18 +123,8 @@ export default function ReportsPage() {
                 <Users className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">80%</div>
-                <p className="text-xs text-muted-foreground">20 of 25 rooms filled</p>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Maintenance Requests</CardTitle>
-                <Wrench className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">8 Active</div>
-                <p className="text-xs text-muted-foreground">3 open, 5 in progress</p>
+                <div className="text-2xl font-bold">{occupancyRate}%</div>
+                <p className="text-xs text-muted-foreground">{occupiedRooms} of {totalRooms} rooms filled</p>
             </CardContent>
         </Card>
       </div>
@@ -98,7 +133,6 @@ export default function ReportsPage() {
         <TabsList>
           <TabsTrigger value="income">Income</TabsTrigger>
           <TabsTrigger value="occupancy">Occupancy</TabsTrigger>
-          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="income">
@@ -133,7 +167,7 @@ export default function ReportsPage() {
                         <RadialBarChart 
                             innerRadius="80%" 
                             outerRadius="100%" 
-                            data={occupancyData} 
+                            data={occupancyChartData} 
                             startAngle={90} 
                             endAngle={-270}
                         >
@@ -144,32 +178,10 @@ export default function ReportsPage() {
                             />
                             <Tooltip />
                             <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-2xl font-bold">
-                                {occupancyData[0].value}%
+                                {occupancyRate}%
                             </text>
                         </RadialBarChart>
                     </ResponsiveContainer>
-                </CardContent>
-            </Card>
-        </TabsContent>
-
-        <TabsContent value="maintenance">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Maintenance Status</CardTitle>
-                    <CardDescription>The current status of all maintenance requests.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-center">
-                <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                    <Pie data={maintenanceData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
-                        {maintenanceData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                    </PieChart>
-                </ResponsiveContainer>
                 </CardContent>
             </Card>
         </TabsContent>
@@ -190,7 +202,6 @@ export default function ReportsPage() {
                         <div>
                             {activity.type === 'payment' && <DollarSign className="w-5 h-5 text-green-500" />}
                             {activity.type === 'tenant' && <Users className="w-5 h-5 text-blue-500" />}
-                            {activity.type === 'maintenance' && <Wrench className="w-5 h-5 text-orange-500" />}
                         </div>
                         <p className="text-sm text-muted-foreground">{activity.description}</p>
                     </div>

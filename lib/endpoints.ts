@@ -23,9 +23,11 @@ export const ENDPOINTS = {
   rooms: {
     list: `${API_BASE}/api/rooms/`,
     detail: (id: number | string) => `${API_BASE}/api/rooms/${id}/`,
+    createWithTenant: `${API_BASE}/api/rooms/create-with-tenant/`,
   },
   houses: {
     list: `${API_BASE}/api/houses/`,
+    detail: (id: number | string) => `${API_BASE}/api/houses/${id}/`,
   },
   tenants: {
     list: `${API_BASE}/api/tenants/`,

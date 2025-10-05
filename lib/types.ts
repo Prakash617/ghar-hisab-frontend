@@ -42,6 +42,16 @@ export type Tenant = {
   documents: { id: number; document: string; }[];
 };
 
+export type TenantData = {
+  name: string;
+  contact: string;
+  moveInDate: string;
+  electricityPricePerUnit: string;
+  water_price: string;
+  rent_price: string;
+  waste_price: string;
+};
+
 export type Room = {
   id: number;
   house: number;

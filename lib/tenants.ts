@@ -2,6 +2,11 @@ import { apiFetch } from "./api";
 import { ENDPOINTS } from "./endpoints";
 import { Tenant } from "./types";
 
+export const getAllTenants = async (): Promise<Tenant[]> => {
+  const data = await apiFetch(ENDPOINTS.tenants.list);
+  return data;
+};
+
 export const getTenantByRoomId = async (roomId: string): Promise<Tenant> => {
   console.log("Fetching tenant for roomId:", roomId);
   const data = await apiFetch(`${ENDPOINTS.tenants.list}?room_id=${roomId}`);

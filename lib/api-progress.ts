@@ -7,13 +7,29 @@ export function apiFetchWithProgress(url: string, options: RequestInit & { onPro
 
     const token = localStorage.getItem("access");
 
-    const headers: Record<string, string> = {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    };
+    const baseHeaders: Record<string, string> = {};
+    if (token) {
+      baseHeaders.Authorization = `Bearer ${token}`;
+    }
 
-    for (const key in headers) {
-      xhr.setRequestHeader(key, headers[key]);
+    let mergedHeaders: Record<string, string> = { ...baseHeaders };
+
+    if (options.headers) {
+      if (options.headers instanceof Headers) {
+        options.headers.forEach((value, key) => {
+          mergedHeaders[key] = value;
+        });
+      } else if (Array.isArray(options.headers)) {
+        options.headers.forEach(([key, value]) => {
+          mergedHeaders[key] = value;
+        });
+      } else { // Must be Record<string, string>
+        mergedHeaders = { ...mergedHeaders, ...options.headers };
+      }
+    }
+
+    for (const key in mergedHeaders) {
+      xhr.setRequestHeader(key, mergedHeaders[key]);
     }
 
     xhr.upload.onprogress = (event) => {
@@ -32,12 +48,27 @@ export function apiFetchWithProgress(url: string, options: RequestInit & { onPro
           if (newAccessToken) {
             const newXhr = new XMLHttpRequest();
             newXhr.open(options.method || 'GET', url);
-            const newHeaders: Record<string, string> = {
-                ...(newAccessToken ? { Authorization: `Bearer ${newAccessToken}` } : {}),
-                ...options.headers,
-            };
-            for (const key in newHeaders) {
-                newXhr.setRequestHeader(key, newHeaders[key]);
+            const newBaseHeaders: Record<string, string> = {};
+            if (newAccessToken) {
+                newBaseHeaders.Authorization = `Bearer ${newAccessToken}`;
+            }
+            let newMergedHeaders: Record<string, string> = { ...newBaseHeaders };
+
+            if (options.headers) {
+                if (options.headers instanceof Headers) {
+                    options.headers.forEach((value, key) => {
+                        newMergedHeaders[key] = value;
+                    });
+                } else if (Array.isArray(options.headers)) {
+                    options.headers.forEach(([key, value]) => {
+                        newMergedHeaders[key] = value;
+                    });
+                } else { // Must be Record<string, string>
+                    newMergedHeaders = { ...newMergedHeaders, ...options.headers };
+                }
+            }
+            for (const key in newMergedHeaders) {
+                newXhr.setRequestHeader(key, newMergedHeaders[key]);
             }
             newXhr.upload.onprogress = (event) => {
                 if (event.lengthComputable) {

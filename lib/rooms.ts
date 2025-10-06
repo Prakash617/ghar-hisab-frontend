@@ -12,6 +12,11 @@ export const getAllRooms = async (): Promise<Room[]> => {
   return data;
 };
 
+export const getRoom = async (roomId: string): Promise<Room> => {
+  const data = await apiFetch(ENDPOINTS.rooms.detail(roomId));
+  return data;
+};
+
 export const createRoomWithTenant = async (roomData: { room_number: string; house: number; tenant: TenantData }): Promise<{room: Room, tenant: Tenant}> => {
   const response = await apiFetch(ENDPOINTS.rooms.createWithTenant, {
     method: "POST",

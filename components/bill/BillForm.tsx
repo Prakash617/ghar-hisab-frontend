@@ -35,12 +35,8 @@ import { format } from "date-fns"
 import { PaymentHistory, PaymentStatus } from "@/lib/types"
 
 const FormSchema = z.object({
-  type: z.string({
-    required_error: "Please select a bill type.",
-  }),
-  billing_month: z.date({
-    required_error: "A date is required.",
-  }),
+  type: z.string().nonempty({ message: "Please select a bill type." }),
+  billing_month: z.date(),
   amount: z.string().min(2, {
     message: "Amount must be at least 2 characters.",
   }),

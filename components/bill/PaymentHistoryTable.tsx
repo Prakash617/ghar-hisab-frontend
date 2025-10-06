@@ -72,7 +72,7 @@ export const PaymentHistoryTable = ({
 
     const handleConfirmDelete = () => {
         if (itemToDelete) {
-            deletePaymentHistory(itemToDelete.id);
+            deletePaymentHistory(String(itemToDelete.id));
             setShowDeleteConfirmDialog(false);
             setItemToDelete(null);
         }

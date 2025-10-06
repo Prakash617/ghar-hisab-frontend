@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { FileText, Download, Trash2 } from "lucide-react"; // Import FileText and Download icons
+import Image from "next/image";
 
 export const TenantDocumentsCard = ({ tenant, roomId }: { tenant: Tenant | undefined, roomId: string }) => {
     const { toast } = useToast();
@@ -117,7 +118,7 @@ export const TenantDocumentsCard = ({ tenant, roomId }: { tenant: Tenant | undef
                                     <div key={doc.id} className="flex items-center justify-between p-2 border rounded-md shadow-sm bg-gray-50">
                                         <a href={doc.document} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 flex-grow min-w-0">
                                             {isImage(fileName) ? (
-                                                <img src={doc.document} alt={fileName} className="w-8 h-8 object-cover rounded flex-shrink-0" />
+                                                <Image src={doc.document} alt={fileName} className="w-8 h-8 object-cover rounded flex-shrink-0" />
                                             ) : (
                                                 <FileText className="w-5 h-5 flex-shrink-0 text-gray-500" />
                                             )}

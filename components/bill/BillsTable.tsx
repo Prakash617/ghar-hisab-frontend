@@ -1,38 +1,48 @@
 
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bill } from "@/lib/types";
+import { PaymentHistory } from "@/lib/types";
 
-export const BillsTable = ({ bills, onMarkPaid }: { bills: Bill[], onMarkPaid: (billId: number) => void }) => (
+export const BillsTable = ({ bills, onMarkPaid }: { bills: PaymentHistory[], onMarkPaid: (billId: number) => void }) => (
     <Card>
         <CardHeader>
-            <CardTitle>Current Bills</CardTitle>
-            <CardDescription>Overview of outstanding and paid bills for the current cycle.</CardDescription>
+            <CardTitle>Bills</CardTitle>
         </CardHeader>
         <CardContent>
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Amount</TableHead>
+                        <TableHead>Bill Month</TableHead>
+                        <TableHead>Total Amount</TableHead>
+                        <TableHead>Amount Paid</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Action</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {bills.map((bill) => (
                         <TableRow key={bill.id}>
-                            <TableCell>{bill.type}</TableCell>
-                            <TableCell>Rs. {bill.amount}</TableCell>
+                            <TableCell>{new Date(bill.billing_month).toLocaleDateString()}</TableCell>
+                            <TableCell>{bill.total}</TableCell>
+                            <TableCell>{bill.total_paid}</TableCell>
                             <TableCell>
-                                <Badge className={bill.status === "Paid" ? "bg-green-500" : "bg-yellow-500"}>{bill.status}</Badge>
+                                <Badge
+                                    variant={bill.status === "Paid" ? "default" : bill.status === "Partially Paid" ? "secondary" : "destructive"}
+                                >
+                                    {bill.status}
+                                </Badge>
                             </TableCell>
                             <TableCell className="text-right">
-                                {bill.status === "Pending" && (
-                                    <Button size="sm" onClick={() => onMarkPaid(bill.id)}>Mark as Paid</Button>
-                                )}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => onMarkPaid(bill.id)}
+                                    disabled={bill.status === "Paid"}
+                                >
+                                    Mark as Paid
+                                </Button>
                             </TableCell>
                         </TableRow>
                     ))}

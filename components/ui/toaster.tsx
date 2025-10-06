@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import {
   Toast,
   ToastClose,
@@ -24,7 +25,7 @@ export function Toaster() {
                 <ToastDescription>{description}</ToastDescription>
               )}
             </div>
-            {action}
+            {action && React.isValidElement(action) ? action : null}
             <ToastClose />
           </Toast>
         )

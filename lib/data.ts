@@ -15,7 +15,7 @@ export function getRooms(houseId: number): Room[] {
   const filePath = path.join(dataDirectory, 'rooms.json');
   const fileContent = fs.readFileSync(filePath, 'utf8');
   const rooms: Room[] = JSON.parse(fileContent);
-  return rooms.filter(room => room.houseId === houseId);
+  return rooms.filter(room => room.house === houseId);
 }
 
 export function getTenant(roomId: number): Tenant | undefined {

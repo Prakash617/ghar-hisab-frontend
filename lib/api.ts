@@ -9,18 +9,34 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
 
   console.log("apiFetch: Sending request to", url, "with options:", options);
 
-  const headers: Record<string, string> = {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
+  const baseHeaders: Record<string, string> = {};
+  if (token) {
+    baseHeaders.Authorization = `Bearer ${token}`;
+  }
+
+  let mergedHeaders: Record<string, string> = { ...baseHeaders };
+
+  if (options.headers) {
+    if (options.headers instanceof Headers) {
+      options.headers.forEach((value, key) => {
+        mergedHeaders[key] = value;
+      });
+    } else if (Array.isArray(options.headers)) {
+      options.headers.forEach(([key, value]) => {
+        mergedHeaders[key] = value;
+      });
+    } else { // Must be Record<string, string>
+      mergedHeaders = { ...mergedHeaders, ...options.headers };
+    }
+  }
 
   if (!(options.body instanceof FormData)) {
-    headers["Content-Type"] = "application/json";
+    mergedHeaders["Content-Type"] = "application/json";
   }
 
   let response = await fetch(url, {
     ...options,
-    headers,
+    headers: mergedHeaders,
   });
 
   console.log("apiFetch: Received response with status", response.status, response.statusText);
@@ -31,13 +47,34 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
     if (newAccessToken) {
       token = newAccessToken;
       console.log("apiFetch: Token refreshed, retrying request...");
+
+      const newBaseHeaders: Record<string, string> = {};
+      if (token) {
+        newBaseHeaders.Authorization = `Bearer ${token}`;
+      }
+      let newMergedHeaders: Record<string, string> = { ...newBaseHeaders };
+
+      if (options.headers) {
+        if (options.headers instanceof Headers) {
+          options.headers.forEach((value, key) => {
+            newMergedHeaders[key] = value;
+          });
+        } else if (Array.isArray(options.headers)) {
+          options.headers.forEach(([key, value]) => {
+            newMergedHeaders[key] = value;
+          });
+        } else { // Must be Record<string, string>
+          newMergedHeaders = { ...newMergedHeaders, ...options.headers };
+        }
+      }
+
+      if (!(options.body instanceof FormData)) {
+        newMergedHeaders["Content-Type"] = "application/json";
+      }
+
       response = await fetch(url, {
         ...options,
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...options.headers,
-        },
+        headers: newMergedHeaders,
       });
       console.log("apiFetch: Retried request received response with status", response.status, response.statusText);
     }

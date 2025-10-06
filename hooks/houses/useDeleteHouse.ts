@@ -10,8 +10,8 @@ export function useDeleteHouse() {
   return useMutation({
     mutationFn: deleteHouse,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.houses() });
-      queryClient.refetchQueries({ queryKey: queryKeys.houses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.houses });
+      queryClient.refetchQueries({ queryKey: queryKeys.houses });
       toast({
         title: "Success",
         description: data.message,

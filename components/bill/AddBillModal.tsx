@@ -4,12 +4,8 @@ import { useState } from "react"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { BillForm } from "@/components/bill/BillForm"
 import { AddPaymentForm } from "@/components/bill/AddPaymentForm"
 
 import { PaymentHistory } from "@/lib/types"
@@ -42,7 +38,7 @@ export function AddBillModal({ isOpen, onClose, lastBill, roomId }: AddBillModal
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
-        <AddPaymentForm onAddPayment={handleAddPayment} lastPayment={lastBill} roomId={roomId} />
+        <AddPaymentForm onAddPayment={handleAddPayment} lastPayment={lastBill ?? undefined} roomId={roomId} />
       </DialogContent>
     </Dialog>
   )

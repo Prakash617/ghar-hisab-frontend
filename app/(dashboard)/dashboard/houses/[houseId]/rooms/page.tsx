@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function RoomsPage({ params }: { params: { houseId: string } }) {
-  const { houseId } = React.use(params);
+  const { houseId } = params;
   const { data: rooms, isLoading, isError } = useGetRoomsByHouseId(houseId);
   const { mutate: deleteRoom } = useDeleteRoom(houseId);
 

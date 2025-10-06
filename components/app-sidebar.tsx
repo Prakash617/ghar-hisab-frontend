@@ -3,7 +3,6 @@
 import * as React from "react"
 import {
   LayoutDashboard,
-  DoorOpen,
   CalendarCheck,
   Users,
   Settings,
@@ -11,7 +10,6 @@ import {
   Send,
   Building,
   Hotel,
-  Bed,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"

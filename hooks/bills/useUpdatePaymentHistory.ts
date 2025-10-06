@@ -8,14 +8,14 @@ import { ENDPOINTS } from "@/lib/endpoints";
 type ApiPaymentHistory = {
   id: number;
   room: number;
-  month: string;
+  billing_month: string;
   previous_units: number;
   current_units: number;
-  electricity: { amount: number; status: "Paid" | "Unpaid" | "Partial"; }; // Updated to object
-  water: { amount: number; status: "Paid" | "Unpaid" | "Partial"; };     // Updated to object
-  rent: { amount: number; status: "Paid" | "Unpaid" | "Partial"; };       // Updated to object
+  electricity: { amount: number; status: "Paid" | "Unpaid" | "Partially Paid"; }; // Updated to object
+  water: { amount: number; status: "Paid" | "Unpaid" | "Partially Paid"; };     // Updated to object
+  rent: { amount: number; status: "Paid" | "Unpaid" | "Partially Paid"; };       // Updated to object
   // total is optional and recalculated by backend, so we remove it from the payload type
-  status: "Paid" | "Unpaid" | "Partial";
+  status: "Paid" | "Unpaid" | "Partially Paid";
 };
 
 // Helper function to transform PaymentHistory to ApiPaymentHistory
@@ -23,12 +23,12 @@ const toApiPaymentHistory = (paymentHistory: PaymentHistory): ApiPaymentHistory 
   return {
     id: paymentHistory.id,
     room: paymentHistory.roomId,
-    month: paymentHistory.month,
-    previous_units: paymentHistory.previousUnits,
-    current_units: paymentHistory.currentUnits,
-    electricity: { amount: paymentHistory.electricity.amount, status: paymentHistory.electricity.status },
-    water: { amount: paymentHistory.water.amount, status: paymentHistory.water.status },
-    rent: { amount: paymentHistory.rent.amount, status: paymentHistory.rent.status },
+    billing_month: paymentHistory.billing_month,
+    previous_units: paymentHistory.previous_units,
+    current_units: paymentHistory.current_units,
+    electricity: { amount: parseFloat(paymentHistory.electricity), status: paymentHistory.electricity_status },
+    water: { amount: parseFloat(paymentHistory.water), status: paymentHistory.water_status },
+    rent: { amount: parseFloat(paymentHistory.rent), status: paymentHistory.rent_status },
     // total is removed as per backend specification for update payload
     status: paymentHistory.status,
   };

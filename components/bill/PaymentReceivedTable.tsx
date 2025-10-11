@@ -1,119 +1,178 @@
-import React, { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { PaymentReceived } from "@/lib/payment-received";
-import { useGetPaymentReceivedByTenantId } from "@/hooks/bills/useGetPaymentReceivedByTenantId";
-import { Skeleton } from "@/components/ui/skeleton";
+"use client";
+
+import { useState } from "react";
+import { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { EditPaymentModal } from "./EditPaymentModal";
-import { DeletePaymentModal } from "./DeletePaymentModal";
+import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { DataTable } from "@/components/ui/data-table";
+import { PaymentReceived } from "@/lib/payment-received";
+import { Badge } from "@/components/ui/badge";
+import { useGetPaymentReceivedByTenantId } from "@/hooks/bills/useGetPaymentReceivedByTenantId";
+import { useDeletePaymentReceived } from "@/hooks/bills/useDeletePaymentReceived";
+import { useUpdatePaymentReceived } from "@/hooks/bills/useUpdatePaymentReceived";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
+import { AddPaymentModal } from "./AddPaymentModal";
+import { EditPaymentModal } from "./EditPaymentModal";
+import { DeletePaymentModal } from "./DeletePaymentModal";
 
 interface PaymentReceivedTableProps {
   tenantId: string;
 }
 
-export const PaymentReceivedTable = ({ tenantId }: PaymentReceivedTableProps) => {
-  const queryClient = useQueryClient();
-  const { data: payments, isLoading, isError } = useGetPaymentReceivedByTenantId(tenantId);
-
+export const PaymentReceivedTable = ({
+  tenantId,
+}: PaymentReceivedTableProps) => {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentReceived | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentReceived | undefined>();
 
-  const getBadgeClass = (status: string) => {
-    switch (status) {
-      case 'Paid': return 'bg-green-500';
-      case 'Unpaid': return 'bg-red-500';
-      case 'Partially Paid': return 'bg-yellow-500';
-      case 'Overpaid': return 'bg-blue-500';
-      default: return 'bg-gray-400';
-    }
-  };
+    const { data: payments, isLoading } =
 
-  const handleEdit = (payment: PaymentReceived) => {
-    setSelectedPayment(payment);
-    setIsEditModalOpen(true);
-  };
+      useGetPaymentReceivedByTenantId(tenantId);
 
-  const handleDelete = (payment: PaymentReceived) => {
-    setSelectedPayment(payment);
-    setIsDeleteModalOpen(true);
-  };
+    const { mutate: deletePayment } = useDeletePaymentReceived(tenantId);
 
-  const handlePaymentActionSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.paymentReceived(tenantId) });
-  };
+    const { mutate: updatePayment } = useUpdatePaymentReceived(tenantId);
+
+  const columns: ColumnDef<PaymentReceived>[] = [
+    {
+      accessorKey: "amount",
+      header: "Amount",
+    },
+    {
+      accessorKey: "received_date",
+      header: "Payment Date",
+      cell: ({ row }) => {
+        const date: Date = row.getValue("received_date");
+        return <span>{format(new Date(date), "PPP")}</span>;
+      },
+    },
+    {
+      accessorKey: "remarks",
+      header: "Remarks",
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status: string = row.getValue("status");
+        return (
+          <Badge
+            className={`${
+              status === "Paid" ? "bg-green-500" : "bg-red-500"
+            } text-white`}
+          >
+            {status}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "created_at",
+      header: "Created At",
+      cell: ({ row }) => {
+        const date: Date = row.getValue("created_at");
+        return <span>{format(new Date(date), "PPP")}</span>;
+      },
+    },
+    {
+      accessorKey: "total_amount_due",
+      header: "Total Amount Due",
+    },
+    {
+      accessorKey: "remaining_amount",
+      header: "Remaining Amount",
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const payment = row.original;
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <DotsHorizontalIcon className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => {
+                  setSelectedPayment(payment);
+                  setIsEditModalOpen(true);
+                }}
+              >
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  setSelectedPayment(payment);
+                  setIsDeleteModalOpen(true);
+                }}
+              >
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ]; // Missing closing bracket for the columns array
+
 
   if (isLoading) {
-    return <Skeleton className="h-[200px] w-full" />;
-  }
-
-  if (isError) {
-    return <div>Error loading payment history.</div>;
+    return <div>Loading payments...</div>;
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Payment Received History</CardTitle>
-        <CardDescription>History of all payments received from this tenant.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Remarks</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created At</TableHead>
-              <TableHead>Total Amount Due</TableHead>
-              <TableHead>Remaining Amount</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {payments?.map((payment) => (
-              <TableRow key={payment.id}>
-                <TableCell>{new Date(payment.received_date).toLocaleDateString()}</TableCell>
-                <TableCell>Rs. {Number(payment.amount).toFixed(2)}</TableCell>
-                <TableCell>{payment.remarks || '-'}</TableCell>
-                <TableCell>
-                  <Badge className={getBadgeClass(payment.status)}>{payment.status}</Badge>
-                </TableCell>
-                <TableCell>{new Date(payment.created_at).toLocaleDateString()}</TableCell>
-                <TableCell>Rs. {Number(payment.total_amount_due).toFixed(2)}</TableCell>
-                <TableCell>Rs. {Number(payment.remaining_amount).toFixed(2)}</TableCell>
-                <TableCell>
-                  <Button variant="outline" size="sm" className="mr-2" onClick={() => handleEdit(payment)}>Edit</Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(payment)}>Delete</Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        {/* <Button onClick={() => setIsAddModalOpen(true)}>
+          Add New Payment
+        </Button> */}
+      </div>
+      <DataTable columns={columns} data={payments || []} />
+      {/* <AddPaymentModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        tenantId={tenantId}
+      /> */}
       {selectedPayment && (
         <EditPaymentModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           payment={selectedPayment}
-          onPaymentUpdated={handlePaymentActionSuccess}
+          onPaymentUpdated={() => {
+            setIsEditModalOpen(false);
+            queryClient.invalidateQueries({ queryKey: queryKeys.paymentReceived(tenantId) });
+          }}
         />
       )}
-
       {selectedPayment && (
         <DeletePaymentModal
           isOpen={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}
           payment={selectedPayment}
-          onPaymentDeleted={handlePaymentActionSuccess}
+          onPaymentDeleted={() => {
+            setIsDeleteModalOpen(false);
+            queryClient.invalidateQueries({ queryKey: queryKeys.paymentReceived(tenantId) });
+          }}
         />
       )}
-    </Card>
+    </div>
   );
 };

@@ -1,176 +1,138 @@
-import React, { useState, useEffect } from "react";
-import { useGetBillDetails } from "@/hooks/bills/useGetBillDetails";
-import { useUpdateBillItem } from "@/hooks/bills/useUpdateBillItem";
-import { PaymentHistory, PaymentStatus } from "@/lib/types";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
+"use client";
 
-interface EditableBillItem {
-  type: 'electricity' | 'water' | 'rent' | 'waste';
-  amount: string;
-  paid: string;
-  status: PaymentStatus;
-}
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { PaymentHistoryTable } from "@/components/bill/PaymentHistoryTable";
+import { PaymentHistory, PaymentStatus } from "@/lib/types";
+import { AddBillModal } from "@/components/bill/AddBillModal";
+import { useGetBillDetails } from "@/hooks/bills/useGetBillDetails";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useUpdatePaymentHistory } from "@/hooks/bills/useUpdatePaymentHistory";
+import { EditBillItemDialog } from "@/components/bill/EditBillItemDialog";
+
+const ELECTRICITY_RATE = 50;
 
 export function BillDetails({ roomId }: { roomId: number }) {
   const { data: paymentHistory = [], isLoading, isError } = useGetBillDetails(roomId.toString());
-  const { mutate: updateBillItem } = useUpdateBillItem(roomId.toString());
+  const { mutate: updatePaymentHistory } = useUpdatePaymentHistory(roomId.toString());
 
-  const [editingItem, setEditingItem] = useState<{ paymentId: number; type: EditableBillItem['type'] } | null>(null);
-  const [editedData, setEditedData] = useState<EditableBillItem | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editedData, setEditedData] = useState<PaymentHistory | null>(null);
 
-  const handleEdit = (paymentId: number, type: EditableBillItem['type'], currentData: EditableBillItem) => {
-    setEditingItem({ paymentId, type });
-    setEditedData(currentData);
+  const [isAddBillModalOpen, setIsAddBillModalOpen] = useState(false);
+
+  const [showEditItemDialog, setShowEditItemDialog] = useState(false);
+  const [itemToEditData, setItemToEditData] = useState<{
+    amount: string;
+    paid: string;
+    status: PaymentStatus;
+  } | null>(null);
+  const [itemToEditType, setItemToEditType] = useState<'electricity' | 'water' | 'rent' | 'waste' | null>(null);
+  const [paymentIdToEdit, setPaymentIdToEdit] = useState<number | null>(null);
+
+  const handleOpenAddBillModal = () => {
+    setIsAddBillModalOpen(true);
   };
 
-  const handleSave = async () => {
-    if (editingItem && editedData) {
-      try {
-        await updateBillItem({
-          paymentId: editingItem.paymentId,
-          itemType: editingItem.type,
-          itemData: {
-            amount: editedData.amount,
-            paid: editedData.paid,
-            status: editedData.status,
-          },
-        });
-        toast({
-          title: "Bill Item Updated",
-          description: "The bill item has been successfully updated.",
-        });
-        setEditingItem(null);
-        setEditedData(null);
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update bill item. Please try again.",
-          variant: "destructive",
-        });
-        console.error("Failed to update bill item:", error);
-      }
-    }
+  const handleCloseAddBillModal = () => {
+    setIsAddBillModalOpen(false);
+  };
+
+  const handleEdit = (index: number) => {
+    setEditingIndex(index);
+    setEditedData({ ...paymentHistory[index] });
   };
 
   const handleCancel = () => {
-    setEditingItem(null);
+    setEditingIndex(null);
     setEditedData(null);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSave = () => {
+    if (editedData && editingIndex !== null) {
+      const dataToSend = { ...editedData, roomId: roomId };
+      updatePaymentHistory(dataToSend);
+      setEditingIndex(null);
+      setEditedData(null);
+    }
+  };
+  
+  const handleFieldChange = (fieldName: keyof PaymentHistory, value: string | number) => {
     if (editedData) {
-      setEditedData({
-        ...editedData,
-        [e.target.name]: e.target.value,
-      });
+      const newData = { ...editedData, [fieldName]: value };
+
+      if (fieldName === 'current_units') {
+        const consumed = Number(value) - newData.previous_units;
+        newData.electricity = (consumed * ELECTRICITY_RATE).toString();
+      }
+
+      setEditedData(newData);
     }
   };
 
+  const handleEditBillItemClick = (paymentId: number, itemType: 'electricity' | 'water' | 'rent' | 'waste') => {
+    const payment = paymentHistory.find(p => p.id === paymentId);
+    if (payment) {
+      setPaymentIdToEdit(paymentId);
+      setItemToEditType(itemType);
+      setItemToEditData({
+        amount: payment[itemType],
+        paid: payment[`${itemType}_paid`],
+        status: payment[`${itemType}_status`]
+      });
+      setShowEditItemDialog(true);
+    }
+  };
+
+  const handleCloseEditItemDialog = () => {
+    setShowEditItemDialog(false);
+    setPaymentIdToEdit(null);
+    setItemToEditType(null);
+    setItemToEditData(null);
+  };
+
   if (isLoading) {
-    return <Skeleton className="h-[200px] w-full" />;
+    return <Skeleton className="h-[300px] w-full" />;
   }
+  
 
   if (isError) {
-    return <div>Error loading bill details.</div>;
+    return <div>Error fetching bill details.</div>;
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Bill Details</h2>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Billing Month</TableHead>
-            <TableHead>Item Type</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Paid</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paymentHistory.map((history) => (
-            <React.Fragment key={history.id}>
-              {['electricity', 'water', 'rent', 'waste'].map((type) => {
-                const itemType = type as EditableBillItem['type'];
-                const isEditing = editingItem?.paymentId === history.id && editingItem?.type === itemType;
-                const currentAmount = history[itemType];
-                const currentPaid = history[`${itemType}_paid` as keyof PaymentHistory];
-                const currentStatus = history[`${itemType}_status` as keyof PaymentHistory];
+    <>
+      <div className="flex justify-end">
+        <Button onClick={handleOpenAddBillModal}>Add Bill</Button>
+      </div>
 
-                return (
-                  <TableRow key={`${history.id}-${itemType}`}>
-                    <TableCell>{history.billing_month}</TableCell>
-                    <TableCell className="capitalize">{itemType}</TableCell>
-                    <TableCell>
-                      {isEditing ? (
-                        <Input
-                          type="text"
-                          name="amount"
-                          value={editedData?.amount || ''}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        `Rs. ${currentAmount}`
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {isEditing ? (
-                        <Input
-                          type="text"
-                          name="paid"
-                          value={editedData?.paid || ''}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        `Rs. ${currentPaid}`
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {isEditing ? (
-                        <Input
-                          type="text"
-                          name="status"
-                          value={editedData?.status || ''}
-                          onChange={handleChange}
-                        />
-                      ) : (
-                        currentStatus
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {isEditing ? (
-                        <>
-                          <Button size="sm" onClick={handleSave} className="mr-2">Save</Button>
-                          <Button size="sm" variant="outline" onClick={handleCancel}>Cancel</Button>
-                        </>
-                      ) : (
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            handleEdit(history.id, itemType, {
-                              type: itemType,
-                              amount: currentAmount as string,
-                              paid: currentPaid as string,
-                              status: currentStatus as PaymentStatus,
-                            })
-                          }
-                        >
-                          Edit
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </React.Fragment>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+      <PaymentHistoryTable
+        paymentHistory={paymentHistory}
+        editingIndex={editingIndex}
+        editedData={editedData}
+        onEdit={handleEdit}
+        onSave={handleSave}
+        onCancel={handleCancel}
+        onFieldChange={handleFieldChange}
+        onEditItem={handleEditBillItemClick}
+        billId={roomId.toString()}
+      />
+
+      <AddBillModal
+        isOpen={isAddBillModalOpen}
+        onClose={handleCloseAddBillModal}
+        lastBill={paymentHistory[0] || null}
+        roomId={roomId}
+      />
+
+      <EditBillItemDialog
+        isOpen={showEditItemDialog}
+        onClose={handleCloseEditItemDialog}
+        itemData={itemToEditData}
+        itemType={itemToEditType}
+        billId={roomId.toString()}
+        paymentId={paymentIdToEdit}
+      />
+    </>
   );
 }

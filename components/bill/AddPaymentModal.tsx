@@ -85,11 +85,11 @@ export function AddPaymentModal({ tenantId, onPaymentAdded }: AddPaymentModalPro
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>Add Payment</Button>
+        <Button>Add Payment Received History</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Payment</DialogTitle>
+          <DialogTitle>Add New Payment Received History</DialogTitle>
           <DialogDescription>
             Record a new payment received from the tenant.
           </DialogDescription>
@@ -164,7 +164,7 @@ export function AddPaymentModal({ tenantId, onPaymentAdded }: AddPaymentModalPro
               )}
             />
             <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending ? "Adding Payment..." : "Add Payment"}
+              {isPending ? "Adding Payment Received History..." : "Add Payment Received History"}
             </Button>
           </form>
         </Form>

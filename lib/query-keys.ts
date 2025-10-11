@@ -8,4 +8,5 @@ export const queryKeys = {
   allRooms: ["allRooms"],
   tenants: ["tenants"],
   currentUser: ["currentUser"],
+  paymentReceived: (tenantId: string) => ["paymentReceived", tenantId],
 };

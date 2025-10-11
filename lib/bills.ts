@@ -26,6 +26,14 @@ export const createPaymentHistory = async (payload: PaymentHistoryPayload): Prom
   return response;
 };
 
+export const updatePaymentHistory = async (id: string, payload: Partial<PaymentHistory>): Promise<PaymentHistory> => {
+  const response = await apiFetch(ENDPOINTS.paymentHistories.detail(id), {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+  return response;
+};
+
 export const getPaymentHistories = async (): Promise<PaymentHistory[]> => {
   const data: PaymentHistory[] = await apiFetch(ENDPOINTS.paymentHistories.list);
   return data;

@@ -61,7 +61,7 @@ export const PaymentHistoryTable = ({
     onEditItem,
     billId
 }: PaymentHistoryTableProps) => {
-    const { mutate: deletePaymentHistory } = useDeletePaymentHistory(billId);
+    const { mutate: deletePaymentHistory } = useDeletePaymentHistory();
     const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<PaymentHistory | null>(null);
 

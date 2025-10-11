@@ -17,7 +17,6 @@ type Props = {
 
 const Layout = ({ children }: Props) => {
   return (
-  <ProtectedPage>
   <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
@@ -33,12 +32,11 @@ const Layout = ({ children }: Props) => {
         </header>
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       
-        {children}
+        <ProtectedPage>{children}</ProtectedPage>
     </div>
       </SidebarInset>
+      <Toaster />
     </SidebarProvider>
-    <Toaster />
-    </ProtectedPage>
   )
 }
 

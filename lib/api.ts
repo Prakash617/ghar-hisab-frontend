@@ -1,6 +1,3 @@
-import { ENDPOINTS } from "./endpoints";
-import { PaymentHistory } from "./types";
-
 import { refreshToken } from "./auth";
 
 
@@ -40,6 +37,7 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
   });
 
   console.log("apiFetch: Received response with status", response.status, response.statusText);
+  console.log("apiFetch: Raw response before json()", await response.clone().text());
 
   if (response.status === 401) {
     console.log("apiFetch: Token expired, attempting refresh...");
@@ -77,6 +75,7 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
         headers: newMergedHeaders,
       });
       console.log("apiFetch: Retried request received response with status", response.status, response.statusText);
+      console.log("apiFetch: Raw retried response before json()", await response.clone().text());
     }
   }
 
@@ -86,6 +85,12 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
     throw new Error(errorData.message || "Network response was not ok");
   }
 
-  return response.json();
+  try {
+    return await response.json();
+  } catch (error) {
+    const text = await response.text();
+    console.error("apiFetch: Failed to parse JSON response. Raw response:", text, error);
+    throw new Error("Failed to parse JSON response");
+  }
 }
 

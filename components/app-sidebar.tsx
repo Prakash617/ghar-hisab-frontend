@@ -6,15 +6,14 @@ import {
   CalendarCheck,
   Users,
   Settings,
-  LifeBuoy,
-  Send,
   Building,
   Hotel,
+  BadgeCheck,
+  CreditCard,
+  Bell,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -26,13 +25,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const data = {
-  user: {
-    name: "Admin",
-    email: "admin@example.com",
-    avatar: "/avatars/admin.png",
-  },
-  navMain: [
+const navMain = [
     {
       title: "Dashboard",
       url: "/dashboard",
@@ -48,20 +41,6 @@ const data = {
       title: "Bills",
       url: "/dashboard/bills",
       icon: CalendarCheck,
-      items: [
-        {
-          title: "All Bookings",
-          url: "/dashboard/bookings",
-        },
-        {
-          title: "Add New",
-          url: "/dashboard/bookings/new",
-        },
-        {
-          title: "Calendar",
-          url: "/dashboard/bookings/calendar",
-        },
-      ],
     },
     {
       title: "Reports",
@@ -73,21 +52,7 @@ const data = {
       url: "/dashboard/settings",
       icon: Settings,
     },
-  ],
-  navSecondary: [
-    {
-      title: "Support",
-      url: "#",
-      icon: LifeBuoy,
-    },
-    {
-      title: "Feedback",
-      url: "#",
-      icon: Send,
-    },
-  ],
-  projects: [],
-}
+  ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -101,8 +66,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Hotel className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Room Management</span>
-                  <span className="truncate text-xs">Main Hotel</span>
+                  <span className="truncate font-medium">Gharhisab</span>
                 </div>
               </a>
             </SidebarMenuButton>
@@ -110,12 +74,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   )

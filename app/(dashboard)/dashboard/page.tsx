@@ -5,6 +5,7 @@ import { useGetAllRooms } from "@/hooks/rooms/useGetAllRooms"
 import { useGetAllTenants } from "@/hooks/tenants/useGetAllTenants"
 import { useGetPaymentHistories } from "@/hooks/bills/useGetPaymentHistories"
 import { Skeleton } from "@/components/ui/skeleton"
+import Link from "next/link";
 
 export default function DashboardPage() {
   const { data: roomsData, isLoading: isLoadingRooms } = useGetAllRooms()
@@ -32,6 +33,16 @@ export default function DashboardPage() {
   const recentPayments = paymentHistoriesData?.slice(0, 3) || []
 
   const isLoading = isLoadingRooms || isLoadingTenants || isLoadingPayments
+
+  const getRoomNumber = (roomId: number) => {
+    const room = roomsData?.find(r => r.id === roomId);
+    return room?.room_number || "N/A";
+  };
+
+  const getTenantName = (roomId: number) => {
+    const tenant = tenantsData?.find(t => t.roomId === roomId);
+    return tenant?.name || "N/A";
+  };
 
   if (isLoading) {
     return (
@@ -105,14 +116,16 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Pending Bills</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{pendingBills}</p>
-          </CardContent>
-        </Card>
+        <Link href="/dashboard/bills">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending Bills</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{pendingBills}</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Recent Payments Section */}
@@ -123,7 +136,7 @@ export default function DashboardPage() {
             <ul className="divide-y">
               {recentPayments.map(payment => (
                 <li key={payment.id} className="py-2 flex justify-between">
-                  <span>Room {payment.roomId}</span>
+                  <span>Room: {getRoomNumber(payment.roomId)} - Tenant: {getTenantName(payment.roomId)}</span>
                   <span className={payment.status === 'Paid' ? 'text-green-600' : 'text-red-600'}>
                     {payment.status} - Rs. {parseFloat(payment.total_paid).toLocaleString()} / {parseFloat(payment.total).toLocaleString()}
                   </span>

@@ -1,22 +1,8 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api";
-import { queryKeys } from "@/lib/query-keys";
-import { ENDPOINTS } from "@/lib/endpoints";
+import { useMutation } from "@tanstack/react-query";
+import { deletePaymentReceived } from "@/lib/payment-received";
 
-export const useDeletePaymentHistory = (billId: string) => {
-  const queryClient = useQueryClient();
-
+export function useDeletePaymentHistory() {
   return useMutation({
-    mutationFn: (paymentHistoryId: string) => {
-      return apiFetch(ENDPOINTS.paymentHistories.detail(paymentHistoryId), { method: 'DELETE' });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.billDetails(billId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.paymentHistories,
-      });
-    },
+    mutationFn: (paymentId: string) => deletePaymentReceived(paymentId),
   });
-};
+}

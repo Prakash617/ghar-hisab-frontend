@@ -57,13 +57,13 @@ export function AddPaymentHistoryModal({ roomId, onPaymentHistoryAdded }: AddPay
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>Add Payment History</Button>
+        <Button>Add New Bill</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Payment History</DialogTitle>
+          <DialogTitle>Add New Payment Bill</DialogTitle>
           <DialogDescription>
-            Record a new payment history entry for the room.
+            Record a new payment bill entry for the room.
           </DialogDescription>
         </DialogHeader>
         <AddPaymentForm 

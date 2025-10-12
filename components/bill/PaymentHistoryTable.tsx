@@ -29,7 +29,7 @@ interface PaymentHistoryTableProps {
     billId: string;
 }
 
-const BillItemCell = ({ amount, status, updatedAt, createdAt, isEditing, onFieldChange, onClick }: { amount: string, status: PaymentStatus, updatedAt: string | null, createdAt: string, isEditing: boolean, onFieldChange: (value: string) => void, onClick: () => void }) => {
+const BillItemCell = ({ amount, paidAmount, status, updatedAt, createdAt, isEditing, onFieldChange, onClick }: { amount: string, paidAmount: string, status: PaymentStatus, updatedAt: string | null, createdAt: string, isEditing: boolean, onFieldChange: (value: string) => void, onClick: () => void }) => {
     const statusColor = status === 'Paid' ? 'text-green-600' : status === 'Partially Paid' ? 'text-yellow-600' : 'text-red-600';
     const canClick = !isEditing;
     const dateToShow = updatedAt || createdAt;
@@ -43,6 +43,9 @@ const BillItemCell = ({ amount, status, updatedAt, createdAt, isEditing, onField
                     <span className={`${statusColor} ${canClick ? 'cursor-pointer hover:underline' : ''}`} onClick={canClick ? onClick : undefined}>
                         Rs. {amount}
                     </span>
+                    {paidAmount && paidAmount !== "0" && (
+                        <div className="text-xs text-gray-500">Paid: Rs. {paidAmount}</div>
+                    )}
                     {dateToShow && <div className="text-xs text-gray-500">{new Date(dateToShow).toLocaleDateString()}</div>}
                 </div>
             )}
@@ -130,6 +133,7 @@ export const PaymentHistoryTable = ({
                                     
                                     <BillItemCell 
                                         amount={data.electricity} 
+                                        paidAmount={data.electricity_paid}
                                         status={data.electricity_status}
                                         updatedAt={data.electricity_updated_at}
                                         createdAt={data.created_at}
@@ -139,6 +143,7 @@ export const PaymentHistoryTable = ({
                                     />
                                     <BillItemCell 
                                         amount={data.water}
+                                        paidAmount={data.water_paid}
                                         status={data.water_status}
                                         updatedAt={data.water_updated_at}
                                         createdAt={data.created_at}
@@ -148,6 +153,7 @@ export const PaymentHistoryTable = ({
                                     />
                                     <BillItemCell 
                                         amount={data.rent} 
+                                        paidAmount={data.rent_paid}
                                         status={data.rent_status}
                                         updatedAt={data.rent_updated_at}
                                         createdAt={data.created_at}
@@ -157,6 +163,7 @@ export const PaymentHistoryTable = ({
                                     />
                                     <BillItemCell 
                                         amount={data.waste} 
+                                        paidAmount={data.waste_paid}
                                         status={data.waste_status}
                                         updatedAt={data.waste_updated_at}
                                         createdAt={data.created_at}

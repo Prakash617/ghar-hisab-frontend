@@ -45,7 +45,7 @@ interface AddPaymentModalProps {
   onPaymentAdded: () => void;
 }
 
-export function AddPaymentModal({ tenantId, onPaymentAdded }: AddPaymentModalProps) {
+export function AddPaymentReceivedModal({ tenantId, onPaymentAdded }: AddPaymentModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { mutateAsync: createPayment, isPending } = useCreatePaymentReceived();
 

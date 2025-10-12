@@ -5,7 +5,7 @@ import { TenantInfoCard } from "@/components/bill/TenantInfoCard";
 import { TenantDocumentsCard } from "@/components/bill/TenantDocumentsCard";
 import { useGetTenantByRoomId } from "@/hooks/tenants/useGetTenantByRoomId";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AddPaymentModal } from "@/components/bill/AddPaymentModal";
+import { AddPaymentReceivedModal } from "@/components/bill/AddPaymentReceivedModal";
 import { PaymentReceivedTable } from "@/components/bill/PaymentReceivedTable";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
@@ -160,10 +160,10 @@ export default function BillsDetailPage({
       <TenantInfoCard tenant={tenant} roomId={roomId} />
       <TenantDocumentsCard tenant={tenant} roomId={roomId} />
 
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Payment History</h2>
-        <AddPaymentHistoryModal roomId={roomId} onPaymentHistoryAdded={handlePaymentHistoryAdded} />
-      </div>
+      {/* <div className="flex items-center justify-between"> */}
+        {/* <h2 className="text-xl font-bold">Payment History</h2> */}
+        {/* <AddPaymentHistoryModal roomId={roomId} onPaymentHistoryAdded={handlePaymentHistoryAdded} /> */}
+      {/* </div> */}
       {/* <PaymentHistoryTable
         paymentHistory={paymentHistory}
         billId={roomId}
@@ -178,12 +178,12 @@ export default function BillsDetailPage({
       <BillDetails roomId={parseInt(roomId)} />
 
 
-      <div className="flex justify-end">
-        <AddPaymentModal tenantId={tenant.id.toString()} onPaymentAdded={handlePaymentAdded} />
+      <div className="flex items-center justify-between mt-2">
+        <h2 className="text-xl font-bold">Payment Received History</h2>
+        <AddPaymentReceivedModal tenantId={tenant.id.toString()} onPaymentAdded={handlePaymentAdded} />
       </div>
-
       <PaymentReceivedTable key={tenant.id} tenantId={tenant.id.toString()} />
-
+{/* 
       <EditBillItemDialog
         isOpen={isEditItemDialogOpen}
         onClose={handleEditItemDialogClose}
@@ -191,7 +191,7 @@ export default function BillsDetailPage({
         itemType={editItemDialogType}
         billId={roomId}
         paymentId={editItemDialogPaymentId}
-      />
+      /> */}
     </div>
   );
 }

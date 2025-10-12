@@ -81,7 +81,6 @@ export const AddPaymentForm = ({ onAddPayment, lastPayment, roomId }: AddPayment
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <h3 className="text-lg font-semibold">Add New Payment</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block font-medium mb-1" htmlFor="billing_month">
@@ -177,7 +176,7 @@ export const AddPaymentForm = ({ onAddPayment, lastPayment, roomId }: AddPayment
           />
         </div>
       </div>
-      <Button type="submit">Add Payment</Button>
+      <Button type="submit">Add New Bill</Button>
     </form>
   );
 };

@@ -102,10 +102,10 @@ export function BillDetails({ roomId }: { roomId: number }) {
 
   return (
     <>
+                                                                                        
       <div className="flex justify-end">
-        <Button onClick={handleOpenAddBillModal}>Add Bill</Button>
+        <Button onClick={handleOpenAddBillModal}>Add New Bill</Button>
       </div>
-
       <PaymentHistoryTable
         paymentHistory={paymentHistory}
         editingIndex={editingIndex}

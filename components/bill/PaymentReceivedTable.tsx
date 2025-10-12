@@ -21,7 +21,7 @@ import { useDeletePaymentReceived } from "@/hooks/bills/useDeletePaymentReceived
 import { useUpdatePaymentReceived } from "@/hooks/bills/useUpdatePaymentReceived";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { AddPaymentModal } from "./AddPaymentModal";
+import { AddPaymentModal } from "./AddPaymentReceivedModal";
 import { EditPaymentModal } from "./EditPaymentModal";
 import { DeletePaymentModal } from "./DeletePaymentModal";
 
@@ -171,6 +171,7 @@ export const PaymentReceivedTable = ({
             setIsDeleteModalOpen(false);
             queryClient.invalidateQueries({ queryKey: queryKeys.paymentReceived(tenantId) });
           }}
+          tenantId={tenantId}
         />
       )}
     </div>

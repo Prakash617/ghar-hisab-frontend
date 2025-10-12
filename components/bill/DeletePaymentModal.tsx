@@ -10,7 +10,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PaymentReceived } from "@/lib/payment-received";
-import { useDeletePaymentHistory } from "@/hooks/bills/useDeletePaymentHistory";
+import { useDeletePaymentReceived } from "@/hooks/bills/useDeletePaymentReceived";
 import { toast } from "@/components/ui/use-toast";
 
 interface DeletePaymentModalProps {
@@ -18,10 +18,11 @@ interface DeletePaymentModalProps {
   onClose: () => void;
   payment: PaymentReceived;
   onPaymentDeleted: () => void;
+  tenantId: string;
 }
 
-export const DeletePaymentModal = ({ isOpen, onClose, payment, onPaymentDeleted }: DeletePaymentModalProps) => {
-  const deletePaymentMutation = useDeletePaymentHistory();
+export const DeletePaymentModal = ({ isOpen, onClose, payment, onPaymentDeleted, tenantId }: DeletePaymentModalProps) => {
+  const deletePaymentMutation = useDeletePaymentReceived(tenantId);
 
   const handleDelete = async () => {
     try {

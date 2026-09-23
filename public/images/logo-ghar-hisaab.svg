@@ -1,0 +1,14 @@
+<svg width="520" height="96" viewBox="0 0 520 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ghar Hisaab logo">
+  <rect width="520" height="96" fill="transparent"/>
+  <g transform="translate(4,10)">
+    <path d="M6 42L52 12L98 42" stroke="#1AA3E8" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M16 40V74H88V40" fill="#2AB8EE"/>
+    <path d="M28 50H64V74H28V50Z" fill="#E8F8FF"/>
+    <rect x="35" y="56" width="22" height="3" fill="#1F4F67"/>
+    <rect x="35" y="62" width="22" height="3" fill="#1F4F67"/>
+    <rect x="35" y="68" width="22" height="3" fill="#1F4F67"/>
+    <rect x="60" y="46" width="34" height="34" rx="8" fill="#19D39B"/>
+    <path d="M68 63L74 69L86 55" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="126" y="63" font-family="Space Grotesk, Inter, Segoe UI, sans-serif" font-size="64" font-weight="700" fill="#0B2B45">Ghar Hisaab</text>
+</svg>

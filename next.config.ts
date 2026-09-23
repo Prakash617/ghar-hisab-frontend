@@ -1,8 +1,15 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  images: {
-    domains: ["msgwords.com", "localhost", "nurseicon.com.np"], // add any external host here
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  async rewrites() {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    return [
+      {
+        source: "/media/:path*",
+        destination: `${backendUrl}/media/:path*`,
+      },
+    ];
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;

@@ -56,7 +56,7 @@ function DialogContent({
           // Base
           "fixed z-50 flex flex-col w-full bg-white text-slate-900 duration-200 outline-none shadow-2xl",
           // Mobile: Bottom sheet drawer style, max-h 92dvh, rounded top, smooth slide-up
-          "bottom-0 left-0 right-0 max-h-[92dvh] overflow-y-auto rounded-t-3xl p-4.5 pb-6 ring-1 ring-slate-900/10",
+          "bottom-0 left-0 right-0 max-h-[92dvh] overflow-y-auto overscroll-contain rounded-t-3xl p-4.5 pb-24 sm:pb-6 ring-1 ring-slate-900/10",
           "data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-bottom-8",
           "data-closed:animate-out data-closed:fade-out-0 data-closed:slide-out-to-bottom-8",
           // Desktop (sm:): Centered modal dialog

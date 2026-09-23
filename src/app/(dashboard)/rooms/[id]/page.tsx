@@ -26,6 +26,7 @@ import {
   Banknote,
   Mail,
   AlertTriangle,
+  AlertCircle,
   CreditCard,
   Pencil,
   Trash2,
@@ -512,6 +513,50 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     });
   };
 
+  const [statusConfirm, setStatusConfirm] = useState<{
+    isOpen: boolean;
+    bill: any;
+    newStatus: "Paid" | "Unpaid" | "Partially Paid";
+  }>({
+    isOpen: false,
+    bill: null,
+    newStatus: "Paid",
+  });
+
+  const promptStatusChange = (bill: any, newStatus: "Paid" | "Unpaid" | "Partially Paid") => {
+    if (bill.status === newStatus) return;
+    setStatusConfirm({
+      isOpen: true,
+      bill,
+      newStatus,
+    });
+  };
+
+  const confirmStatusChange = () => {
+    if (!statusConfirm.bill) return;
+    const { bill, newStatus } = statusConfirm;
+    handleQuickStatusChange(bill, newStatus);
+    if (viewingBill && viewingBill.id === bill.id) {
+      setViewingBill({ ...viewingBill, status: newStatus });
+    }
+    setStatusConfirm({ isOpen: false, bill: null, newStatus: "Paid" });
+  };
+
+  const [roomStatusConfirmOpen, setRoomStatusConfirmOpen] = useState(false);
+
+  const toggleRoomStatusMutation = useMutation({
+    mutationFn: () => roomsApi.toggleStatus(roomId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["room", roomId] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      setRoomStatusConfirmOpen(false);
+      toast.success(locale === "ne" ? "कोठाको स्थिति अद्यावधिक भयो।" : "Room status updated.");
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || (locale === "ne" ? "स्थिति परिवर्तन गर्न असफल।" : "Failed to toggle status."));
+    },
+  });
+
   // Add Bill calculations
   const parsedCurrentUnits = parseInt(addBillForm.current_units);
   const effectivePreviousUnits = addBillForm.is_meter_reset
@@ -568,6 +613,19 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <span className={`h-1.5 w-1.5 rounded-full ${room?.is_occupied ? "bg-emerald-600" : "bg-slate-500"}`}></span>
               {room?.is_occupied ? t("roomDetail.occupied") : t("roomDetail.vacant")}
             </span>
+            <button
+              type="button"
+              onClick={() => setRoomStatusConfirmOpen(true)}
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border transition-all ${
+                room?.is_active
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                  : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+              }`}
+              title={locale === "ne" ? "कोठाको स्थिति परिवर्तन गर्न क्लिक गर्नुहोस्" : "Click to toggle room active status"}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${room?.is_active ? "bg-emerald-500" : "bg-slate-400"}`}></span>
+              {room?.is_active ? t("houses.active") : t("houses.inactive")}
+            </button>
           </div>
           <p className="mt-1 text-sm text-slate-500">
             {tenant ? t("roomDetail.tenantSubtitle") : t("roomDetail.noTenantSubtitle")}
@@ -827,7 +885,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         <select
                           value={payment.status}
                           disabled={updateBillMutation.isPending}
-                          onChange={(e) => handleQuickStatusChange(payment, e.target.value as any)}
+                          onChange={(e) => promptStatusChange(payment, e.target.value as any)}
                           aria-label="Payment status"
                           className={`rounded-full px-2.5 py-1 text-xs font-bold border cursor-pointer transition shadow-2xs ${
                             payment.status === "Paid"
@@ -1544,7 +1602,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       <select
                         value={payment.status}
                         disabled={updateBillMutation.isPending}
-                        onChange={(e) => handleQuickStatusChange(payment, e.target.value as any)}
+                        onChange={(e) => promptStatusChange(payment, e.target.value as any)}
                         aria-label="Payment status"
                         className={`rounded-full px-2.5 py-1 text-xs font-bold border cursor-pointer transition shadow-xs ${
                           payment.status === "Paid"
@@ -2569,8 +2627,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       disabled={updateBillMutation.isPending}
                       onChange={(e) => {
                         const newStat = e.target.value as "Paid" | "Unpaid" | "Partially Paid";
-                        handleQuickStatusChange(viewingBill, newStat);
-                        setViewingBill({ ...viewingBill, status: newStat });
+                        promptStatusChange(viewingBill, newStat);
                       }}
                       className={`rounded-full px-2.5 py-0.5 text-xs font-bold border cursor-pointer ${
                         viewingBill.status === "Paid"
@@ -3065,6 +3122,129 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
               )
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bill Status Confirmation Dialog */}
+      <Dialog
+        open={statusConfirm.isOpen}
+        onOpenChange={(open) => !open && setStatusConfirm({ isOpen: false, bill: null, newStatus: "Paid" })}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                <AlertCircle className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <DialogTitle>{t("roomDetail.confirmStatusTitle")}</DialogTitle>
+                <p className="text-xs text-slate-500 mt-1">
+                  {statusConfirm.bill?.month_display || statusConfirm.bill?.month || statusConfirm.bill?.year_month}
+                </p>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <p className="text-sm text-slate-600">
+              {locale === "ne"
+                ? `के तपाईं यो बिलको स्थिति "${statusConfirm.bill?.status}" बाट "${statusConfirm.newStatus}" मा परिवर्तन गर्न निश्चित हुनुहुन्छ?`
+                : `Are you sure you want to change this bill's status from "${statusConfirm.bill?.status}" to "${statusConfirm.newStatus}"?`}
+            </p>
+
+            {statusConfirm.newStatus === "Paid" && (
+              <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800">
+                <p className="font-semibold">{t("roomDetail.confirmPaidNote")}</p>
+                <p className="mt-1">
+                  {locale === "ne"
+                    ? `कुल रकम: रु ${statusConfirm.bill?.total || statusConfirm.bill?.total_amount || 0}`
+                    : `Total amount: Rs. ${statusConfirm.bill?.total || statusConfirm.bill?.total_amount || 0}`}
+                </p>
+              </div>
+            )}
+
+            {statusConfirm.newStatus === "Unpaid" && (
+              <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800">
+                <p className="font-semibold">{t("roomDetail.confirmUnpaidNote")}</p>
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                type="button"
+                disabled={updateBillMutation.isPending}
+                onClick={confirmStatusChange}
+                className="flex-1 bg-sky-500 hover:bg-sky-600 text-white"
+              >
+                {updateBillMutation.isPending ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t("common.loading")}
+                  </span>
+                ) : (
+                  t("roomDetail.confirmChange")
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStatusConfirm({ isOpen: false, bill: null, newStatus: "Paid" })}
+                className="flex-1"
+              >
+                {t("common.cancel")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Room Status Confirmation Dialog */}
+      <Dialog open={roomStatusConfirmOpen} onOpenChange={setRoomStatusConfirmOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                <AlertCircle className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <DialogTitle>{t("roomDetail.confirmRoomStatusTitle")}</DialogTitle>
+                <p className="text-xs text-slate-500 mt-1">
+                  {room?.room_name || `${t("rooms.room")} ${room?.room_number}`}
+                </p>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <p className="text-sm text-slate-600">
+              {locale === "ne"
+                ? `के तपाईं यो कोठाको स्थिति "${room?.is_active ? "सक्रिय" : "निष्क्रिय"}" बाट "${room?.is_active ? "निष्क्रिय" : "सक्रिय"}" मा परिवर्तन गर्न निश्चित हुनुहुन्छ?`
+                : `Are you sure you want to change this room's status from "${room?.is_active ? "Active" : "Inactive"}" to "${room?.is_active ? "Inactive" : "Active"}"?`}
+            </p>
+            <div className="flex gap-2 pt-2">
+              <Button
+                type="button"
+                disabled={toggleRoomStatusMutation.isPending}
+                onClick={() => toggleRoomStatusMutation.mutate()}
+                className="flex-1 bg-sky-500 hover:bg-sky-600 text-white"
+              >
+                {toggleRoomStatusMutation.isPending ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t("common.loading")}
+                  </span>
+                ) : (
+                  t("roomDetail.confirmChange")
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRoomStatusConfirmOpen(false)}
+                className="flex-1"
+              >
+                {t("common.cancel")}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

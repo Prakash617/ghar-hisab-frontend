@@ -4,10 +4,19 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { roomsApi, housesApi } from "@/lib/api";
 import { useTranslation } from "@/i18n/provider";
-import { DoorOpen, Search, Filter, Home, CheckCircle2, AlertCircle, ArrowRight } from "lucide-react";
+import { DoorOpen, Search, Filter, Home, CheckCircle2, AlertCircle, ArrowRight, Plus, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/components/ui/toast";
 import { compareRoomNumbers } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function RoomsPage() {
   const { t, locale } = useTranslation();
@@ -16,6 +25,8 @@ export default function RoomsPage() {
   const [selectedHouse, setSelectedHouse] = useState<string>("all");
   const [occupancyFilter, setOccupancyFilter] = useState<string>("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [addForm, setAddForm] = useState({ house: "", room_number: "", room_name: "" });
 
   const { data: rooms, isLoading: roomsLoading } = useQuery({
     queryKey: ["rooms"],
@@ -25,6 +36,21 @@ export default function RoomsPage() {
   const { data: houses } = useQuery({
     queryKey: ["houses"],
     queryFn: () => housesApi.list(),
+  });
+
+  const createRoomMutation = useMutation({
+    mutationFn: (data: { house: number; room_number: string; room_name?: string }) =>
+      roomsApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["houses"] });
+      setIsAddOpen(false);
+      setAddForm({ house: "", room_number: "", room_name: "" });
+      toast.success(locale === "ne" ? "नयाँ कोठा सफलतापूर्वक थपियो।" : "Room added successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || (locale === "ne" ? "कोठा थप्न असफल।" : "Failed to add room."));
+    },
   });
 
   const toggleMutation = useMutation({
@@ -80,20 +106,35 @@ export default function RoomsPage() {
           </p>
         </div>
 
-        {/* Quick occupancy pills */}
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 border border-slate-200">
-            <DoorOpen className="h-3.5 w-3.5 text-slate-500" />
-            {totalCount} {t("rooms.title")}
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
-            <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-            {occupiedCount} {t("roomDetail.occupied")}
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200">
-            <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-            {vacantCount} {t("roomDetail.vacant")}
-          </span>
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Quick occupancy pills */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 border border-slate-200">
+              <DoorOpen className="h-3.5 w-3.5 text-slate-500" />
+              {totalCount} {t("rooms.title")}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
+              <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+              {occupiedCount} {t("roomDetail.occupied")}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200">
+              <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+              {vacantCount} {t("roomDetail.vacant")}
+            </span>
+          </div>
+
+          {/* Add Room button */}
+          <button
+            onClick={() => {
+              const defaultHouse = selectedHouse !== "all" ? selectedHouse : (houses?.[0]?.id ? String(houses[0].id) : "");
+              setAddForm({ house: defaultHouse, room_number: "", room_name: "" });
+              setIsAddOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-sky-500 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm shadow-sky-200 hover:bg-sky-600 transition-all shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            {t("rooms.addRoom")}
+          </button>
         </div>
       </div>
 
@@ -212,6 +253,97 @@ export default function RoomsPage() {
           </div>
         )}
       </div>
+
+      {/* Add Room Dialog */}
+      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("rooms.addRoom")}</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!addForm.house) {
+                toast.error(locale === "ne" ? "कृपया घर छान्नुहोस्।" : "Please select a house.");
+                return;
+              }
+              if (!addForm.room_number.trim()) {
+                toast.error(locale === "ne" ? "कोठा नम्बर आवश्यक छ।" : "Room number is required.");
+                return;
+              }
+              createRoomMutation.mutate({
+                house: parseInt(addForm.house),
+                room_number: addForm.room_number.trim(),
+                room_name: addForm.room_name.trim(),
+              });
+            }}
+            className="space-y-4 pt-2"
+          >
+            <div>
+              <Label className="text-xs font-semibold text-slate-700">{t("rooms.selectHouse")}</Label>
+              <select
+                value={addForm.house}
+                onChange={(e) => setAddForm({ ...addForm, house: e.target.value })}
+                required
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-2xs"
+              >
+                <option value="" disabled>-- {locale === "ne" ? "घर छान्नुहोस्" : "Select a house"} --</option>
+                {houses?.map((h: any) => (
+                  <option key={h.id} value={h.id}>
+                    {h.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <Label className="text-xs font-semibold text-slate-700">{t("rooms.roomNumber")}</Label>
+              <Input
+                value={addForm.room_number}
+                onChange={(e) => setAddForm({ ...addForm, room_number: e.target.value })}
+                placeholder="e.g. 101, 1, 2A"
+                required
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs font-semibold text-slate-700">{t("rooms.roomName")}</Label>
+              <Input
+                value={addForm.room_name}
+                onChange={(e) => setAddForm({ ...addForm, room_name: e.target.value })}
+                placeholder="e.g. Ground Floor Front, Kirana"
+                className="mt-1"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                type="submit"
+                disabled={createRoomMutation.isPending}
+                className="flex-1 bg-sky-500 hover:bg-sky-600 text-white"
+              >
+                {createRoomMutation.isPending ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t("common.loading")}
+                  </span>
+                ) : (
+                  t("common.save")
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsAddOpen(false)}
+                className="flex-1"
+              >
+                {t("common.cancel")}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

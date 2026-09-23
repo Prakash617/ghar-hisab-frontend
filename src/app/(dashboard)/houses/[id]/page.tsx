@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/toast";
 import { compareRoomNumbers } from "@/lib/utils";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 export default function HouseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -25,6 +26,7 @@ export default function HouseDetailPage({ params }: { params: Promise<{ id: stri
   const queryClient = useQueryClient();
   const [editingRoom, setEditingRoom] = useState<any>(null);
   const [deletingRoom, setDeletingRoom] = useState<any>(null);
+  const [statusConfirmRoom, setStatusConfirmRoom] = useState<any>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addForm, setAddForm] = useState({ room_number: "", room_name: "" });
   const [editForm, setEditForm] = useState({ room_number: "", room_name: "" });
@@ -174,7 +176,7 @@ export default function HouseDetailPage({ params }: { params: Promise<{ id: stri
                         type="checkbox"
                         className="peer sr-only"
                         checked={room.is_active}
-                        onChange={() => toggleMutation.mutate(room.id)}
+                        onChange={() => setStatusConfirmRoom(room)}
                       />
                       <span className="h-5 w-9 rounded-full bg-slate-200 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition peer-checked:bg-emerald-500 peer-checked:after:translate-x-4 relative"></span>
                     </label>
@@ -302,6 +304,60 @@ export default function HouseDetailPage({ params }: { params: Promise<{ id: stri
             >
               {deleteMutation.isPending ? t("common.deleting") : t("common.delete")}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Room Status Confirmation Dialog */}
+      <Dialog open={!!statusConfirmRoom} onOpenChange={() => setStatusConfirmRoom(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                <AlertCircle className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <DialogTitle>{t("roomDetail.confirmRoomStatusTitle")}</DialogTitle>
+                <p className="text-xs text-slate-500 mt-1">
+                  {statusConfirmRoom?.room_name || `${t("rooms.room")} ${statusConfirmRoom?.room_number}`}
+                </p>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-slate-600">
+              {t("roomDetail.confirmRoomStatusDesc")}
+            </p>
+            <div className="flex gap-2 pt-2">
+              <Button
+                type="button"
+                disabled={toggleMutation.isPending}
+                onClick={() => {
+                  if (statusConfirmRoom) {
+                    toggleMutation.mutate(statusConfirmRoom.id);
+                    setStatusConfirmRoom(null);
+                  }
+                }}
+                className="flex-1 bg-sky-500 hover:bg-sky-600 text-white"
+              >
+                {toggleMutation.isPending ? (
+                  <span className="flex items-center gap-1.5">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t("common.loading")}
+                  </span>
+                ) : (
+                  t("roomDetail.confirmChange")
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStatusConfirmRoom(null)}
+                className="flex-1"
+              >
+                {t("common.cancel")}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

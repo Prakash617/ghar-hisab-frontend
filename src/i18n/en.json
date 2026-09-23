@@ -155,7 +155,10 @@
     "vacant": "Vacant",
     "noRooms": "No rooms yet",
     "noRoomsDesc": "Add rooms to this house.",
-    "viewDetails": "View Details"
+    "viewDetails": "View Details",
+    "sortBy": "Sort",
+    "sortAsc": "Room # (1 → 9 Ascending)",
+    "sortDesc": "Room # (9 → 1 Descending)"
   },
   "roomDetail": {
     "tabBills": "Bills",

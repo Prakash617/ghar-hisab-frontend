@@ -72,3 +72,27 @@ export function getMediaUrl(url: string | null | undefined): string {
   const cleanPath = url.startsWith("/") ? url : `/${url}`;
   return `${baseUrl}${cleanPath}`;
 }
+
+/**
+ * Natural comparison for room numbers in ascending sequence.
+ * Handles numbers (1, 2, 10), alphanumeric rooms (1A, 2B, Room 1),
+ * and Nepali Devanagari numerals (१, २, १०).
+ */
+export function compareRoomNumbers(
+  aRoomNumber?: string | number | null,
+  bRoomNumber?: string | number | null
+): number {
+  const a = String(aRoomNumber ?? "").trim();
+  const b = String(bRoomNumber ?? "").trim();
+
+  const devanagariToStandard = (str: string) =>
+    str.replace(/[०-९]/g, (d) => String("०१२३४५६७८९".indexOf(d)));
+
+  const normA = devanagariToStandard(a);
+  const normB = devanagariToStandard(b);
+
+  return normA.localeCompare(normB, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+}

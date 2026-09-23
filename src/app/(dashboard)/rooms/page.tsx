@@ -7,6 +7,7 @@ import { useTranslation } from "@/i18n/provider";
 import { DoorOpen, Search, Filter, Home, CheckCircle2, AlertCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/components/ui/toast";
+import { compareRoomNumbers } from "@/lib/utils";
 
 export default function RoomsPage() {
   const { t, locale } = useTranslation();
@@ -14,6 +15,7 @@ export default function RoomsPage() {
   const [search, setSearch] = useState("");
   const [selectedHouse, setSelectedHouse] = useState<string>("all");
   const [occupancyFilter, setOccupancyFilter] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const { data: rooms, isLoading: roomsLoading } = useQuery({
     queryKey: ["rooms"],
@@ -53,6 +55,14 @@ export default function RoomsPage() {
         : !room.is_occupied;
 
     return matchesSearch && matchesHouse && matchesOccupancy;
+  });
+
+  const sortedRooms = [...(filteredRooms || [])].sort((a: any, b: any) => {
+    const cmp = compareRoomNumbers(a.room_number, b.room_number);
+    if (cmp !== 0) {
+      return sortOrder === "asc" ? cmp : -cmp;
+    }
+    return String(a.house_name || "").localeCompare(String(b.house_name || ""));
   });
 
   const totalCount = rooms?.length || 0;
@@ -125,6 +135,17 @@ export default function RoomsPage() {
             <option value="occupied">{t("roomDetail.occupied")}</option>
             <option value="vacant">{t("roomDetail.vacant")}</option>
           </select>
+
+          {/* Sort order (Ascending by default) */}
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+            className="flex-1 sm:flex-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-2xs"
+            title={t("rooms.sortBy")}
+          >
+            <option value="asc">{t("rooms.sortAsc")}</option>
+            <option value="desc">{t("rooms.sortDesc")}</option>
+          </select>
         </div>
       </div>
 
@@ -138,7 +159,7 @@ export default function RoomsPage() {
                 <div className="h-8 bg-slate-200 rounded"></div>
               </div>
             ))
-          : filteredRooms?.map((room: any) => (
+          : sortedRooms.map((room: any) => (
               <Link
                 key={room.id}
                 href={`/rooms/${room.id}`}
@@ -183,7 +204,7 @@ export default function RoomsPage() {
               </Link>
             ))}
 
-        {!roomsLoading && filteredRooms?.length === 0 && (
+        {!roomsLoading && sortedRooms.length === 0 && (
           <div className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
             <DoorOpen className="mx-auto h-12 w-12 text-slate-300 mb-3" />
             <p className="text-base font-bold text-slate-800">{t("rooms.noRooms")}</p>

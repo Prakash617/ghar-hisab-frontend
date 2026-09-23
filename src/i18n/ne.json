@@ -155,7 +155,10 @@
     "vacant": "खाली",
     "noRooms": "अझै कोठा छैन",
     "noRoomsDesc": "यस घरमा कोठा थप्नुहोस्।",
-    "viewDetails": "विवरण हेर्नुहोस्"
+    "viewDetails": "विवरण हेर्नुहोस्",
+    "sortBy": "क्रमबद्ध",
+    "sortAsc": "कोठा नं. (१ → ९ बढ्दो)",
+    "sortDesc": "कोठा नं. (९ → १ घट्दो)"
   },
   "roomDetail": {
     "tabBills": "बिलहरू",

@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/toast";
+import { compareRoomNumbers } from "@/lib/utils";
 
 export default function HouseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -113,6 +114,10 @@ export default function HouseDetailPage({ params }: { params: Promise<{ id: stri
 
   const isLoading = houseLoading || roomsLoading;
 
+  const sortedRooms = [...(rooms || [])].sort((a: any, b: any) =>
+    compareRoomNumbers(a.room_number, b.room_number)
+  );
+
   return (
     <section className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -142,7 +147,7 @@ export default function HouseDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
             ))
-          : rooms?.map((room: any) => (
+          : sortedRooms.map((room: any) => (
               <div
                 key={room.id}
                 onClick={() => router.push(`/rooms/${room.id}`)}

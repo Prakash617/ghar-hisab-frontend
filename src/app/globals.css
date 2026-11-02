@@ -852,6 +852,19 @@ select {
   color-scheme: dark;
 }
 
+/* Native select menus are rendered by the browser, so style the options
+   explicitly to keep them readable on dark surfaces. */
+.dark select option,
+.dark select optgroup {
+  background-color: #111827;
+  color: #e2e8f0;
+}
+
+.dark select option:checked {
+  background-color: #0369a1;
+  color: #f8fafc;
+}
+
 .dark ::placeholder {
   color: #64748b;
 }

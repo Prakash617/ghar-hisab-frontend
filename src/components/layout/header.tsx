@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Sidebar } from "./sidebar";
 import { LanguageSwitcher } from "./language-switcher";
+import { ThemeToggle } from "./theme-toggle";
 
 export function Header() {
   const [open, setOpen] = useState(false);
@@ -28,6 +29,7 @@ export function Header() {
         </div>
       </div>
       <div className="flex items-center gap-2">
+        <ThemeToggle />
         <LanguageSwitcher />
       </div>
     </header>

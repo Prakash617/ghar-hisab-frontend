@@ -46,7 +46,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || error.message || "Request failed");
+    throw new Error(error.detail || error.message || error.error || "Request failed");
   }
 
   if (response.status === 204) {
@@ -351,6 +351,35 @@ export const emailApi = {
   sendPendingEmails: (roomId: number) =>
     request<any>(`/api/custom/rooms/${roomId}/pending-email/`, {
       method: "POST",
+      token: getAccessToken() || undefined,
+    }),
+};
+
+// SMS API (Aakash SMS)
+export const smsApi = {
+  getSettings: () =>
+    request<any>("/api/custom/sms-settings/", {
+      token: getAccessToken() || undefined,
+    }),
+
+  updateSettings: (data: any) =>
+    request<any>("/api/custom/sms-settings/", {
+      method: "PUT",
+      body: JSON.stringify(data),
+      token: getAccessToken() || undefined,
+    }),
+
+  sendBill: (paymentId: number, data?: { custom_message?: string }) =>
+    request<any>(`/api/custom/payments/${paymentId}/send-sms/`, {
+      method: "POST",
+      body: JSON.stringify(data || {}),
+      token: getAccessToken() || undefined,
+    }),
+
+  sendPendingBills: (roomId: number, data?: { message?: string }) =>
+    request<any>(`/api/custom/rooms/${roomId}/pending-sms/`, {
+      method: "POST",
+      body: JSON.stringify(data || {}),
       token: getAccessToken() || undefined,
     }),
 };

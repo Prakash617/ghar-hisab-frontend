@@ -83,6 +83,42 @@
   --sidebar-ring: oklch(0.6 0.17 230);
 }
 
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.15 0.02 260);
+  --foreground: oklch(0.96 0.01 240);
+  --card: oklch(0.2 0.02 260);
+  --card-foreground: oklch(0.96 0.01 240);
+  --popover: oklch(0.2 0.02 260);
+  --popover-foreground: oklch(0.96 0.01 240);
+  --primary: oklch(0.7 0.15 230);
+  --primary-foreground: oklch(0.15 0.02 260);
+  --secondary: oklch(0.26 0.02 260);
+  --secondary-foreground: oklch(0.96 0.01 240);
+  --muted: oklch(0.25 0.02 260);
+  --muted-foreground: oklch(0.72 0.02 240);
+  --accent: oklch(0.28 0.03 240);
+  --accent-foreground: oklch(0.96 0.01 240);
+  --destructive: oklch(0.68 0.2 25);
+  --border: oklch(0.31 0.02 260);
+  --input: oklch(0.34 0.02 260);
+  --ring: oklch(0.68 0.15 230);
+  --chart-1: oklch(0.7 0.15 230);
+  --chart-2: oklch(0.7 0.15 160);
+  --chart-3: oklch(0.7 0.2 25);
+  --chart-4: oklch(0.78 0.12 80);
+  --chart-5: oklch(0.7 0.15 280);
+  --sidebar: oklch(0.18 0.02 260);
+  --sidebar-foreground: oklch(0.96 0.01 240);
+  --sidebar-primary: oklch(0.7 0.15 230);
+  --sidebar-primary-foreground: oklch(0.15 0.02 260);
+  --sidebar-accent: oklch(0.26 0.02 260);
+  --sidebar-accent-foreground: oklch(0.96 0.01 240);
+  --sidebar-border: oklch(0.31 0.02 260);
+  --sidebar-ring: oklch(0.68 0.15 230);
+  background-color: oklch(0.13 0.02 260);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -201,4 +237,637 @@ select {
   select {
     font-size: 16px !important;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Dark mode surface overrides
+   The app pages use a light-first Tailwind palette. These mappings keep the
+   existing markup readable in dark mode without duplicating every class.
+--------------------------------------------------------------------------- */
+.dark body {
+  background-color: #0b1120;
+}
+
+/* Neutral surfaces */
+.dark .bg-slate-50,
+.dark .bg-slate-50\/80,
+.dark .bg-slate-50\/70,
+.dark .bg-slate-50\/60,
+.dark .bg-gray-50 {
+  background-color: #0b1120;
+}
+
+.dark .bg-white,
+.dark .bg-white\/95,
+.dark .bg-white\/90,
+.dark .bg-white\/70 {
+  background-color: #111827;
+}
+
+.dark .bg-slate-100,
+.dark .bg-slate-100\/60,
+.dark .bg-gray-100 {
+  background-color: #1e293b;
+}
+
+.dark .bg-slate-200,
+.dark .bg-slate-200\/80,
+.dark .bg-slate-200\/70 {
+  background-color: #334155;
+}
+
+.dark .bg-slate-300 {
+  background-color: #475569;
+}
+
+/* Neutral text */
+.dark .text-slate-900,
+.dark .text-gray-900 {
+  color: #f1f5f9;
+}
+
+.dark .text-slate-800 {
+  color: #e2e8f0;
+}
+
+.dark .text-slate-700,
+.dark .text-gray-700 {
+  color: #cbd5e1;
+}
+
+.dark .text-slate-600,
+.dark .text-gray-600,
+.dark .text-slate-500,
+.dark .text-gray-500 {
+  color: #94a3b8;
+}
+
+/* Neutral borders */
+.dark .border-slate-100,
+.dark .border-slate-100\/60,
+.dark .border-gray-100 {
+  border-color: #1e293b;
+}
+
+.dark .border-slate-200,
+.dark .border-slate-200\/90,
+.dark .border-slate-200\/80,
+.dark .border-slate-200\/60,
+.dark .border-gray-200 {
+  border-color: #334155;
+}
+
+.dark .border-slate-300,
+.dark .border-slate-400,
+.dark .border-gray-400 {
+  border-color: #475569;
+}
+
+/* Sky / blue accents */
+.dark .bg-sky-50,
+.dark .bg-sky-50\/70,
+.dark .bg-blue-50,
+.dark .bg-blue-50\/50 {
+  background-color: #082f49;
+}
+
+.dark .bg-sky-100 {
+  background-color: #0c4a6e;
+}
+
+.dark .bg-sky-200,
+.dark .bg-sky-200\/60 {
+  background-color: #075985;
+}
+
+.dark .text-sky-700,
+.dark .text-sky-800,
+.dark .text-blue-800 {
+  color: #7dd3fc;
+}
+
+.dark .text-sky-600 {
+  color: #38bdf8;
+}
+
+.dark .text-blue-900 {
+  color: #dbeafe;
+}
+
+.dark .border-sky-100,
+.dark .border-sky-200,
+.dark .border-sky-200\/80,
+.dark .border-sky-200\/60,
+.dark .border-blue-100,
+.dark .border-blue-200 {
+  border-color: #075985;
+}
+
+.dark .border-sky-300 {
+  border-color: #0369a1;
+}
+
+.dark .ring-sky-100,
+.dark .focus\:ring-sky-100:focus {
+  --tw-ring-color: #0c4a6e;
+}
+
+/* Emerald / green accents */
+.dark .bg-emerald-50,
+.dark .bg-emerald-50\/60,
+.dark .bg-emerald-50\/70 {
+  background-color: #022c22;
+}
+
+.dark .bg-emerald-100 {
+  background-color: #064e3b;
+}
+
+.dark .bg-emerald-200,
+.dark .bg-emerald-200\/60 {
+  background-color: #065f46;
+}
+
+.dark .text-emerald-700 {
+  color: #6ee7b7;
+}
+
+.dark .text-emerald-800,
+.dark .text-emerald-900 {
+  color: #a7f3d0;
+}
+
+.dark .text-emerald-600 {
+  color: #34d399;
+}
+
+.dark .border-emerald-100,
+.dark .border-emerald-200,
+.dark .border-emerald-200\/80,
+.dark .border-emerald-200\/60 {
+  border-color: #065f46;
+}
+
+.dark .border-emerald-300 {
+  border-color: #047857;
+}
+
+/* Amber / orange accents */
+.dark .bg-amber-50,
+.dark .bg-amber-50\/80,
+.dark .bg-amber-50\/70,
+.dark .bg-amber-50\/60 {
+  background-color: #451a03;
+}
+
+.dark .bg-amber-100 {
+  background-color: #78350f;
+}
+
+.dark .bg-orange-50,
+.dark .bg-orange-50\/70 {
+  background-color: #431407;
+}
+
+.dark .bg-orange-100 {
+  background-color: #7c2d12;
+}
+
+.dark .text-amber-950 {
+  color: #fffbeb;
+}
+
+.dark .text-amber-900 {
+  color: #fef3c7;
+}
+
+.dark .text-amber-800,
+.dark .text-orange-800 {
+  color: #fde68a;
+}
+
+.dark .text-amber-700,
+.dark .text-orange-700 {
+  color: #fcd34d;
+}
+
+.dark .text-amber-600,
+.dark .text-orange-600 {
+  color: #fbbf24;
+}
+
+.dark .border-amber-100,
+.dark .border-amber-200,
+.dark .border-amber-200\/80,
+.dark .border-amber-200\/60 {
+  border-color: #92400e;
+}
+
+.dark .border-amber-300 {
+  border-color: #b45309;
+}
+
+/* Rose / red accents */
+.dark .bg-rose-50,
+.dark .bg-rose-50\/50 {
+  background-color: #4c0519;
+}
+
+.dark .bg-rose-100 {
+  background-color: #881337;
+}
+
+.dark .bg-red-50 {
+  background-color: #450a0a;
+}
+
+.dark .bg-red-100 {
+  background-color: #7f1d1d;
+}
+
+.dark .text-rose-900 {
+  color: #ffe4e6;
+}
+
+.dark .text-rose-800,
+.dark .text-red-800 {
+  color: #fecdd3;
+}
+
+.dark .text-rose-700,
+.dark .text-red-700 {
+  color: #fda4af;
+}
+
+.dark .text-rose-600,
+.dark .text-red-600 {
+  color: #fb7185;
+}
+
+.dark .text-red-900 {
+  color: #fee2e2;
+}
+
+.dark .border-rose-100,
+.dark .border-rose-200,
+.dark .border-rose-200\/60,
+.dark .border-red-200 {
+  border-color: #9f1239;
+}
+
+.dark .border-rose-300,
+.dark .border-red-300 {
+  border-color: #be123c;
+}
+
+/* Indigo / violet / purple accents */
+.dark .bg-indigo-50,
+.dark .bg-indigo-50\/80 {
+  background-color: #1e1b4b;
+}
+
+.dark .bg-indigo-100 {
+  background-color: #312e81;
+}
+
+.dark .bg-violet-50 {
+  background-color: #2e1065;
+}
+
+.dark .bg-violet-100 {
+  background-color: #4c1d95;
+}
+
+.dark .bg-violet-200 {
+  background-color: #5b21b6;
+}
+
+.dark .bg-purple-50,
+.dark .bg-purple-50\/70 {
+  background-color: #3b0764;
+}
+
+.dark .text-indigo-900 {
+  color: #e0e7ff;
+}
+
+.dark .text-indigo-700,
+.dark .text-violet-700 {
+  color: #a5b4fc;
+}
+
+.dark .text-indigo-600 {
+  color: #818cf8;
+}
+
+.dark .text-purple-700 {
+  color: #d8b4fe;
+}
+
+.dark .text-purple-800 {
+  color: #e9d5ff;
+}
+
+.dark .border-indigo-100,
+.dark .border-indigo-200,
+.dark .border-indigo-200\/90,
+.dark .border-indigo-200\/80 {
+  border-color: #3730a3;
+}
+
+.dark .border-violet-300 {
+  border-color: #6d28d9;
+}
+
+/* Cyan accents */
+.dark .bg-cyan-50,
+.dark .bg-cyan-50\/70 {
+  background-color: #083344;
+}
+
+.dark .text-cyan-700 {
+  color: #67e8f9;
+}
+
+.dark .text-cyan-800 {
+  color: #a5f3fc;
+}
+
+.dark .text-cyan-600 {
+  color: #22d3ee;
+}
+
+/* Hover states */
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-gray-50:hover {
+  background-color: #1e293b;
+}
+
+.dark .hover\:bg-slate-200:hover {
+  background-color: #334155;
+}
+
+.dark .hover\:bg-sky-50:hover {
+  background-color: #0c4a6e;
+}
+
+.dark .hover\:bg-sky-100:hover {
+  background-color: #075985;
+}
+
+.dark .hover\:bg-sky-200:hover {
+  background-color: #0369a1;
+}
+
+.dark .hover\:bg-emerald-50:hover {
+  background-color: #064e3b;
+}
+
+.dark .hover\:bg-emerald-100:hover {
+  background-color: #065f46;
+}
+
+.dark .hover\:bg-rose-50:hover {
+  background-color: #881337;
+}
+
+.dark .hover\:bg-rose-100:hover {
+  background-color: #9f1239;
+}
+
+.dark .hover\:bg-red-50:hover {
+  background-color: #7f1d1d;
+}
+
+.dark .hover\:bg-red-100:hover {
+  background-color: #991b1b;
+}
+
+.dark .hover\:bg-amber-100:hover {
+  background-color: #92400e;
+}
+
+.dark .hover\:bg-violet-100:hover {
+  background-color: #5b21b6;
+}
+
+.dark .hover\:bg-violet-200:hover {
+  background-color: #6d28d9;
+}
+
+.dark .hover\:text-slate-900:hover {
+  color: #f8fafc;
+}
+
+.dark .hover\:text-slate-700:hover {
+  color: #e2e8f0;
+}
+
+.dark .hover\:text-slate-600:hover {
+  color: #cbd5e1;
+}
+
+.dark .hover\:text-sky-600:hover {
+  color: #38bdf8;
+}
+
+.dark .hover\:text-sky-700:hover {
+  color: #7dd3fc;
+}
+
+.dark .hover\:text-sky-800:hover {
+  color: #bae6fd;
+}
+
+.dark .hover\:text-rose-600:hover {
+  color: #fb7185;
+}
+
+.dark .hover\:text-rose-800:hover {
+  color: #fecdd3;
+}
+
+.dark .group-hover\:text-sky-600:is(:where(.group):hover *) {
+  color: #38bdf8;
+}
+
+.dark .group-hover\:text-sky-700:is(:where(.group):hover *) {
+  color: #7dd3fc;
+}
+
+.dark .hover\:border-slate-300:hover {
+  border-color: #475569;
+}
+
+.dark .hover\:border-sky-300:hover {
+  border-color: #0369a1;
+}
+
+/* Gradients used by hero/stat cards */
+.dark .gradient-brand {
+  background-image: linear-gradient(to bottom right, #172554, #1e1b4b);
+}
+
+.dark .gradient-emerald {
+  background-image: linear-gradient(to bottom right, #022c22, #052e16);
+}
+
+.dark .gradient-rose {
+  background-image: linear-gradient(to bottom right, #4c0519, #431407);
+}
+
+.dark .from-rose-50 {
+  --tw-gradient-from: #4c0519;
+}
+
+.dark .from-sky-50\/70,
+.dark .from-indigo-50\/70 {
+  --tw-gradient-from: #172554;
+}
+
+.dark .from-emerald-50\/70 {
+  --tw-gradient-from: #022c22;
+}
+
+.dark .from-amber-50\/70 {
+  --tw-gradient-from: #451a03;
+}
+
+/* White middles/stops in gradient cards would otherwise stay bright */
+.dark .from-white {
+  --tw-gradient-from: #111827;
+}
+
+.dark .via-white {
+  --tw-gradient-via: #111827;
+}
+
+.dark .to-white {
+  --tw-gradient-to: #111827;
+}
+
+.dark .via-orange-50\/40,
+.dark .via-orange-50\/50 {
+  --tw-gradient-via: rgb(67 20 7 / 0.45);
+}
+
+.dark .via-indigo-50\/40 {
+  --tw-gradient-via: rgb(30 27 75 / 0.45);
+}
+
+.dark .to-amber-50 {
+  --tw-gradient-to: #451a03;
+}
+
+.dark .to-sky-50\/50 {
+  --tw-gradient-to: #082f49;
+}
+
+.dark .to-teal-50\/40 {
+  --tw-gradient-to: #042f2e;
+}
+
+.dark .to-purple-50\/40 {
+  --tw-gradient-to: #3b0764;
+}
+
+.dark .to-orange-50\/40 {
+  --tw-gradient-to: #431407;
+}
+
+.dark .to-blue-50\/40 {
+  --tw-gradient-to: #172554;
+}
+
+/* Shared utility classes defined above */
+.dark .stat-card,
+.dark .card-interactive {
+  border-color: #334155;
+  background-color: #111827;
+}
+
+.dark .card-interactive:hover {
+  border-color: #475569;
+}
+
+.dark .btn-secondary {
+  border-color: #334155;
+  background-color: #111827;
+  color: #cbd5e1;
+}
+
+.dark .btn-secondary:hover {
+  background-color: #1e293b;
+}
+
+.dark .btn-ghost {
+  color: #cbd5e1;
+}
+
+.dark .btn-ghost:hover {
+  background-color: #1e293b;
+}
+
+.dark .input {
+  border-color: #334155;
+  background-color: #0b1120;
+  color: #e2e8f0;
+}
+
+.dark .badge-success {
+  background-color: #022c22;
+  color: #6ee7b7;
+  --tw-ring-color: #065f46;
+}
+
+.dark .badge-danger {
+  background-color: #4c0519;
+  color: #fda4af;
+  --tw-ring-color: #9f1239;
+}
+
+.dark .badge-warning {
+  background-color: #451a03;
+  color: #fcd34d;
+  --tw-ring-color: #92400e;
+}
+
+.dark .badge-info {
+  background-color: #082f49;
+  color: #7dd3fc;
+  --tw-ring-color: #075985;
+}
+
+.dark .badge-neutral {
+  background-color: #1e293b;
+  color: #cbd5e1;
+  --tw-ring-color: #334155;
+}
+
+/* Form controls and native dropdowns */
+.dark select,
+.dark input,
+.dark textarea {
+  color-scheme: dark;
+}
+
+.dark ::placeholder {
+  color: #64748b;
+}
+
+/* Dialog / sheet chrome */
+.dark .ring-slate-900\/10 {
+  --tw-ring-color: rgb(255 255 255 / 0.08);
+}
+
+/* Dark mode shadows */
+.dark .shadow-slate-200,
+.dark .shadow-slate-200\/60,
+.dark .shadow-indigo-300 {
+  --tw-shadow-color: rgb(0 0 0 / 0.45);
+}
+
+.dark .shadow-sky-200 {
+  --tw-shadow-color: rgb(2 132 199 / 0.25);
 }

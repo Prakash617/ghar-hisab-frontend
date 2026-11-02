@@ -33,6 +33,11 @@
     "logout": "Logout",
     "signedInAs": "Signed in as"
   },
+  "theme": {
+    "toggle": "Toggle theme",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
   "auth": {
     "login": "Sign in",
     "register": "Create account",
@@ -213,6 +218,9 @@
     "recordPayment": "Record payment",
     "sendBillsNotice": "Send bills notice",
     "sentEmailsHistory": "Sent emails history",
+    "sendSmsAction": "Send SMS",
+    "sendSmsNotice": "Send SMS reminder",
+    "sendingSms": "Sending SMS...",
     "documents": "Documents",
     "billingHistory": "Billing History",
     "paymentHistory": "Payment History",
@@ -440,6 +448,16 @@
     "saveChanges": "Save Changes",
     "saving": "Saving...",
     "profileSuccess": "Profile updated successfully!",
-    "emailSuccess": "Email settings saved successfully!"
+    "emailSuccess": "Email settings saved successfully!",
+    "smsSettings": "Aakash SMS",
+    "smsProvider": "SMS Provider",
+    "smsActive": "Active",
+    "smsInactive": "Inactive",
+    "smsNotConfigured": "Not configured",
+    "smsApiKey": "Aakash SMS API Key",
+    "smsApiKeyPlaceholder": "Paste your Aakash SMS auth token",
+    "smsApiKeyHelp": "Get your auth token from aakashsms.com. Adding a key activates SMS sending to tenant numbers.",
+    "smsEnable": "Enable SMS sending",
+    "smsSuccess": "SMS settings saved successfully!"
   }
 }

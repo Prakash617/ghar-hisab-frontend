@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { roomsApi, paymentsApi, tenantsApi, tenantDocumentsApi, emailApi } from "@/lib/api";
+import { roomsApi, paymentsApi, tenantsApi, tenantDocumentsApi, emailApi, smsApi } from "@/lib/api";
 import { useTranslation } from "@/i18n/provider";
 import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import {
   Eye,
   Banknote,
   Mail,
+  MessageSquare,
   AlertTriangle,
   AlertCircle,
   CreditCard,
@@ -324,6 +325,26 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     },
     onError: (err: any) => {
       toast.error(err?.message || "Failed to send bill email.");
+    },
+  });
+
+  const sendPendingSmsMutation = useMutation({
+    mutationFn: () => smsApi.sendPendingBills(roomId),
+    onSuccess: (res: any) => {
+      toast.success(res?.message || "Pending bills SMS sent successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to send SMS.");
+    },
+  });
+
+  const sendSingleBillSmsMutation = useMutation({
+    mutationFn: (paymentId: number) => smsApi.sendBill(paymentId),
+    onSuccess: (res: any) => {
+      toast.success(res?.message || "Bill SMS sent successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to send bill SMS.");
     },
   });
 
@@ -742,13 +763,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
               {/* Secondary Quick Action Pills */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-                <button
-                  onClick={() => openAddBillModal(true)}
-                  className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 font-semibold text-amber-800 shadow-2xs hover:bg-amber-100"
-                >
-                  <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
-                  {t("roomDetail.resetChangeMeter")}
-                </button>
                 {unpaidCount > 0 && (
                   <button
                     onClick={() => setIsPendingEmailModalOpen(true)}
@@ -756,6 +770,16 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   >
                     <Mail className="h-3.5 w-3.5" />
                     {t("roomDetail.sendBillsNotice")}
+                  </button>
+                )}
+                {unpaidCount > 0 && (
+                  <button
+                    onClick={() => sendPendingSmsMutation.mutate()}
+                    disabled={sendPendingSmsMutation.isPending || !tenant?.contact}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1.5 font-semibold text-emerald-700 shadow-2xs hover:bg-emerald-100 disabled:opacity-50"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    {sendPendingSmsMutation.isPending ? t("roomDetail.sendingSms") : t("roomDetail.sendSmsNotice")}
                   </button>
                 )}
                 <button
@@ -1013,6 +1037,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           title={t("roomDetail.sendEmailAction")}
                         >
                           <Send className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => sendSingleBillSmsMutation.mutate(payment.id)}
+                          disabled={payment.status === "Paid" || sendSingleBillSmsMutation.isPending || !tenant?.contact}
+                          className="inline-flex items-center justify-center rounded-lg bg-emerald-50 p-1.5 text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 active:scale-95 transition"
+                          title={t("roomDetail.sendSmsAction")}
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => setDeletingBill(payment)}
@@ -1511,14 +1543,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <Plus className="h-4 w-4" />
               2) {t("roomDetail.addNewBill")}
             </button>
-            <button
-              onClick={() => openAddBillModal(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-sm font-semibold text-amber-800 shadow-xs hover:bg-amber-100 transition-colors"
-              title={t("roomDetail.resetChangeMeter")}
-            >
-              <RotateCcw className="h-4 w-4 text-amber-600" />
-              {t("roomDetail.resetChangeMeter")}
-            </button>
             {unpaidCount > 0 && (
               <button
                 onClick={() => setIsPendingEmailModalOpen(true)}
@@ -1627,6 +1651,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         </button>
                         <button onClick={() => sendSingleBillMutation.mutate(payment.id)} disabled={payment.status === "Paid" || sendSingleBillMutation.isPending} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50 disabled:opacity-50">
                           <Send className="h-3.5 w-3.5" />{t("roomDetail.sendEmailAction")}
+                        </button>
+                        <button onClick={() => sendSingleBillSmsMutation.mutate(payment.id)} disabled={payment.status === "Paid" || sendSingleBillSmsMutation.isPending || !tenant?.contact} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
+                          <MessageSquare className="h-3.5 w-3.5" />{t("roomDetail.sendSmsAction")}
                         </button>
                         <button onClick={() => setDeletingBill(payment)} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50">
                           <Trash2 className="h-3.5 w-3.5" />{t("common.delete")}
@@ -2274,9 +2301,19 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   />
                 </div>
 
-                <div className="sticky bottom-0 bg-white z-10 pt-3 border-t border-slate-100 flex justify-end gap-2">
+                <div className="sticky bottom-0 bg-white z-10 pt-3 border-t border-slate-100 flex flex-wrap justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsPendingEmailModalOpen(false)}>
                     {t("common.cancel")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => sendPendingSmsMutation.mutate()}
+                    disabled={sendPendingSmsMutation.isPending || !tenant?.contact}
+                    className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-1.5" />
+                    {sendPendingSmsMutation.isPending ? t("roomDetail.sendingSms") : t("roomDetail.sendSmsNotice")}
                   </Button>
                   <Button
                     type="submit"

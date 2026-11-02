@@ -242,7 +242,7 @@ export default function HousesPage() {
                   {/* Top: Name & Active Status Toggle */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <Link href={`/houses/${house.id}`}>
+                      <Link href={`/rooms?house_id=${house.id}`}>
                         <h2 className="font-display text-lg font-bold text-slate-900 group-hover:text-sky-600 transition-colors truncate">
                           {house.name}
                         </h2>
@@ -306,7 +306,7 @@ export default function HousesPage() {
                 {/* Footer Actions */}
                 <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                   <Link
-                    href={`/houses/${house.id}`}
+                    href={`/rooms?house_id=${house.id}`}
                     className="font-semibold text-sky-600 hover:text-sky-700 inline-flex items-center gap-1 transition-colors"
                   >
                     {t("houses.viewRooms")}

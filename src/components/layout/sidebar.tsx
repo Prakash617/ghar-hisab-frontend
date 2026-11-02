@@ -6,20 +6,22 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "@/i18n/provider";
 import { useAuthStore } from "@/stores/auth";
 import { LanguageSwitcher } from "./language-switcher";
+import { ThemeToggle } from "./theme-toggle";
 import {
   LayoutDashboard,
   Home,
   DoorOpen,
+  CreditCard,
   Mail,
   Settings,
   LogOut,
-  Download,
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", key: "nav.dashboard", icon: LayoutDashboard },
   { href: "/houses", key: "nav.houses", icon: Home },
-  { href: "/payments", key: "nav.payments", icon: DoorOpen },
+  { href: "/rooms", key: "nav.rooms", icon: DoorOpen },
+  { href: "/payments", key: "nav.payments", icon: CreditCard },
   { href: "/emails", key: "nav.emails", icon: Mail },
   { href: "/settings", key: "nav.settings", icon: Settings },
 ];
@@ -106,8 +108,9 @@ export function Sidebar({ className, onNavigate }: SidebarProps = {}) {
         </div>
 
         <div className="border-t border-slate-200 bg-white px-3 py-4">
-          <div className="mb-3">
+          <div className="mb-3 flex items-center justify-between gap-2">
             <LanguageSwitcher />
+            <ThemeToggle />
           </div>
           <button
             onClick={logout}

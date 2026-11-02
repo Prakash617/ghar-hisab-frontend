@@ -33,6 +33,11 @@
     "logout": "लग आउट",
     "signedInAs": "यस रूपमा साइन इन"
   },
+  "theme": {
+    "toggle": "थिम परिवर्तन गर्नुहोस्",
+    "switchToLight": "उज्यालो मोडमा जानुहोस्",
+    "switchToDark": "अँध्यारो मोडमा जानुहोस्"
+  },
   "auth": {
     "login": "साइन इन",
     "register": "खाता बनाउनुहोस्",
@@ -213,6 +218,9 @@
     "recordPayment": "भुक्तानी दाखिला",
     "sendBillsNotice": "बाँकी बिल सूचना पठाउनुहोस्",
     "sentEmailsHistory": "पठाइएको इमेल इतिहास",
+    "sendSmsAction": "एसएमएस पठाउनुहोस्",
+    "sendSmsNotice": "एसएमएस सम्झना पठाउनुहोस्",
+    "sendingSms": "एसएमएस पठाइँदै...",
     "documents": "कागजातहरू",
     "billingHistory": "बिलिङ इतिहास",
     "paymentHistory": "भुक्तानी इतिहास",
@@ -440,6 +448,16 @@
     "saveChanges": "परिवर्तनहरू सेभ गर्नुहोस्",
     "saving": "सेभ हुँदैछ...",
     "profileSuccess": "प्रोफाइल सफलतापूर्वक अपडेट भयो!",
-    "emailSuccess": "इमेल सेटिङ्स सफलतापूर्वक सेभ भयो!"
+    "emailSuccess": "इमेल सेटिङ्स सफलतापूर्वक सेभ भयो!",
+    "smsSettings": "आकाश एसएमएस",
+    "smsProvider": "एसएमएस प्रदायक",
+    "smsActive": "सक्रिय",
+    "smsInactive": "निष्क्रिय",
+    "smsNotConfigured": "सेटअप गरिएको छैन",
+    "smsApiKey": "आकाश एसएमएस एपीआई कुञ्जी",
+    "smsApiKeyPlaceholder": "आफ्नो आकाश एसएमएस auth token राख्नुहोस्",
+    "smsApiKeyHelp": "aakashsms.com बाट auth token प्राप्त गर्नुहोस्। कुञ्जी राखेपछि भाडावालाको नम्बरमा एसएमएस पठाउन सकिन्छ।",
+    "smsEnable": "एसएमएस पठाउने सुविधा सक्रिय गर्नुहोस्",
+    "smsSuccess": "एसएमएस सेटिङ्स सफलतापूर्वक सेभ भयो!"
   }
 }

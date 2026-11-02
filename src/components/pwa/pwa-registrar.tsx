@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Download, X, Share2, PlusSquare, WifiOff, CheckCircle2, Sparkles } from "lucide-react";
 
 export function PwaRegistrar() {
@@ -11,6 +11,52 @@ export function PwaRegistrar() {
   const [isOffline, setIsOffline] = useState(false);
   const [showOnlineToast, setShowOnlineToast] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+
+  const bannerTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isDismissedRef = useRef<boolean>(false);
+
+  // Helper to reliably check if prompt was dismissed or app is already installed
+  const checkIfDismissed = useCallback(() => {
+    if (isDismissedRef.current) return true;
+
+    try {
+      if (typeof window === "undefined") return false;
+
+      // Check if installed
+      if (localStorage.getItem("pwa_installed") === "true") return true;
+
+      // Check current browser session dismissal
+      if (sessionStorage.getItem("pwa_install_dismissed") === "true") {
+        isDismissedRef.current = true;
+        return true;
+      }
+
+      // Check persistent dismissal cooldown (30 days)
+      const lastDismissed = localStorage.getItem("pwa_install_dismissed");
+      if (lastDismissed) {
+        const dismissedTimestamp = parseInt(lastDismissed, 10);
+        if (!isNaN(dismissedTimestamp)) {
+          const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+          if (Date.now() - dismissedTimestamp < thirtyDaysMs) {
+            isDismissedRef.current = true;
+            return true;
+          }
+        }
+      }
+    } catch {
+      // If storage is unavailable or restricted, err on the side of respecting the session state
+      return isDismissedRef.current;
+    }
+
+    return false;
+  }, []);
+
+  const clearBannerTimer = () => {
+    if (bannerTimerRef.current) {
+      clearTimeout(bannerTimerRef.current);
+      bannerTimerRef.current = null;
+    }
+  };
 
   useEffect(() => {
     // 1. Service Worker Registration
@@ -65,13 +111,20 @@ export function PwaRegistrar() {
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    // 4. Install Prompt Handling
-    if (!standalone) {
-      // Check dismissed cooldown (7 days)
-      const lastDismissed = localStorage.getItem("pwa_install_dismissed");
-      const isDismissedRecently =
-        lastDismissed && Date.now() - parseInt(lastDismissed, 10) < 7 * 24 * 60 * 60 * 1000;
+    // 4. App Installed listener
+    const handleAppInstalled = () => {
+      clearBannerTimer();
+      setShowInstallBanner(false);
+      setShowIosGuide(false);
+      isDismissedRef.current = true;
+      try {
+        localStorage.setItem("pwa_installed", "true");
+      } catch {}
+    };
+    window.addEventListener("appinstalled", handleAppInstalled);
 
+    // 5. Install Prompt Handling
+    if (!standalone && !checkIfDismissed()) {
       // Detect iOS Safari
       const ua = window.navigator.userAgent.toLowerCase();
       const isIosDevice = /iphone|ipad|ipod/.test(ua) && !(window as any).MSStream;
@@ -81,31 +134,46 @@ export function PwaRegistrar() {
       const handleBeforeInstallPrompt = (e: Event) => {
         e.preventDefault();
         setDeferredPrompt(e);
-        if (!isDismissedRecently) {
-          // Delay presentation slightly for pleasant UX
-          setTimeout(() => setShowInstallBanner(true), 2500);
-        }
+
+        if (checkIfDismissed()) return;
+
+        clearBannerTimer();
+        // Delay presentation slightly for pleasant UX
+        bannerTimerRef.current = setTimeout(() => {
+          if (!checkIfDismissed()) {
+            setShowInstallBanner(true);
+          }
+        }, 2500);
       };
 
       window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-      // If iOS and not standalone and not recently dismissed, show banner
-      if (isIosDevice && !isDismissedRecently) {
-        setTimeout(() => setShowInstallBanner(true), 3500);
+      // If iOS and not standalone and not dismissed, show banner
+      if (isIosDevice && !checkIfDismissed()) {
+        clearBannerTimer();
+        bannerTimerRef.current = setTimeout(() => {
+          if (!checkIfDismissed()) {
+            setShowInstallBanner(true);
+          }
+        }, 3500);
       }
 
       return () => {
+        clearBannerTimer();
         window.removeEventListener("online", handleOnline);
         window.removeEventListener("offline", handleOffline);
+        window.removeEventListener("appinstalled", handleAppInstalled);
         window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       };
     }
 
     return () => {
+      clearBannerTimer();
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("appinstalled", handleAppInstalled);
     };
-  }, []);
+  }, [checkIfDismissed]);
 
   const handleInstallClick = async () => {
     if (isIos) {
@@ -118,14 +186,30 @@ export function PwaRegistrar() {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     console.log(`[PWA] User response to the install prompt: ${outcome}`);
+    if (outcome === "accepted") {
+      isDismissedRef.current = true;
+      try {
+        localStorage.setItem("pwa_installed", "true");
+      } catch {}
+    } else {
+      // If user dismissed the browser prompt, also respect dismissal
+      handleDismiss();
+    }
     setDeferredPrompt(null);
     setShowInstallBanner(false);
   };
 
   const handleDismiss = () => {
+    clearBannerTimer();
+    isDismissedRef.current = true;
     setShowInstallBanner(false);
     setShowIosGuide(false);
-    localStorage.setItem("pwa_install_dismissed", Date.now().toString());
+    try {
+      sessionStorage.setItem("pwa_install_dismissed", "true");
+      localStorage.setItem("pwa_install_dismissed", Date.now().toString());
+    } catch (e) {
+      console.warn("[PWA] Unable to persist dismissal to storage:", e);
+    }
   };
 
   return (

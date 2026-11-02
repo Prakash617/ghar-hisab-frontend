@@ -1,20 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { profileApi, emailApi } from "@/lib/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { profileApi, emailApi, smsApi } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Mail, Save } from "lucide-react";
+import { User, Mail, MessageSquare, Save } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n/provider";
 
 export default function SettingsPage() {
   const { user } = useAuthStore();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [profileData, setProfileData] = useState({
     first_name: "",
     last_name: "",
@@ -26,6 +27,10 @@ export default function SettingsPage() {
     use_tls: true,
     email_host_user: "",
   });
+  const [smsSettings, setSmsSettings] = useState({
+    api_key: "",
+    is_enabled: false,
+  });
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile"],
@@ -35,6 +40,11 @@ export default function SettingsPage() {
   const { data: emailConfig, isLoading: emailLoading } = useQuery({
     queryKey: ["email-settings"],
     queryFn: () => emailApi.getSettings(),
+  });
+
+  const { data: smsConfig, isLoading: smsLoading } = useQuery({
+    queryKey: ["sms-settings"],
+    queryFn: () => smsApi.getSettings(),
   });
 
   useEffect(() => {
@@ -58,6 +68,15 @@ export default function SettingsPage() {
     }
   }, [emailConfig]);
 
+  useEffect(() => {
+    if (smsConfig) {
+      setSmsSettings({
+        api_key: smsConfig.api_key || "",
+        is_enabled: smsConfig.is_enabled ?? false,
+      });
+    }
+  }, [smsConfig]);
+
   const updateProfileMutation = useMutation({
     mutationFn: (data: any) => profileApi.update(data),
     onSuccess: () => {
@@ -78,6 +97,17 @@ export default function SettingsPage() {
     },
   });
 
+  const updateSmsMutation = useMutation({
+    mutationFn: (data: any) => smsApi.updateSettings(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sms-settings"] });
+      toast.success(t("settings.smsSuccess"));
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to save SMS settings.");
+    },
+  });
+
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfileMutation.mutate(profileData);
@@ -86,6 +116,17 @@ export default function SettingsPage() {
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateEmailMutation.mutate(emailSettings);
+  };
+
+  const handleSmsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = { ...smsSettings };
+    // Entering a fresh API key activates SMS. The user can still switch
+    // the checkbox off in a later save once the key is stored.
+    if (payload.api_key && payload.api_key !== "••••••••") {
+      payload.is_enabled = true;
+    }
+    updateSmsMutation.mutate(payload);
   };
 
   return (
@@ -208,7 +249,73 @@ export default function SettingsPage() {
             </form>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              {t("settings.smsSettings")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSmsSubmit} className="space-y-4">
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs">
+                <span className="font-medium text-slate-600">
+                  {t("settings.smsProvider")}
+                </span>
+                <span
+                  className={`inline-flex items-center rounded-full px-2 py-0.5 font-semibold ${
+                    smsConfig?.is_configured && smsConfig?.is_enabled
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-slate-200 text-slate-600"
+                  }`}
+                >
+                  {smsConfig?.is_configured
+                    ? smsConfig?.is_enabled
+                      ? t("settings.smsActive")
+                      : t("settings.smsInactive")
+                    : t("settings.smsNotConfigured")}
+                </span>
+              </div>
+
+              <div>
+                <Label htmlFor="sms_api_key">{t("settings.smsApiKey")}</Label>
+                <Input
+                  id="sms_api_key"
+                  type="password"
+                  autoComplete="off"
+                  value={smsSettings.api_key}
+                  onChange={(e) =>
+                    setSmsSettings({ ...smsSettings, api_key: e.target.value })
+                  }
+                  placeholder={t("settings.smsApiKeyPlaceholder")}
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  {t("settings.smsApiKeyHelp")}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="sms_enabled"
+                  checked={smsSettings.is_enabled}
+                  onChange={(e) =>
+                    setSmsSettings({ ...smsSettings, is_enabled: e.target.checked })
+                  }
+                  className="rounded"
+                />
+                <Label htmlFor="sms_enabled">{t("settings.smsEnable")}</Label>
+              </div>
+
+              <Button type="submit" disabled={updateSmsMutation.isPending || smsLoading}>
+                <Save className="h-4 w-4 mr-2" />
+                {updateSmsMutation.isPending ? t("settings.saving") : t("settings.saveChanges")}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 }
+

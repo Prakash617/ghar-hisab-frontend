@@ -60,6 +60,7 @@ Backend runs at `http://localhost:8000` (configurable via env).
 - Payments: `/api/payment-histories/`, `/api/custom/rooms/<id>/record-payment/`
 - Dashboard: `/api/custom/dashboard/`
 - Email: `/api/custom/email-history/`, `/api/custom/email-settings/`
+- SMS: `/api/custom/sms-settings/`, `/api/custom/payments/<id>/send-sms/`, `/api/custom/rooms/<id>/pending-sms/`
 
 ## Pages
 
@@ -73,7 +74,7 @@ Backend runs at `http://localhost:8000` (configurable via env).
 | `/houses/[id]` | House detail with rooms |
 | `/rooms/[id]` | Room detail, bills, payments |
 | `/payments` | Payment history list |
-| `/settings` | Profile, email settings |
+| `/settings` | Profile, email settings, Aakash SMS settings |
 
 ## Design System
 

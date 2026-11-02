@@ -8,6 +8,8 @@ import { useTranslation } from "@/i18n/provider";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { BrandLogo } from "@/components/brand-logo";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -57,7 +59,8 @@ function LoginForm() {
   return (
     <section className="relative overflow-hidden py-2 sm:py-0 min-h-screen flex items-center">
       {/* Language Switcher in top right */}
-      <div className="absolute top-4 right-4 z-20">
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <ThemeToggle />
         <LanguageSwitcher />
       </div>
 
@@ -68,11 +71,7 @@ function LoginForm() {
 
       <div className="mx-auto grid w-full max-w-5xl gap-4 sm:gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-8 px-4">
         <div className="hidden lg:block">
-          <img
-            src="/images/logo-ghar-hisaab.svg"
-            alt="Ghar Hisaab"
-            className="h-12 w-auto mb-6"
-          />
+          <BrandLogo className="h-12 w-auto mb-6" />
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
             {t("auth.welcomeBack")}
           </p>
@@ -104,11 +103,9 @@ function LoginForm() {
 
         <div className="mx-auto w-full max-w-xl rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-xl shadow-slate-200/60 sm:p-8 lg:max-w-none">
           <div className="mb-6">
-            <img
-              src="/images/logo-ghar-hisaab.svg"
-              alt="Ghar Hisaab"
-              className="h-9 w-auto mb-3 lg:hidden"
-            />
+            <div className="lg:hidden">
+              <BrandLogo className="h-9 w-auto mb-3" />
+            </div>
             <h2 className="font-display text-2xl sm:text-3xl text-slate-900">
               {t("auth.signIn")}
             </h2>

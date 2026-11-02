@@ -48,8 +48,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} h-full select-none-pwa`}>
+    <html
+      lang="en"
+      className={`${inter.variable} h-full select-none-pwa`}
+      suppressHydrationWarning
+    >
       <body className="min-h-full bg-slate-50 antialiased overflow-x-hidden">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('gharhisab-theme');var m=window.matchMedia('(prefers-color-scheme: dark)').matches;var d=t==='dark'||((!t||t==='system')&&m);document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light';document.documentElement.dataset.theme=d?'dark':'light';}catch(e){}})();`,
+          }}
+        />
         <Providers>
           {children}
           <PwaRegistrar />

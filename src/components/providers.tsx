@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { I18nProvider } from "@/i18n/provider";
+import { ThemeProvider } from "@/components/theme-provider";
 import { PWAProvider } from "./pwa-provider";
 import { Toaster } from "@/components/ui/toast";
 
@@ -71,13 +72,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <I18nProvider>
-        <PWAProvider>
-          {children}
-          <MobileKeyboardHelper />
-          <Toaster />
-        </PWAProvider>
-      </I18nProvider>
+      <ThemeProvider>
+        <I18nProvider>
+          <PWAProvider>
+            {children}
+            <MobileKeyboardHelper />
+            <Toaster />
+          </PWAProvider>
+        </I18nProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

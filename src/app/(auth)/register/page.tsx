@@ -7,6 +7,8 @@ import { authApi } from "@/lib/api";
 import { useTranslation } from "@/i18n/provider";
 import { toast } from "@/components/ui/toast";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -63,7 +65,8 @@ export default function RegisterPage() {
   return (
     <section className="relative overflow-hidden py-2 sm:py-0 min-h-screen flex items-center">
       {/* Language Switcher in top right */}
-      <div className="absolute top-4 right-4 z-20">
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <ThemeToggle />
         <LanguageSwitcher />
       </div>
 
@@ -75,11 +78,7 @@ export default function RegisterPage() {
       <div className="mx-auto w-full max-w-xl px-4">
         <div className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-xl shadow-slate-200/60 sm:p-8">
           <div className="mb-6">
-            <img
-              src="/images/logo-ghar-hisaab.svg"
-              alt="Ghar Hisaab"
-              className="h-10 w-auto mb-3"
-            />
+            <BrandLogo className="h-10 w-auto mb-3" />
             <h2 className="font-display text-2xl sm:text-3xl text-slate-900">
               {t("auth.registerTitle")}
             </h2>

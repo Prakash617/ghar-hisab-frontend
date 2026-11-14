@@ -364,6 +364,7 @@
     "switchUpdatesDefault": "भाषा बदल्दा पूर्वनिर्धारित विषय र सन्देश अद्यावधिक हुन्छ।",
     "sendNotice": "इमेल पठाउनुहोस्",
     "sendingNotice": "सूचना पठाउँदैछ...",
+    "paymentQrAttached": "तपाईंको अपलोड गरिएको भुक्तानी QR कोड यस इमेलमा स्वतः संलग्न हुनेछ।",
     "emailHistoryForRoom": "को इमेल इतिहास",
     "emailHistoryDesc": "यस कोठाको लागि पठाइएका सबै बिल र बाँकी सूचनाहरूको विवरण।",
     "viewAllEmails": "सबै इमेलहरू हेर्नुहोस् →",
@@ -466,6 +467,16 @@
     "smsApiKeyPlaceholder": "आफ्नो आकाश एसएमएस auth token राख्नुहोस्",
     "smsApiKeyHelp": "aakashsms.com बाट auth token प्राप्त गर्नुहोस्। कुञ्जी राखेपछि भाडावालाको नम्बरमा एसएमएस पठाउन सकिन्छ।",
     "smsEnable": "एसएमएस पठाउने सुविधा सक्रिय गर्नुहोस्",
-    "smsSuccess": "एसएमएस सेटिङ्स सफलतापूर्वक सेभ भयो!"
+    "smsSuccess": "एसएमएस सेटिङ्स सफलतापूर्वक सेभ भयो!",
+    "paymentQrTitle": "भुक्तानी QR कोड",
+    "paymentQrDesc": "तपाईंको eSewa / Khalti / बैंक QR फोटो अपलोड गर्नुहोस्। भाडावाललाई पठाइने बिल र बाँकी सूचना इमेलमा यो स्वतः पठाइनेछ।",
+    "paymentQrChoose": "QR फोटो छान्नुहोस्",
+    "paymentQrUpload": "QR फोटो सेभ गर्नुहोस्",
+    "paymentQrUploading": "अपलोड हुँदैछ...",
+    "paymentQrRemove": "QR हटाउनुहोस्",
+    "paymentQrSaved": "भुक्तानी QR फोटो अपडेट भयो!",
+    "paymentQrRemoved": "भुक्तानी QR फोटो हटाइयो।",
+    "paymentQrEmpty": "अहिलेसम्म कुनै QR अपलोड गरिएको छैन",
+    "paymentQrEmailHint": "भाडावालले बिल इमेलभित्रै यो QR कोड देख्न सक्नेछन्।"
   }
 }

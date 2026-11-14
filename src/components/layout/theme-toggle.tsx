@@ -24,7 +24,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
         resolvedTheme === "dark" ? t("theme.switchToLight") : t("theme.switchToDark")
       }
       className={cn(
-        "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-2xs transition-colors hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500",
+        "inline-flex h-10 w-10 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-2xs transition-colors hover:bg-slate-50 hover:text-slate-900 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 cursor-pointer",
         className
       )}
     >

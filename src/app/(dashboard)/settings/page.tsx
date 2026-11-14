@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { profileApi, emailApi, smsApi } from "@/lib/api";
+import { getMediaUrl } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Mail, MessageSquare, Save } from "lucide-react";
+import { User, Mail, MessageSquare, Save, QrCode, Upload, Trash2 } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n/provider";
 
@@ -31,6 +32,9 @@ export default function SettingsPage() {
     api_key: "",
     is_enabled: false,
   });
+  const [qrFile, setQrFile] = useState<File | null>(null);
+  const [qrPreview, setQrPreview] = useState<string | null>(null);
+  const qrInputRef = useRef<HTMLInputElement | null>(null);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile"],
@@ -107,6 +111,52 @@ export default function SettingsPage() {
       toast.error(err?.message || "Failed to save SMS settings.");
     },
   });
+
+  const uploadQrMutation = useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append("payment_qr_image", file);
+      return profileApi.update(formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setQrFile(null);
+      setQrPreview(null);
+      if (qrInputRef.current) qrInputRef.current.value = "";
+      toast.success(t("settings.paymentQrSaved"));
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to upload QR photo.");
+    },
+  });
+
+  const removeQrMutation = useMutation({
+    mutationFn: () => profileApi.update({ remove_payment_qr: true }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setQrFile(null);
+      setQrPreview(null);
+      if (qrInputRef.current) qrInputRef.current.value = "";
+      toast.success(t("settings.paymentQrRemoved"));
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to remove QR photo.");
+    },
+  });
+
+  useEffect(() => {
+    return () => {
+      if (qrPreview) URL.revokeObjectURL(qrPreview);
+    };
+  }, [qrPreview]);
+
+  const handleQrFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (qrPreview) URL.revokeObjectURL(qrPreview);
+    setQrFile(file);
+    setQrPreview(URL.createObjectURL(file));
+  };
 
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -312,6 +362,95 @@ export default function SettingsPage() {
                 {updateSmsMutation.isPending ? t("settings.saving") : t("settings.saveChanges")}
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5 text-sky-600" />
+              {t("settings.paymentQrTitle")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-xs leading-relaxed text-slate-600">
+              {t("settings.paymentQrDesc")}
+            </p>
+
+            {(qrPreview || profile?.payment_qr_image) ? (
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center">
+                <img
+                  src={qrPreview || getMediaUrl(profile?.payment_qr_image)}
+                  alt="Payment QR Code"
+                  className="max-h-56 w-auto rounded-xl border border-slate-200 bg-white object-contain p-2 shadow-2xs"
+                />
+                <p className="mt-2.5 text-xs font-medium text-slate-600">
+                  {t("settings.paymentQrEmailHint")}
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-6 text-center">
+                <QrCode className="h-10 w-10 text-slate-400 mb-2" />
+                <p className="text-xs font-medium text-slate-600">
+                  {t("settings.paymentQrEmpty")}
+                </p>
+              </div>
+            )}
+
+            <input
+              ref={qrInputRef}
+              id="payment_qr_input"
+              type="file"
+              accept="image/*"
+              onChange={handleQrFileChange}
+              className="hidden"
+            />
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => qrInputRef.current?.click()}
+                disabled={uploadQrMutation.isPending || removeQrMutation.isPending}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {t("settings.paymentQrChoose")}
+              </Button>
+
+              {qrFile && (
+                <Button
+                  type="button"
+                  onClick={() => uploadQrMutation.mutate(qrFile)}
+                  disabled={uploadQrMutation.isPending}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {uploadQrMutation.isPending
+                    ? t("settings.paymentQrUploading")
+                    : t("settings.paymentQrUpload")}
+                </Button>
+              )}
+
+              {(profile?.payment_qr_image || qrPreview) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (qrPreview && !profile?.payment_qr_image) {
+                      setQrFile(null);
+                      setQrPreview(null);
+                      if (qrInputRef.current) qrInputRef.current.value = "";
+                    } else {
+                      removeQrMutation.mutate();
+                    }
+                  }}
+                  disabled={removeQrMutation.isPending || uploadQrMutation.isPending}
+                  className="border-rose-200 text-rose-700 hover:bg-rose-50"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t("settings.paymentQrRemove")}
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

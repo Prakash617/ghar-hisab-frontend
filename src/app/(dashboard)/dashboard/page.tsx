@@ -255,12 +255,12 @@ export default function DashboardPage() {
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* House Filter */}
           {houses.length > 0 && (
-            <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-2 shadow-2xs transition focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500">
+            <div className="flex min-h-11 sm:min-h-9 flex-1 sm:flex-none items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-2xs transition focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500">
               <Building2 className="h-4 w-4 text-slate-400 shrink-0" />
               <select
                 value={houseFilter}
                 onChange={(e) => setHouseFilter(e.target.value)}
-                className="bg-transparent text-xs sm:text-sm font-medium text-slate-700 outline-hidden cursor-pointer"
+                className="w-full bg-transparent text-xs sm:text-sm font-medium text-slate-700 outline-hidden cursor-pointer"
                 title={t("dashboard.allHouses")}
               >
                 <option value="">{t("dashboard.allHouses")}</option>
@@ -274,22 +274,22 @@ export default function DashboardPage() {
           )}
 
           {/* Month Stepper: Prev, Select, Next, and Today Shortcut */}
-          <div className="inline-flex items-center rounded-xl border border-slate-200 bg-white p-1 shadow-2xs">
+          <div className="inline-flex min-h-11 sm:min-h-9 flex-1 sm:flex-none items-center justify-between rounded-xl border border-slate-200 bg-white p-1 shadow-2xs">
             <button
               onClick={handlePrevMonth}
               disabled={activeMonth === "all"}
               title={t("dashboard.prevMonth")}
-              className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              className="inline-flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
 
             <div className="flex items-center gap-1.5 px-2">
-              <Calendar className="h-4 w-4 text-brand-600 shrink-0" />
+              <Calendar className="h-4 w-4 text-sky-600 shrink-0" />
               <select
                 value={activeMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="bg-transparent text-xs sm:text-sm font-semibold text-slate-800 outline-hidden cursor-pointer max-w-[150px] sm:max-w-none"
+                className="bg-transparent text-xs sm:text-sm font-semibold text-slate-800 outline-hidden cursor-pointer max-w-[155px] sm:max-w-none"
               >
                 {availableMonths.map((m) => (
                   <option key={m} value={m}>
@@ -304,7 +304,7 @@ export default function DashboardPage() {
               onClick={handleNextMonth}
               disabled={activeMonth === "all"}
               title={t("dashboard.nextMonth")}
-              className="rounded-lg p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              className="inline-flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -314,7 +314,7 @@ export default function DashboardPage() {
           {todayNepaliMonth && !isCurrentMonth && (
             <button
               onClick={handleCurrentMonth}
-              className="inline-flex items-center gap-1 rounded-xl bg-brand-50 px-3 py-2 text-xs font-semibold text-brand-700 border border-brand-200 hover:bg-brand-100 transition shadow-2xs"
+              className="inline-flex min-h-11 sm:min-h-9 items-center gap-1 rounded-xl bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-700 border border-sky-200 hover:bg-sky-100 active:scale-95 transition shadow-2xs cursor-pointer"
             >
               {t("dashboard.currentMonth")}
             </button>
@@ -544,21 +544,21 @@ export default function DashboardPage() {
           </div>
 
           {/* Search, Status Filter & Action Controls */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Search Input */}
             <div className="relative flex-1 min-w-[180px] sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t("dashboard.searchBills")}
-                className="w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 shadow-2xs outline-hidden focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="min-h-10 sm:min-h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 py-1.5 text-sm sm:text-xs text-slate-800 placeholder-slate-400 shadow-2xs outline-hidden focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
               />
             </div>
 
             {/* Status Filter */}
-            <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs">
+            <div className="flex min-h-10 sm:min-h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs">
               <Filter className="h-3.5 w-3.5 text-slate-400 shrink-0" />
               <select
                 value={statusFilter}
@@ -577,9 +577,9 @@ export default function DashboardPage() {
               onClick={handleExportCsv}
               disabled={!dashboard?.recent_payments?.length}
               title={t("dashboard.exportCsv")}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              className="inline-flex min-h-10 min-w-10 sm:min-h-9 sm:min-w-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
             >
-              <Download className="h-3.5 w-3.5 text-slate-500" />
+              <Download className="h-4 w-4 sm:h-3.5 sm:w-3.5 text-slate-500" />
               <span className="hidden sm:inline">{t("dashboard.exportCsv")}</span>
             </button>
 
@@ -587,16 +587,92 @@ export default function DashboardPage() {
             <button
               onClick={handlePrint}
               title={t("dashboard.printSummary")}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition"
+              className="inline-flex min-h-10 min-w-10 sm:min-h-9 sm:min-w-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition cursor-pointer"
             >
-              <Printer className="h-3.5 w-3.5 text-slate-500" />
+              <Printer className="h-4 w-4 sm:h-3.5 sm:w-3.5 text-slate-500" />
               <span className="hidden sm:inline">{t("dashboard.printSummary")}</span>
             </button>
           </div>
         </div>
 
         {dashboard?.recent_payments?.length > 0 ? (
-          <div className="overflow-x-auto">
+          <>
+          {/* Mobile Native Card List */}
+          <div className="md:hidden space-y-3">
+            {dashboard.recent_payments.map((payment: any) => {
+              const unitsUsed =
+                payment.current_units !== undefined && payment.previous_units !== undefined
+                  ? Math.max(0, payment.current_units - payment.previous_units)
+                  : null;
+              return (
+                <article
+                  key={payment.id}
+                  className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-slate-900 truncate">
+                        {payment.room_number || payment.roomName}
+                        {payment.houseName ? ` · ${payment.houseName}` : ""}
+                      </p>
+                      <p className="text-xs text-slate-500 truncate">
+                        {payment.tenant_name || "-"} · {payment.billing_month}
+                      </p>
+                    </div>
+                    <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(payment.status)}`}>
+                      {payment.status === "Paid" && <CheckCircle2 className="h-3 w-3 text-emerald-600" />}
+                      {payment.status === "Partially Paid" && <Clock className="h-3 w-3 text-amber-600" />}
+                      {payment.status === "Unpaid" && <AlertCircle className="h-3 w-3 text-rose-600" />}
+                      {payment.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 rounded-xl bg-slate-50 p-2.5 text-xs">
+                    <div>
+                      <span className="text-[11px] font-semibold uppercase text-slate-600 block">{t("dashboard.electricity")}</span>
+                      <span className="font-semibold text-slate-800 tabular-nums">{formatCurrency(payment.electricity)}</span>
+                      {unitsUsed !== null && (
+                        <span className="block text-[11px] text-amber-700 font-medium">{unitsUsed} {t("dashboard.units")}</span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-semibold uppercase text-slate-600 block">{t("dashboard.water")} / {t("dashboard.waste")}</span>
+                      <span className="font-semibold text-slate-800 tabular-nums">
+                        {formatCurrency((parseFloat(payment.water || "0") + parseFloat(payment.waste || "0")))}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[11px] font-semibold uppercase text-slate-600 block">{t("dashboard.billed")}</span>
+                      <span className="font-bold text-slate-900 tabular-nums">{formatCurrency(payment.amount || payment.total)}</span>
+                    </div>
+                  </div>
+
+                  {parseFloat(payment.extra_charge || "0") > 0 && (
+                    <div className="flex items-center justify-between rounded-xl bg-amber-50/70 border border-amber-200/70 px-3 py-1.5 text-xs">
+                      <span className="text-amber-800 font-medium truncate">
+                        {payment.extra_charge_label || t("roomDetail.extraCost")}
+                      </span>
+                      <span className="font-bold text-amber-800 tabular-nums shrink-0 ml-2">
+                        {formatCurrency(payment.extra_charge)}
+                      </span>
+                    </div>
+                  )}
+
+                  {payment.roomId && (
+                    <Link
+                      href={`/rooms/${payment.roomId}`}
+                      className="flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-sky-50 text-xs font-semibold text-sky-700 hover:bg-sky-100 active:scale-[0.99] transition"
+                    >
+                      {t("dashboard.viewRoom")}
+                    </Link>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full text-sm text-slate-600">
               <thead className="border-b border-slate-200 bg-slate-50/80 text-xs uppercase tracking-wider text-slate-500">
                 <tr>
@@ -635,7 +711,7 @@ export default function DashboardPage() {
                         <div className="flex flex-col">
                           <span>{payment.room_number || payment.roomName}</span>
                           {payment.houseName && (
-                            <span className="text-xs font-normal text-slate-400">
+                            <span className="text-xs font-normal text-slate-600">
                               {payment.houseName}
                             </span>
                           )}
@@ -676,7 +752,7 @@ export default function DashboardPage() {
                             <div className="flex flex-col items-end">
                               <span className="font-medium">{formatCurrency(payment.extra_charge)}</span>
                               {payment.extra_charge_label && (
-                                <span className="text-[11px] text-slate-400">{payment.extra_charge_label}</span>
+                                <span className="text-xs text-slate-600">{payment.extra_charge_label}</span>
                               )}
                             </div>
                           ) : (
@@ -712,11 +788,12 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
+          </>
         ) : (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-8 text-center">
             <p className="text-sm font-medium text-slate-500">{t("dashboard.noPayments")}</p>
             {activeMonth && (
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-600 mt-1">
                 {locale === "ne"
                   ? `${formattedActiveMonth} मा कुनै भुक्तानी वा बिल फेला परेन।`
                   : `No billing records found for ${formattedActiveMonth}.`}

@@ -54,7 +54,7 @@ export function Sidebar({ className, onNavigate }: SidebarProps = {}) {
             <h2 className="text-base font-bold text-slate-900 tracking-tight leading-tight">
               Ghar Hisaab
             </h2>
-            <p className="text-[11px] font-medium text-slate-400">
+            <p className="text-xs font-medium text-slate-600">
               Rental Management
             </p>
           </div>
@@ -62,7 +62,7 @@ export function Sidebar({ className, onNavigate }: SidebarProps = {}) {
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-            <p className="text-xs uppercase tracking-widest text-slate-400">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-600">
               {t("nav.signedInAs")}
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-900">
@@ -85,9 +85,9 @@ export function Sidebar({ className, onNavigate }: SidebarProps = {}) {
                     href={item.href}
                     onClick={onNavigate}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-sky-50 text-sky-600"
+                        ? "bg-sky-50 text-sky-700 font-semibold shadow-2xs"
                         : "text-slate-700 hover:bg-slate-100 hover:text-sky-600"
                     )}
                   >
@@ -114,7 +114,7 @@ export function Sidebar({ className, onNavigate }: SidebarProps = {}) {
           </div>
           <button
             onClick={logout}
-            className="w-full flex items-center justify-center gap-2 rounded-lg bg-red-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+            className="w-full min-h-11 flex items-center justify-center gap-2 rounded-xl bg-red-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-red-700 active:scale-[0.98] transition-all cursor-pointer"
           >
             <LogOut className="h-4 w-4" />
             {t("nav.logout")}

@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatDateTime, getMediaUrl } from "@/lib/utils";
+import { formatCurrency, formatDateTime, getMediaUrl } from "@/lib/utils";
 import { getTodayNepaliDate } from "@/lib/nepaliDate";
 import Link from "next/link";
 import {
@@ -42,6 +42,7 @@ import {
   ChevronDown,
   ChevronUp,
   FolderOpen,
+  QrCode,
 } from "lucide-react";
 
 export default function RoomDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -665,8 +666,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <Link href="/houses" className="mb-1 flex items-center text-sm text-slate-500 hover:text-slate-700">
-            <ArrowLeft className="mr-1 h-4 w-4" />
+          <Link href="/houses" className="mb-1 inline-flex min-h-9 items-center text-sm font-medium text-slate-500 hover:text-slate-800">
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
             {t("roomDetail.backToHouses")}
           </Link>
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -733,17 +734,17 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
       {/* Mobile Segmented Tab Controls (md:hidden) */}
       <div className="md:hidden">
-        <div className="flex rounded-xl bg-slate-100 p-1 text-xs font-semibold text-slate-600 shadow-inner">
+        <div className="flex rounded-2xl bg-slate-100 p-1 text-xs font-semibold text-slate-600 shadow-inner">
           <button
             type="button"
             onClick={() => setMobileTab("bills")}
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2.5 transition-all ${
+            className={`flex-1 min-h-11 flex items-center justify-center gap-1.5 rounded-xl py-2 transition-all cursor-pointer ${
               mobileTab === "bills"
                 ? "bg-white text-slate-900 shadow-sm font-bold"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <FileText className="h-4 w-4 text-indigo-600" />
+            <FileText className="h-4 w-4 text-sky-600" />
             <span>{t("roomDetail.tabBills")}</span>
             {unpaidCount > 0 && (
               <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">
@@ -755,7 +756,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           <button
             type="button"
             onClick={() => setMobileTab("tenant")}
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2.5 transition-all ${
+            className={`flex-1 min-h-11 flex items-center justify-center gap-1.5 rounded-xl py-2 transition-all cursor-pointer ${
               mobileTab === "tenant"
                 ? "bg-white text-slate-900 shadow-sm font-bold"
                 : "text-slate-600 hover:text-slate-900"
@@ -768,7 +769,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           <button
             type="button"
             onClick={() => setMobileTab("docs")}
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2.5 transition-all ${
+            className={`flex-1 min-h-11 flex items-center justify-center gap-1.5 rounded-xl py-2 transition-all cursor-pointer ${
               mobileTab === "docs"
                 ? "bg-white text-slate-900 shadow-sm font-bold"
                 : "text-slate-600 hover:text-slate-900"
@@ -788,20 +789,20 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       {/* Mobile Content Container (md:hidden) */}
       <div className="md:hidden space-y-4">
         {mobileTab === "bills" && (
-          <div className="space-y-3.5">
+          <div className="space-y-3.5 pb-16">
             {/* Quick Action Bar */}
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => openAddBillModal(false)}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 active:scale-[0.98] transition"
+                  className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 active:scale-[0.98] transition cursor-pointer"
                 >
                   <Plus className="h-4 w-4" />
                   {t("roomDetail.addNewBill")}
                 </button>
                 <button
                   onClick={openPaymentModal}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition"
+                  className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-sky-700 active:scale-[0.98] transition cursor-pointer"
                 >
                   <Banknote className="h-4 w-4" />
                   {t("roomDetail.recordPayment")}
@@ -809,11 +810,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </div>
 
               {/* Secondary Quick Action Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-xs">
                 {unpaidCount > 0 && (
                   <button
                     onClick={() => setIsPendingEmailModalOpen(true)}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1.5 font-semibold text-sky-700 shadow-2xs hover:bg-sky-100"
+                    className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 font-semibold text-sky-700 shadow-2xs hover:bg-sky-100 active:scale-95 transition cursor-pointer"
                   >
                     <Mail className="h-3.5 w-3.5" />
                     {t("roomDetail.sendBillsNotice")}
@@ -840,31 +841,40 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
 
             {/* Total Amount to Receive Card */}
-            <div className="rounded-xl border border-rose-200 bg-gradient-to-br from-rose-50 via-orange-50/40 to-amber-50 p-4 shadow-xs">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-rose-600">
-                    {locale === "ne" ? "प्राप्त गर्नुपर्ने कुल रकम" : "Total to receive"}
-                  </p>
-                  <p className="font-display text-2xl font-extrabold text-rose-700">Rs. {totalAmountToReceive}</p>
-                </div>
-                <div className="text-right">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-700">
+            <div className="rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 via-orange-50/40 to-amber-50 p-4 shadow-xs">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-rose-600">
+                  {locale === "ne" ? "प्राप्त गर्नुपर्ने कुल रकम" : "Total to receive"}
+                </p>
+                <p className="mt-1 font-display text-2xl sm:text-3xl font-extrabold text-rose-700 tabular-nums whitespace-nowrap">
+                  {formatCurrency(totalAmountToReceive)}
+                </p>
+              </div>
+
+              {(unpaidCount > 0 || partialCount > 0) && (
+                <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">
                     {unpaidCount} {t("dashboard.unpaid")}
                   </span>
                   {partialCount > 0 && (
-                    <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">
+                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
                       {partialCount} {t("dashboard.partiallyPaid")}
                     </span>
                   )}
                 </div>
-              </div>
-              <div className="mt-2.5 flex items-center justify-between border-t border-rose-100 pt-2 text-xs text-slate-600">
-                <span>{t("roomDetail.totalCollected")}: <strong className="text-emerald-700 font-bold">Rs. {totalPaidAll}</strong></span>
+              )}
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-rose-200/70 pt-2.5 text-xs text-slate-600">
+                <span>
+                  {t("roomDetail.totalCollected")}:{" "}
+                  <strong className="text-emerald-700 font-bold tabular-nums whitespace-nowrap">
+                    {formatCurrency(totalPaidAll)}
+                  </strong>
+                </span>
                 {unpaidCount > 0 && (
                   <button
                     onClick={() => setIsPendingEmailModalOpen(true)}
-                    className="text-xs font-bold text-rose-700 underline"
+                    className="inline-flex min-h-8 items-center gap-1 whitespace-nowrap font-bold text-rose-700 underline hover:text-rose-800"
                   >
                     {locale === "ne" ? "बाँकी बिलहरू" : "View pending"}
                   </button>
@@ -880,7 +890,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <div className="text-xs">
                     <h4 className="font-bold text-red-900">{t("roomDetail.prevBalanceDue")}</h4>
                     <p className="mt-0.5 text-red-800">
-                      <strong>Rs. {openingBalanceRemaining}</strong> {t("roomDetail.prevBalanceOwedBefore")}
+                      <strong className="tabular-nums">{formatCurrency(openingBalanceRemaining)}</strong> {t("roomDetail.prevBalanceOwedBefore")}
                     </p>
                   </div>
                 </div>
@@ -896,8 +906,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
                   <div className="text-xs">
                     <p className="font-bold text-amber-900">Unapplied balance</p>
-                    <p className="mt-0.5 text-amber-700">
-                      Rs. {totalUnapplied} from receipts is yet to be allocated.
+                    <p className="mt-0.5 text-amber-700 tabular-nums">
+                      {formatCurrency(totalUnapplied)} from receipts is yet to be allocated.
                     </p>
                   </div>
                 </div>
@@ -932,7 +942,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 const dueAmount = Math.max(0, Number(payment.total) - Number(payment.total_paid));
 
                 return (
-                  <article key={payment.id} className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs transition hover:border-slate-300">
+                  <article key={payment.id} className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs transition hover:border-slate-300">
                     {/* Card Header */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
@@ -945,7 +955,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             </span>
                           )}
                         </div>
-                        <p className="mt-0.5 text-xs text-slate-500">
+                        <p className="mt-0.5 text-xs text-slate-500 tabular-nums">
                           {payment.previous_units} → {payment.current_units} ({unitDiff} {t("roomDetail.units")})
                           {payment.is_meter_reset && Number(payment.additional_units) > 0 && ` (+${payment.additional_units})`}
                         </p>
@@ -958,7 +968,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           disabled={updateBillMutation.isPending}
                           onChange={(e) => promptStatusChange(payment, e.target.value as any)}
                           aria-label="Payment status"
-                          className={`rounded-full px-2.5 py-1 text-xs font-bold border cursor-pointer transition shadow-2xs ${
+                          className={`min-h-9 rounded-full px-3 py-1 text-xs font-bold border cursor-pointer transition shadow-2xs ${
                             payment.status === "Paid"
                               ? "bg-emerald-50 text-emerald-700 border-emerald-300"
                               : payment.status === "Partially Paid"
@@ -992,16 +1002,16 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     {/* Core Amounts Row */}
                     <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl bg-slate-50 p-2.5 text-center text-xs">
                       <div>
-                        <p className="text-[10px] font-semibold uppercase text-slate-500">{t("dashboard.billed")}</p>
+                        <p className="text-[11px] font-semibold uppercase text-slate-600">{t("dashboard.billed")}</p>
                         <p className="mt-0.5 font-display font-bold text-slate-900">Rs. {payment.total}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-semibold uppercase text-emerald-700">{t("roomDetail.paidCol")}</p>
+                        <p className="text-[11px] font-semibold uppercase text-emerald-700">{t("roomDetail.paidCol")}</p>
                         <p className="mt-0.5 font-display font-bold text-emerald-700">Rs. {payment.total_paid}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-semibold uppercase text-rose-600">{t("roomDetail.dueCol")}</p>
-                        <p className={`mt-0.5 font-display font-bold ${dueAmount > 0 ? "text-rose-700" : "text-slate-400"}`}>
+                        <p className="text-[11px] font-semibold uppercase text-rose-600">{t("roomDetail.dueCol")}</p>
+                        <p className={`mt-0.5 font-display font-bold ${dueAmount > 0 ? "text-rose-700" : "text-slate-500"}`}>
                           Rs. {dueAmount}
                         </p>
                       </div>
@@ -1012,73 +1022,73 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       <div className="mt-3 space-y-2 border-t border-slate-100 pt-3 text-xs">
                         <div className="grid grid-cols-2 gap-2">
                           <div className="rounded-lg bg-sky-50/70 p-2">
-                            <span className="text-[10px] uppercase text-sky-700">{t("dashboard.electricity")}</span>
+                            <span className="text-[11px] font-semibold uppercase text-sky-700">{t("dashboard.electricity")}</span>
                             <p className="font-bold text-sky-800">Rs. {payment.electricity}</p>
                           </div>
                           <div className="rounded-lg bg-orange-50/70 p-2">
-                            <span className="text-[10px] uppercase text-orange-700">{t("roomDetail.rentCol")}</span>
+                            <span className="text-[11px] font-semibold uppercase text-orange-700">{t("roomDetail.rentCol")}</span>
                             <p className="font-bold text-orange-800">Rs. {payment.rent}</p>
                           </div>
                           <div className="rounded-lg bg-cyan-50/70 p-2">
-                            <span className="text-[10px] uppercase text-cyan-700">{t("roomDetail.waterCol")}</span>
+                            <span className="text-[11px] font-semibold uppercase text-cyan-700">{t("roomDetail.waterCol")}</span>
                             <p className="font-bold text-cyan-800">Rs. {payment.water}</p>
                           </div>
                           <div className="rounded-lg bg-purple-50/70 p-2">
-                            <span className="text-[10px] uppercase text-purple-700">{t("dashboard.internet")}</span>
+                            <span className="text-[11px] font-semibold uppercase text-purple-700">{t("dashboard.internet")}</span>
                             <p className="font-bold text-purple-800">Rs. {payment.internet}</p>
                           </div>
                           {Array.isArray(payment.extra_charges) && payment.extra_charges.length > 0 ? (
                             payment.extra_charges.map((item: any, idx: number) => (
                               <div key={idx} className="rounded-lg bg-amber-50/70 p-2">
-                                <span className="text-[10px] uppercase text-amber-700">{item.label || t("roomDetail.extraCost")}</span>
+                                <span className="text-[11px] font-semibold uppercase text-amber-700">{item.label || t("roomDetail.extraCost")}</span>
                                 <p className="font-bold text-amber-800">Rs. {item.amount}</p>
                               </div>
                             ))
                           ) : (
                             Number(payment.extra_charge) > 0 && (
                               <div className="rounded-lg bg-amber-50/70 p-2">
-                                <span className="text-[10px] uppercase text-amber-700">{payment.extra_charge_label || t("roomDetail.extraCost")}</span>
+                                <span className="text-[11px] font-semibold uppercase text-amber-700">{payment.extra_charge_label || t("roomDetail.extraCost")}</span>
                                 <p className="font-bold text-amber-800">Rs. {payment.extra_charge}</p>
                               </div>
                             )
                           )}
                         </div>
                         {payment.waste > 0 && (
-                          <p className="text-[11px] text-slate-500">{t("roomDetail.wasteCol")}: Rs. {payment.waste}</p>
+                          <p className="text-xs text-slate-600">{t("roomDetail.wasteCol")}: Rs. {payment.waste}</p>
                         )}
                         {payment.payment_received_date && (
-                          <p className="text-[11px] text-slate-500">{t("roomDetail.paymentDate")}: {payment.payment_received_date}</p>
+                          <p className="text-xs text-slate-600">{t("roomDetail.paymentDate")}: {payment.payment_received_date}</p>
                         )}
                         {payment.remarks && (
-                          <p className="text-[11px] text-slate-500">{t("roomDetail.remarks")}: {payment.remarks}</p>
+                          <p className="text-xs text-slate-600">{t("roomDetail.remarks")}: {payment.remarks}</p>
                         )}
                       </div>
                     )}
 
                     {/* Toggle Details & Actions Row */}
-                    <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5">
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
                       <button
                         type="button"
                         onClick={() => setExpandedBillId(isExpanded ? null : payment.id)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-900"
+                        className="inline-flex min-h-10 items-center gap-1 rounded-xl px-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
                       >
                         {isExpanded ? (
                           <>
-                            <ChevronUp className="h-3.5 w-3.5" />
+                            <ChevronUp className="h-4 w-4" />
                             {t("roomDetail.hideBreakdown")}
                           </>
                         ) : (
                           <>
-                            <ChevronDown className="h-3.5 w-3.5" />
+                            <ChevronDown className="h-4 w-4" />
                             {t("roomDetail.showBreakdown")}
                           </>
                         )}
                       </button>
 
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => setViewingBill(payment)}
-                          className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2.5 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 active:scale-95 transition"
+                          className="inline-flex min-h-10 items-center gap-1 rounded-xl bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-700 hover:bg-sky-100 active:scale-95 transition cursor-pointer"
                           title={t("common.view")}
                         >
                           <Eye className="h-3.5 w-3.5" />
@@ -1086,7 +1096,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         </button>
                         <button
                           onClick={() => openEditBill(payment)}
-                          className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 active:scale-95 transition"
+                          className="inline-flex min-h-10 items-center gap-1 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 active:scale-95 transition cursor-pointer"
                           title={t("common.edit")}
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -1095,25 +1105,25 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         <button
                           onClick={() => sendSingleBillMutation.mutate(payment.id)}
                           disabled={payment.status === "Paid" || sendSingleBillMutation.isPending}
-                          className="inline-flex items-center justify-center rounded-lg bg-sky-50 p-1.5 text-sky-700 hover:bg-sky-100 disabled:opacity-40 active:scale-95 transition"
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700 hover:bg-sky-100 disabled:opacity-40 active:scale-95 transition cursor-pointer"
                           title={t("roomDetail.sendEmailAction")}
                         >
-                          <Send className="h-3.5 w-3.5" />
+                          <Send className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => sendSingleBillSmsMutation.mutate(payment.id)}
                           disabled={payment.status === "Paid" || sendSingleBillSmsMutation.isPending || !tenant?.contact}
-                          className="inline-flex items-center justify-center rounded-lg bg-emerald-50 p-1.5 text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 active:scale-95 transition"
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 active:scale-95 transition cursor-pointer"
                           title={t("roomDetail.sendSmsAction")}
                         >
-                          <MessageSquare className="h-3.5 w-3.5" />
+                          <MessageSquare className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => setDeletingBill(payment)}
-                          className="inline-flex items-center justify-center rounded-lg bg-rose-50 p-1.5 text-rose-700 hover:bg-rose-100 active:scale-95 transition"
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 active:scale-95 transition cursor-pointer"
                           title={t("common.delete")}
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -1169,7 +1179,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <div className="text-xs">
                     <h3 className="font-bold text-red-900">{t("roomDetail.prevBalanceDue")}</h3>
                     <p className="mt-0.5 text-red-800">
-                      <strong>Rs. {openingBalanceRemaining}</strong> {t("roomDetail.prevBalanceOwedBefore")}
+                      <strong className="tabular-nums">{formatCurrency(openingBalanceRemaining)}</strong> {t("roomDetail.prevBalanceOwedBefore")}
                     </p>
                   </div>
                 </div>
@@ -1226,30 +1236,30 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
                 {/* Rates & Lease Details */}
                 <div className="space-y-2.5 border-t border-slate-100 pt-3">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{t("roomDetail.leaseDetails")}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-600">{t("roomDetail.leaseDetails")}</p>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="rounded-lg bg-slate-50 p-2.5">
-                      <span className="text-[10px] uppercase text-slate-500">{t("roomDetail.monthlyRent")}</span>
+                      <span className="text-[11px] font-semibold uppercase text-slate-600">{t("roomDetail.monthlyRent")}</span>
                       <p className="mt-0.5 font-bold text-emerald-700">Rs. {tenant.rent_price || 0}</p>
                     </div>
                     <div className="rounded-lg bg-slate-50 p-2.5">
-                      <span className="text-[10px] uppercase text-slate-500">{t("roomDetail.electricity")}</span>
+                      <span className="text-[11px] font-semibold uppercase text-slate-600">{t("roomDetail.electricity")}</span>
                       <p className="mt-0.5 font-bold text-amber-700">Rs. {tenant.electricity_price_per_unit || tenant.electricityPricePerUnit || 0}/unit</p>
                     </div>
                     <div className="rounded-lg bg-slate-50 p-2.5">
-                      <span className="text-[10px] uppercase text-slate-500">{t("roomDetail.waterWasteInternet")}</span>
+                      <span className="text-[11px] font-semibold uppercase text-slate-600">{t("roomDetail.waterWasteInternet")}</span>
                       <p className="mt-0.5 font-bold text-cyan-700">
                         Rs. {(parseFloat(tenant.water_price || "0") + parseFloat(tenant.waste_price || "0") + parseFloat(tenant.internet_price || "0"))}
                       </p>
                     </div>
                     <div className="rounded-lg bg-slate-50 p-2.5">
-                      <span className="text-[10px] uppercase text-slate-500">{t("roomDetail.moveInDate")}</span>
+                      <span className="text-[11px] font-semibold uppercase text-slate-600">{t("roomDetail.moveInDate")}</span>
                       <p className="mt-0.5 font-semibold text-slate-900">{tenant.move_in_date || tenant.moveInDate || "-"}</p>
                     </div>
                   </div>
                   {parseFloat(openingBalance) > 0 && (
                     <div className="rounded-lg bg-rose-50 p-2.5 text-xs">
-                      <span className="text-[10px] uppercase text-rose-600">{t("roomDetail.openingBalance")}</span>
+                      <span className="text-[11px] font-semibold uppercase text-rose-600">{t("roomDetail.openingBalance")}</span>
                       <p className="font-bold text-rose-700">Rs. {openingBalance}</p>
                     </div>
                   )}
@@ -1278,11 +1288,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded-lg bg-slate-50 p-2.5">
-                  <span className="text-[10px] uppercase text-slate-500">{t("roomDetail.house")}</span>
+                  <span className="text-[11px] font-semibold uppercase text-slate-600">{t("roomDetail.house")}</span>
                   <p className="mt-0.5 font-bold text-slate-900">{room?.house_name || "-"}</p>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-2.5">
-                  <span className="text-[10px] uppercase text-slate-500">{t("roomDetail.roomNumber")}</span>
+                  <span className="text-[11px] font-semibold uppercase text-slate-600">{t("roomDetail.roomNumber")}</span>
                   <p className="mt-0.5 font-bold text-slate-900">{room?.room_number}</p>
                 </div>
               </div>
@@ -1435,20 +1445,20 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="stat-card p-3">
           <p className="section-header">{t("roomDetail.totalPending")}</p>
-          <p className="mt-1 font-display text-lg font-bold text-rose-700">Rs. {totalAmountToReceive}</p>
+          <p className="mt-1 font-display text-lg font-bold text-rose-700 tabular-nums whitespace-nowrap">{formatCurrency(totalAmountToReceive)}</p>
         </div>
         <div className="stat-card p-3">
           <p className="section-header">{t("dashboard.unpaid")}</p>
-          <p className="mt-1 font-display text-lg font-bold text-red-700">{unpaidCount}</p>
+          <p className="mt-1 font-display text-lg font-bold text-red-700 tabular-nums">{unpaidCount}</p>
         </div>
         <div className="stat-card p-3">
           <p className="section-header">{t("dashboard.partiallyPaid")}</p>
-          <p className="mt-1 font-display text-lg font-bold text-amber-700">{partialCount}</p>
+          <p className="mt-1 font-display text-lg font-bold text-amber-700 tabular-nums">{partialCount}</p>
         </div>
         <div className="stat-card p-3">
           <p className="section-header">{t("roomDetail.totalCollected")}</p>
-          <p className="mt-1 font-display text-lg font-bold text-emerald-700">
-            Rs. {totalPaidAll}
+          <p className="mt-1 font-display text-lg font-bold text-emerald-700 tabular-nums whitespace-nowrap">
+            {formatCurrency(totalPaidAll)}
           </p>
         </div>
       </div>
@@ -1460,7 +1470,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             <p className="text-xs font-semibold uppercase tracking-wider text-rose-600">
               {locale === "ne" ? "प्राप्त गर्नुपर्ने कुल रकम" : "Total amount to be received"}
             </p>
-            <p className="mt-1 font-display text-3xl font-extrabold text-rose-700">Rs. {totalAmountToReceive}</p>
+            <p className="mt-1 font-display text-3xl font-extrabold text-rose-700 tabular-nums whitespace-nowrap">{formatCurrency(totalAmountToReceive)}</p>
             <p className="mt-1 text-sm text-slate-600">
               {locale === "ne"
                 ? `${unpaidCount} बाँकी बिलहरूको रकम उठाउन बाँकी छ`
@@ -2277,17 +2287,17 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <span>{t("roomDetail.estimatedBillCalc")}</span>
                 </div>
                 {addBillForm.is_meter_reset && (
-                  <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                  <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
                     {t("roomDetail.meterResetMode")}
                   </span>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded bg-white p-2 border border-slate-100">
-                  <span className="text-slate-500">{t("roomDetail.unitsUsed")}:</span>{" "}
+                  <span className="text-slate-600">{t("roomDetail.unitsUsed")}:</span>{" "}
                   <span className="font-semibold text-slate-900">{unitsUsed}</span>
                   {addBillForm.is_meter_reset && (
-                    <span className="block text-[10px] text-amber-700">
+                    <span className="block text-xs text-amber-700">
                       ({newMeterUnits} new + {additionalOldUnits} old)
                     </span>
                   )}
@@ -2377,12 +2387,12 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
                 <div className="rounded-lg border border-rose-200 bg-rose-50 p-3">
                   <p className="font-semibold uppercase text-rose-700">{t("roomDetail.currentPending")}</p>
-                  <p className="mt-1 font-extrabold text-rose-900 text-base">Rs. {pendingPreview?.current_pending_amount || "0"}</p>
+                  <p className="mt-1 font-extrabold text-rose-900 text-base tabular-nums">{formatCurrency(pendingPreview?.current_pending_amount || 0)}</p>
                   <p className="text-rose-600">{t("roomDetail.fromBillRows")}</p>
                 </div>
                 <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-3">
                   <p className="font-semibold uppercase text-emerald-700">{t("roomDetail.totalPayableNow")}</p>
-                  <p className="mt-1 font-extrabold text-emerald-900 text-lg">Rs. {pendingPreview?.total_amount_to_be_paid || "0"}</p>
+                  <p className="mt-1 font-extrabold text-emerald-900 text-lg tabular-nums">{formatCurrency(pendingPreview?.total_amount_to_be_paid || 0)}</p>
                   <p className="text-emerald-700 font-medium">{t("roomDetail.currentPlusPreviousDue")}</p>
                 </div>
               </div>
@@ -2394,17 +2404,31 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 </p>
                 <div className="flex justify-between items-center text-slate-700">
                   <span>{t("roomDetail.step1Pending")}</span>
-                  <span className="font-bold text-rose-700">Rs. {pendingPreview?.current_pending_amount || "0"}</span>
+                  <span className="font-bold text-rose-700 tabular-nums">{formatCurrency(pendingPreview?.current_pending_amount || 0)}</span>
                 </div>
                 <div className="flex justify-between items-center text-slate-700">
                   <span>{t("roomDetail.step2PreviousDue")}</span>
-                  <span className="font-bold text-rose-700">Rs. {pendingPreview?.previous_due || "0"}</span>
+                  <span className="font-bold text-rose-700 tabular-nums">{formatCurrency(pendingPreview?.previous_due || 0)}</span>
                 </div>
                 <div className="border-t border-amber-300 pt-1.5 flex justify-between items-center text-sm">
                   <span className="font-bold text-slate-900">{t("roomDetail.totalPayableStep")}</span>
-                  <span className="font-extrabold text-emerald-800 text-base">Rs. {pendingPreview?.total_amount_to_be_paid || "0"}</span>
+                  <span className="font-extrabold text-emerald-800 text-base tabular-nums">{formatCurrency(pendingPreview?.total_amount_to_be_paid || 0)}</span>
                 </div>
               </div>
+
+              {pendingPreview?.payment_qr_url && (
+                <div className="flex items-center gap-3 rounded-lg border border-sky-200 bg-sky-50/70 p-3 text-xs text-sky-900">
+                  <img
+                    src={getMediaUrl(pendingPreview.payment_qr_url)}
+                    alt="Payment QR"
+                    className="h-12 w-12 shrink-0 rounded-md border border-sky-200 bg-white object-contain p-0.5"
+                  />
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <QrCode className="h-4 w-4 shrink-0 text-sky-600" />
+                    <span>{t("roomDetail.paymentQrAttached")}</span>
+                  </div>
+                </div>
+              )}
 
               {/* Included Rooms Table */}
               {pendingPreview?.room_summaries && pendingPreview.room_summaries.length > 0 && (
@@ -2548,7 +2572,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       <div key={email.id} className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-xs">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${email.email_type === "pending" ? "bg-amber-100 text-amber-800" : "bg-sky-100 text-sky-800"}`}>
+                            <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${email.email_type === "pending" ? "bg-amber-100 text-amber-800" : "bg-sky-100 text-sky-800"}`}>
                               {email.email_type === "pending" ? (locale === "ne" ? "बाँकी सूचना" : "Pending notice") : (locale === "ne" ? "मासिक बिल" : "Single bill")}
                             </span>
                             <p className="mt-1 font-semibold text-slate-900 line-clamp-2">{email.subject}</p>
@@ -2561,7 +2585,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
-                        <div className="mt-2 flex flex-col gap-0.5 border-t border-slate-200/60 pt-1.5 text-[11px] text-slate-500">
+                        <div className="mt-2 flex flex-col gap-0.5 border-t border-slate-200/60 pt-1.5 text-xs text-slate-600">
                           <span className="truncate">To: {email.recipient_name} ({email.recipient_email})</span>
                           <span>{formatDateTime(email.sent_at)}</span>
                         </div>
@@ -2586,14 +2610,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           <tr key={email.id} className="hover:bg-slate-50">
                             <td className="px-3 py-2.5 text-slate-600">{formatDateTime(email.sent_at)}</td>
                             <td className="px-3 py-2.5">
-                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${email.email_type === "pending" ? "bg-amber-100 text-amber-800" : "bg-sky-100 text-sky-800"}`}>
+                              <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${email.email_type === "pending" ? "bg-amber-100 text-amber-800" : "bg-sky-100 text-sky-800"}`}>
                                 {email.email_type === "pending" ? (locale === "ne" ? "बाँकी सूचना" : "Pending notice") : (locale === "ne" ? "मासिक बिल" : "Single bill")}
                               </span>
                             </td>
                             <td className="px-3 py-2.5 text-slate-700">
                               <span className="font-semibold">{email.recipient_name}</span>
                               <br />
-                              <span className="text-[11px] text-slate-400">{email.recipient_email}</span>
+                              <span className="text-xs text-slate-600">{email.recipient_email}</span>
                             </td>
                             <td className="px-3 py-2.5 max-w-xs truncate font-medium text-slate-800">{email.subject}</td>
                             <td className="px-3 py-2.5 text-right">
@@ -2701,7 +2725,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     onChange={(e) => setTenantForm({ ...tenantForm, opening_balance: e.target.value })}
                     className="mt-1"
                   />
-                  <p className="mt-1 text-[11px] text-slate-400">{t("roomDetail.owedBeforeFirst")}</p>
+                  <p className="mt-1 text-xs text-slate-600">{t("roomDetail.owedBeforeFirst")}</p>
                 </div>
               </div>
             </div>
@@ -3247,7 +3271,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     placeholder="YYYY-MM-DD (e.g. 2083-05-21)"
                     className="mt-1"
                   />
-                  <p className="mt-1 text-[11px] text-slate-400">{t("roomDetail.autoFilledNepaliDate")}</p>
+                  <p className="mt-1 text-xs text-slate-600">{t("roomDetail.autoFilledNepaliDate")}</p>
                 </div>
 
                 <div>
@@ -3553,6 +3577,36 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Mobile Thumb-Zone Quick Action Dock */}
+      {mobileTab === "bills" &&
+        !isAddBillOpen &&
+        !isPaymentOpen &&
+        !viewingBill &&
+        !editingBill &&
+        !isTenantModalOpen &&
+        !isPendingEmailModalOpen && (
+          <div className="fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 px-3.5 md:hidden pointer-events-none">
+            <div className="pointer-events-auto mx-auto grid max-w-lg grid-cols-2 gap-2 rounded-2xl border border-slate-200/90 bg-white/95 p-1.5 backdrop-blur-xl shadow-lg ring-1 ring-black/5">
+              <button
+                type="button"
+                onClick={() => openAddBillModal(false)}
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 active:scale-[0.98] transition cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="truncate">{t("roomDetail.addNewBill")}</span>
+              </button>
+              <button
+                type="button"
+                onClick={openPaymentModal}
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-3 text-xs font-bold text-white shadow-xs hover:bg-sky-700 active:scale-[0.98] transition cursor-pointer"
+              >
+                <Banknote className="h-4 w-4" />
+                <span className="truncate">{t("roomDetail.recordPayment")}</span>
+              </button>
+            </div>
+          </div>
+        )}
     </section>
   );
 }

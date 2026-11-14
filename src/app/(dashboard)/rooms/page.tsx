@@ -126,7 +126,7 @@ function RoomsContent() {
               setAddForm({ house: defaultHouse, room_number: "", room_name: "" });
               setIsAddOpen(true);
             }}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-sky-500 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm shadow-sky-200 hover:bg-sky-600 active:scale-95 transition-all shrink-0"
+            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm shadow-sky-200 hover:bg-sky-700 active:scale-95 transition-all shrink-0 cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             <span>{t("rooms.addRoom")}</span>
@@ -141,7 +141,7 @@ function RoomsContent() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-sm sm:text-base font-bold text-slate-900 leading-none">{totalCount}</div>
-              <div className="text-[10px] sm:text-xs text-slate-500 font-medium truncate mt-0.5">{t("rooms.title")}</div>
+              <div className="text-xs text-slate-600 font-medium truncate mt-0.5">{t("rooms.title")}</div>
             </div>
           </div>
 
@@ -151,7 +151,7 @@ function RoomsContent() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-sm sm:text-base font-bold text-emerald-900 leading-none">{occupiedCount}</div>
-              <div className="text-[10px] sm:text-xs text-emerald-700 font-medium truncate mt-0.5">{t("roomDetail.occupied")}</div>
+              <div className="text-xs text-emerald-700 font-medium truncate mt-0.5">{t("roomDetail.occupied")}</div>
             </div>
           </div>
 
@@ -161,7 +161,7 @@ function RoomsContent() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-sm sm:text-base font-bold text-amber-900 leading-none">{vacantCount}</div>
-              <div className="text-[10px] sm:text-xs text-amber-700 font-medium truncate mt-0.5">{t("roomDetail.vacant")}</div>
+              <div className="text-xs text-amber-700 font-medium truncate mt-0.5">{t("roomDetail.vacant")}</div>
             </div>
           </div>
         </div>
@@ -294,7 +294,7 @@ function RoomsContent() {
                   </div>
 
                   <span
-                    className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                    className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${
                       room.is_occupied
                         ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                         : "bg-slate-100 text-slate-700 border border-slate-200"
@@ -310,7 +310,7 @@ function RoomsContent() {
                     {t("rooms.viewDetails")}
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                   </span>
-                  <span className="text-[11px] text-slate-400 font-medium">
+                  <span className="text-xs text-slate-600 font-medium">
                     {room.is_active ? t("houses.active") : t("houses.inactive")}
                   </span>
                 </div>

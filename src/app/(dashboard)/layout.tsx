@@ -42,7 +42,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
       </div>
     );
   }
@@ -55,16 +55,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-slate-50">
       <Sidebar />
       <Header />
-      <main className="md:ml-64 p-3.5 sm:p-6 pb-[calc(5.2rem+env(safe-area-inset-bottom,0px))] md:pb-8">
-        {children}
+      <main className="md:ml-64 px-3.5 pt-3.5 sm:p-6 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-10">
+        <div className="mx-auto max-w-7xl">
+          {children}
+        </div>
       </main>
 
       {/* Mobile Native App Fixed Bottom Navigation Bar */}
       <nav
         aria-label="Mobile Navigation"
-        className="fixed inset-x-0 bottom-0 z-40 px-2 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-1.5 md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 md:hidden pointer-events-none"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-5 gap-1 rounded-2xl border border-slate-200/90 bg-white/95 p-1.5 backdrop-blur-lg shadow-xl ring-1 ring-black/5">
+        <div className="pointer-events-auto mx-auto grid max-w-lg grid-cols-5 gap-1 rounded-2xl border border-slate-200/90 bg-white/95 p-1.5 backdrop-blur-xl shadow-xl ring-1 ring-black/5">
           {mobileNavItems.map((item) => {
             const isActive =
               pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));
@@ -72,16 +74,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 px-1 text-[10px] font-semibold tracking-tight transition-all active:scale-90 select-none ${
+                className={`relative flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 px-1 text-[11px] font-semibold tracking-tight transition-all active:scale-95 select-none ${
                   isActive
-                    ? "bg-indigo-50 text-indigo-700 shadow-2xs font-bold"
-                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                    ? "bg-sky-50 text-sky-700 shadow-2xs font-bold"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                 }`}
               >
-                <item.icon className={`h-5 w-5 transition-transform ${isActive ? "text-indigo-600 scale-110" : "text-slate-400"}`} />
-                <span className="truncate max-w-[56px] text-center">{t(item.key)}</span>
+                <item.icon className={`h-5 w-5 transition-transform ${isActive ? "text-sky-600 scale-105" : "text-slate-500"}`} />
+                <span className="truncate max-w-[58px] text-center">{t(item.key)}</span>
                 {isActive && (
-                  <span className="absolute -bottom-0.5 h-1 w-4 rounded-full bg-indigo-600" />
+                  <span className="absolute -bottom-0.5 h-1 w-4 rounded-full bg-sky-600" />
                 )}
               </Link>
             );

@@ -364,6 +364,7 @@
     "switchUpdatesDefault": "Switching updates default subject and message text.",
     "sendNotice": "Send Email",
     "sendingNotice": "Sending Notice...",
+    "paymentQrAttached": "Your uploaded Payment QR code will be attached in this email.",
     "emailHistoryForRoom": "Email History for",
     "emailHistoryDesc": "Record of all single invoices and pending bill notices sent for this room.",
     "viewAllEmails": "View all emails →",
@@ -466,6 +467,16 @@
     "smsApiKeyPlaceholder": "Paste your Aakash SMS auth token",
     "smsApiKeyHelp": "Get your auth token from aakashsms.com. Adding a key activates SMS sending to tenant numbers.",
     "smsEnable": "Enable SMS sending",
-    "smsSuccess": "SMS settings saved successfully!"
+    "smsSuccess": "SMS settings saved successfully!",
+    "paymentQrTitle": "Payment QR Code",
+    "paymentQrDesc": "Upload your eSewa / Khalti / Bank QR photo. It is automatically attached to bill and pending-notice emails sent to tenants.",
+    "paymentQrChoose": "Choose QR Image",
+    "paymentQrUpload": "Upload QR Photo",
+    "paymentQrUploading": "Uploading...",
+    "paymentQrRemove": "Remove QR",
+    "paymentQrSaved": "Payment QR photo updated!",
+    "paymentQrRemoved": "Payment QR photo removed.",
+    "paymentQrEmpty": "No payment QR uploaded yet",
+    "paymentQrEmailHint": "Tenants will see this QR code right inside billing emails."
   }
 }

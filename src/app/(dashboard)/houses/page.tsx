@@ -188,7 +188,7 @@ export default function HousesPage() {
               setFormData({ name: "", address: "", contact_number: "" });
               setIsAddOpen(true);
             }}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-sky-500 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm shadow-sky-200 hover:bg-sky-600 transition-all shrink-0"
+            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm shadow-sky-200 hover:bg-sky-700 active:scale-95 transition-all shrink-0 cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             {t("houses.addHouse")}
@@ -205,7 +205,7 @@ export default function HousesPage() {
             placeholder={t("houses.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-2xs"
+            className="min-h-11 sm:min-h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-2xs"
           />
         </div>
 
@@ -214,7 +214,7 @@ export default function HousesPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="flex-1 sm:flex-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-2xs"
+            className="min-h-11 sm:min-h-9 flex-1 sm:flex-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-2xs"
           >
             <option value="all">{t("common.all")}</option>
             <option value="active">{t("houses.active")}</option>
@@ -263,7 +263,7 @@ export default function HousesPage() {
                       <button
                         type="button"
                         onClick={() => setStatusConfirmHouse(house)}
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold transition-all ${
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold transition-all ${
                           house.is_active
                             ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                             : "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200"
@@ -283,19 +283,19 @@ export default function HousesPage() {
                   {/* Room Counts Pill Grid */}
                   <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                     <div className="rounded-xl bg-slate-50 border border-slate-100 p-2">
-                      <p className="text-[11px] text-slate-500 font-medium">{t("rooms.title")}</p>
+                      <p className="text-xs text-slate-600 font-medium">{t("rooms.title")}</p>
                       <p className="mt-0.5 font-display text-base font-bold text-slate-900">
                         {house.room_count || 0}
                       </p>
                     </div>
                     <div className="rounded-xl bg-emerald-50/60 border border-emerald-100 p-2">
-                      <p className="text-[11px] text-emerald-700 font-medium">{t("rooms.active")}</p>
+                      <p className="text-xs text-emerald-700 font-medium">{t("rooms.active")}</p>
                       <p className="mt-0.5 font-display text-base font-bold text-emerald-800">
                         {house.occupied_count || 0}
                       </p>
                     </div>
                     <div className="rounded-xl bg-amber-50/60 border border-amber-100 p-2">
-                      <p className="text-[11px] text-amber-700 font-medium">{t("rooms.vacant")}</p>
+                      <p className="text-xs text-amber-700 font-medium">{t("rooms.vacant")}</p>
                       <p className="mt-0.5 font-display text-base font-bold text-amber-800">
                         {house.vacant_count || 0}
                       </p>
@@ -313,19 +313,19 @@ export default function HousesPage() {
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                   </Link>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => openEdit(house)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all"
+                      className="inline-flex min-h-10 sm:min-h-8 items-center gap-1.5 rounded-xl sm:rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all cursor-pointer"
                     >
-                      <Pencil className="h-3 w-3" />
+                      <Pencil className="h-3.5 w-3.5" />
                       {t("common.edit")}
                     </button>
                     <button
                       onClick={() => setDeletingHouse(house)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-all"
+                      className="inline-flex min-h-10 sm:min-h-8 items-center gap-1.5 rounded-xl sm:rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 active:scale-95 transition-all cursor-pointer"
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <Trash2 className="h-3.5 w-3.5" />
                       {t("common.delete")}
                     </button>
                   </div>

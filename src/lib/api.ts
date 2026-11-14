@@ -7,10 +7,13 @@ interface RequestOptions extends RequestInit {
 
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { token, ...fetchOptions } = options;
+  const isFormData = typeof FormData !== "undefined" && fetchOptions.body instanceof FormData;
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = isFormData
+    ? {}
+    : {
+        "Content-Type": "application/json",
+      };
 
   if (options.headers) {
     const h = options.headers as Record<string, string>;
@@ -392,7 +395,7 @@ export const profileApi = {
   update: (data: any) =>
     request<any>("/api/custom/profile/", {
       method: "PUT",
-      body: JSON.stringify(data),
+      body: data instanceof FormData ? data : JSON.stringify(data),
       token: getAccessToken() || undefined,
     }),
 };

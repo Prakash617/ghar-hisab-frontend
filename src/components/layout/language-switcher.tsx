@@ -22,7 +22,7 @@ export function LanguageSwitcher({ className, showIcon = true }: LanguageSwitche
         onChange={(e) => setLocale(e.target.value as "en" | "ne")}
         aria-label="Select Language"
         className={cn(
-          "h-9 appearance-none rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 shadow-2xs hover:border-slate-300 focus:border-sky-500 focus:outline-none cursor-pointer transition",
+          "h-10 sm:h-9 appearance-none rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 shadow-2xs hover:border-slate-300 focus:border-sky-500 focus:outline-none cursor-pointer transition",
           showIcon ? "pl-8 pr-7" : "px-3"
         )}
       >

@@ -57,9 +57,9 @@ function LoginForm() {
   };
 
   return (
-    <section className="relative overflow-hidden py-2 sm:py-0 min-h-screen flex items-center">
+    <section className="relative overflow-hidden pt-[calc(4.25rem+env(safe-area-inset-top,0px))] pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:py-0 min-h-screen flex items-center">
       {/* Language Switcher in top right */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+      <div className="absolute top-[max(0.75rem,env(safe-area-inset-top))] right-4 z-20 flex items-center gap-2">
         <ThemeToggle />
         <LanguageSwitcher />
       </div>
@@ -153,7 +153,7 @@ function LoginForm() {
 
           <div className="my-5 flex items-center justify-between">
             <span className="w-1/5 border-b border-slate-200 lg:w-1/4"></span>
-            <span className="text-xs uppercase text-slate-400 font-medium">
+            <span className="text-xs uppercase text-slate-500 font-medium">
               {t("auth.orContinueWithEmail")}
             </span>
             <span className="w-1/5 border-b border-slate-200 lg:w-1/4"></span>

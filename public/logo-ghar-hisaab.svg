@@ -1,14 +1,24 @@
-<svg width="520" height="96" viewBox="0 0 520 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ghar Hisaab logo">
-  <rect width="520" height="96" fill="transparent"/>
-  <g transform="translate(4,10)">
-    <path d="M6 42L52 12L98 42" stroke="#1AA3E8" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M16 40V74H88V40" fill="#2AB8EE"/>
-    <path d="M28 50H64V74H28V50Z" fill="#E8F8FF"/>
-    <rect x="35" y="56" width="22" height="3" fill="#1F4F67"/>
-    <rect x="35" y="62" width="22" height="3" fill="#1F4F67"/>
-    <rect x="35" y="68" width="22" height="3" fill="#1F4F67"/>
-    <rect x="60" y="46" width="34" height="34" rx="8" fill="#19D39B"/>
-    <path d="M68 63L74 69L86 55" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<svg width="420" height="80" viewBox="0 0 420 80" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ghar Hisaab logo">
+  <defs>
+    <linearGradient id="gh-bg-light" x1="10" y1="8" x2="68" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0EA5E9"/>
+      <stop offset="55%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#1E3A8A"/>
+    </linearGradient>
+    <linearGradient id="gh-accent-light" x1="40" y1="44" x2="52" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="100%" stop-color="#10B981"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(4, 8)">
+    <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#gh-bg-light)"/>
+    <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="15.25" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1.5"/>
+    <path d="M15 29.5L32 16L49 29.5" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M20 30V45.2C20 47.299 21.701 49 23.8 49H40.2C42.299 49 44 47.299 44 45.2V30" fill="#FFFFFF" fill-opacity="0.14" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="25.5" y="33.5" width="13" height="3.2" rx="1.6" fill="#FFFFFF"/>
+    <rect x="25.5" y="40" width="8.5" height="3.2" rx="1.6" fill="#BAE6FD"/>
+    <circle cx="38" cy="41.6" r="2.6" fill="url(#gh-accent-light)"/>
   </g>
-  <text x="126" y="63" font-family="Space Grotesk, Inter, Segoe UI, sans-serif" font-size="64" font-weight="700" fill="#0B2B45">Ghar Hisaab</text>
+  <text x="84" y="41" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="32" font-weight="800" letter-spacing="-0.03em" fill="#0F172A">Ghar <tspan fill="#0284C7">Hisaab</tspan></text>
+  <text x="85" y="61" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="12" font-weight="600" letter-spacing="0.14em" fill="#64748B">SMART RENTAL LEDGER</text>
 </svg>

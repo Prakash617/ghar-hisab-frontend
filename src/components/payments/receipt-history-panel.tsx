@@ -25,7 +25,9 @@ import {
   FileText,
   ExternalLink,
   Loader2,
+  Share2,
 } from "lucide-react";
+import { ShareCardDialog } from "./share-card-dialog";
 
 interface ReceiptHistoryPanelProps {
   receipts: any[];
@@ -47,6 +49,7 @@ export function ReceiptHistoryPanel({
   const [editDate, setEditDate] = useState("");
   const [editRemarks, setEditRemarks] = useState("");
   const [reversingReceipt, setReversingReceipt] = useState<any | null>(null);
+  const [sharingReceipt, setSharingReceipt] = useState<any | null>(null);
 
   const invalidateRelated = () => {
     queryClient.invalidateQueries({ queryKey: ["receipts"] });
@@ -210,7 +213,7 @@ export function ReceiptHistoryPanel({
                     {allocations.map((alloc: any, idx: number) => (
                       <span
                         key={alloc.id || idx}
-                        className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50/70 px-2.5 py-1 text-xs font-medium text-indigo-900 tabular-nums"
+                        className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50/70 px-2.5 py-1 text-xs font-medium text-indigo-900 dark:border-indigo-800/80 dark:bg-indigo-950/70 dark:text-indigo-200 tabular-nums"
                       >
                         <span className="font-semibold">{renderAllocationLabel(alloc)}</span>
                         <span>·</span>
@@ -223,6 +226,14 @@ export function ReceiptHistoryPanel({
 
               {/* Actions */}
               <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setSharingReceipt(receipt)}
+                  className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 text-xs font-semibold text-sky-700 hover:bg-sky-100 active:scale-95 transition cursor-pointer"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  {t("shareCard.share")}
+                </button>
                 <button
                   type="button"
                   onClick={() => openEditModal(receipt)}
@@ -334,7 +345,7 @@ export function ReceiptHistoryPanel({
                             {allocations.map((alloc: any, idx: number) => (
                               <span
                                 key={alloc.id || idx}
-                                className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50/70 px-2 py-0.5 text-xs font-medium text-indigo-900 tabular-nums"
+                                className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50/70 px-2 py-0.5 text-xs font-medium text-indigo-900 dark:border-indigo-800/80 dark:bg-indigo-950/70 dark:text-indigo-200 tabular-nums"
                               >
                                 <span>{renderAllocationLabel(alloc)}:</span>
                                 <span className="font-semibold">{formatCurrency(alloc.allocated_amount)}</span>
@@ -350,6 +361,15 @@ export function ReceiptHistoryPanel({
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         <div className="inline-flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSharingReceipt(receipt)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 cursor-pointer"
+                            title={t("shareCard.share")}
+                          >
+                            <Share2 className="h-3.5 w-3.5" />
+                            {t("shareCard.share")}
+                          </button>
                           <button
                             type="button"
                             onClick={() => openEditModal(receipt)}
@@ -481,6 +501,13 @@ export function ReceiptHistoryPanel({
           </div>
         </DialogContent>
       </Dialog>
+
+      <ShareCardDialog
+        open={!!sharingReceipt}
+        onOpenChange={(open) => !open && setSharingReceipt(null)}
+        mode="receipt"
+        receipt={sharingReceipt}
+      />
     </>
   );
 }

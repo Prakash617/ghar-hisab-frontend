@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { roomsApi, paymentsApi, tenantsApi, tenantDocumentsApi, emailApi, smsApi } from "@/lib/api";
+import { roomsApi, paymentsApi, tenantsApi, tenantDocumentsApi, emailApi, smsApi, tenantPortalApi } from "@/lib/api";
 import { useTranslation } from "@/i18n/provider";
 import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,10 @@ import {
 } from "@/components/ui/dialog";
 import { formatCurrency, formatDateTime, getMediaUrl } from "@/lib/utils";
 import { ReceiptHistoryPanel } from "@/components/payments/receipt-history-panel";
+import { ShareCardDialog } from "@/components/payments/share-card-dialog";
+import { SendBillDialog } from "@/components/payments/send-bill-dialog";
+import { MoveOutModal } from "@/components/rooms/move-out-modal";
+import { deliverImageToMessagingApp, renderPendingNoticeCanvasBlob } from "@/lib/share-bill";
 import { getTodayNepaliDate } from "@/lib/nepaliDate";
 import Link from "next/link";
 import {
@@ -44,7 +48,112 @@ import {
   ChevronUp,
   FolderOpen,
   QrCode,
+  Share2,
+  LogOut,
+  Camera,
+  Copy,
+  Link2,
+  RefreshCw,
+  X,
+  MessageCircle,
 } from "lucide-react";
+
+function TenantPortalLinkBox({
+  portalToken,
+  portalUrl,
+  tenantName,
+  houseName,
+  roomNumber,
+  isRegenerating,
+  onCopy,
+  onRegenerate,
+  t,
+  compact = false,
+}: {
+  portalToken?: string | null;
+  portalUrl: string;
+  tenantName?: string;
+  houseName?: string;
+  roomNumber?: string | number;
+  isRegenerating: boolean;
+  onCopy: () => void;
+  onRegenerate: () => void;
+  t: (key: string) => string;
+  compact?: boolean;
+}) {
+  if (!portalToken) return null;
+
+  const whatsappText = encodeURIComponent(
+    `${tenantName ? `Namaste ${tenantName},\n` : ""}Ghar Hisaab - ${houseName || "Room"} #${roomNumber ?? ""}\nView your monthly bills, meter proof, receipts & payment QR:\n${portalUrl}`
+  );
+
+  return (
+    <div
+      className={
+        compact
+          ? "mt-3 rounded-xl border border-indigo-200/80 bg-indigo-50/70 p-3 dark:border-indigo-900/50 dark:bg-indigo-950/30"
+          : "mb-5 rounded-xl border border-indigo-200/80 bg-indigo-50/60 p-4 dark:border-indigo-900/50 dark:bg-indigo-950/30"
+      }
+    >
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900 dark:text-indigo-200">
+            <Link2 className="h-3.5 w-3.5 shrink-0 text-indigo-600 dark:text-indigo-400" />
+            <span>{t("portal.sectionTitle")}</span>
+          </div>
+          <p className="mt-0.5 text-[11px] leading-relaxed text-indigo-700/90 dark:text-indigo-300/80">
+            {t("portal.subtitle")}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={onCopy}
+          className="h-8 border-indigo-200 bg-white text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-slate-900 dark:text-indigo-300 dark:hover:bg-indigo-950"
+        >
+          <Copy className="mr-1 h-3.5 w-3.5" />
+          {t("portal.copyLink")}
+        </Button>
+
+        <a
+          href={`/portal/${portalToken}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-8 items-center gap-1 rounded-md border border-indigo-200 bg-white px-2.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100 dark:border-indigo-800 dark:bg-slate-900 dark:text-indigo-300 dark:hover:bg-indigo-950"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          {t("portal.openLink")}
+        </a>
+
+        <a
+          href={`https://wa.me/?text=${whatsappText}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-8 items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60"
+        >
+          <Share2 className="h-3.5 w-3.5" />
+          {t("portal.shareWhatsApp")}
+        </a>
+
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          disabled={isRegenerating}
+          onClick={onRegenerate}
+          className="h-8 px-2.5 text-xs font-medium text-slate-600 hover:bg-white/80 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"
+        >
+          <RefreshCw className={`mr-1 h-3.5 w-3.5 ${isRegenerating ? "animate-spin" : ""}`} />
+          {t("portal.regenerateLink")}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function RoomDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -55,6 +164,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   // Navigation & Display State
   const [showTenantProfile, setShowTenantProfile] = useState(false);
   const [viewingBill, setViewingBill] = useState<any>(null);
+  const [sharingBill, setSharingBill] = useState<any>(null);
+  const [sendingBill, setSendingBill] = useState<any>(null);
+  const [isSendingPendingMessaging, setIsSendingPendingMessaging] = useState(false);
+  const [previewMeterPhoto, setPreviewMeterPhoto] = useState<{ url: string; title: string } | null>(null);
+  const [billMeterPhoto, setBillMeterPhoto] = useState<File | null>(null);
+  const [billMeterPhotoPreview, setBillMeterPhotoPreview] = useState("");
+  const [isMoveOutOpen, setIsMoveOutOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<"bills" | "receipts" | "tenant" | "docs">("bills");
   const [expandedBillId, setExpandedBillId] = useState<number | null>(null);
 
@@ -105,6 +221,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     internet_price: "0",
     initial_unit: 0,
     opening_balance: "0",
+    security_deposit: "0",
   });
 
   // Edit / Delete Bill States
@@ -170,6 +287,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   const documents = data?.documents || [];
   const latestReceipt = data?.latest_receipt;
   const recentReceipts = data?.recent_receipts || [];
+  const pastTenants: any[] = data?.past_tenants || [];
   const nextPreviousUnits: number = data?.next_previous_units ?? (payments[0]?.current_units ?? tenant?.initial_unit ?? 0);
   const totalPaidAll = payments.reduce((acc: number, p: any) => acc + (parseFloat(p.total_paid) || 0), 0);
 
@@ -227,6 +345,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         internet_price: String(tenant.internet_price || 0),
         initial_unit: tenant.initial_unit || 0,
         opening_balance: String(tenant.opening_balance || 0),
+        security_deposit: String(tenant.security_deposit || 0),
       });
     } else {
       setTenantForm({
@@ -242,13 +361,36 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         internet_price: "0",
         initial_unit: 0,
         opening_balance: "0",
+        security_deposit: "0",
       });
     }
     setIsTenantModalOpen(true);
   };
 
+  const clearBillMeterPhoto = () => {
+    if (billMeterPhotoPreview) {
+      URL.revokeObjectURL(billMeterPhotoPreview);
+    }
+    setBillMeterPhoto(null);
+    setBillMeterPhotoPreview("");
+  };
+
+  const handleBillMeterPhotoChange = (file: File | null) => {
+    if (billMeterPhotoPreview) {
+      URL.revokeObjectURL(billMeterPhotoPreview);
+    }
+    if (!file) {
+      setBillMeterPhoto(null);
+      setBillMeterPhotoPreview("");
+      return;
+    }
+    setBillMeterPhoto(file);
+    setBillMeterPhotoPreview(URL.createObjectURL(file));
+  };
+
   // Open Add Bill Modal with defaults
   const openAddBillModal = (isReset = false) => {
+    clearBillMeterPhoto();
     setAddBillForm({
       billing_month: todayNepaliDate || new Date().toISOString().slice(0, 7),
       current_units: "",
@@ -282,6 +424,36 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     },
   });
 
+  const regeneratePortalTokenMutation = useMutation({
+    mutationFn: (tenantId: number) => tenantPortalApi.regenerateToken(tenantId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["room", roomId] });
+      toast.success(t("portal.regenerated"));
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.detail || "Failed to regenerate portal link.");
+    },
+  });
+
+  const getTenantPortalUrl = (portalToken?: string | null) => {
+    if (!portalToken) return "";
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}/portal/${portalToken}`;
+    }
+    return `/portal/${portalToken}`;
+  };
+
+  const copyTenantPortalLink = async (portalToken?: string | null) => {
+    const url = getTenantPortalUrl(portalToken);
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(t("portal.copied"));
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
   const createBillMutation = useMutation({
     mutationFn: (bData: any) => {
       const validExtraCharges = bData.has_extra_cost
@@ -296,24 +468,54 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         (sum: number, item: { amount: number }) => sum + item.amount,
         0
       );
+      const extraChargeLabel = validExtraCharges.map((i: { label: string }) => i.label).join(", ").slice(0, 100);
+      const previousUnitsVal = bData.is_meter_reset ? (parseInt(bData.previous_units) || 0) : nextPreviousUnits;
+      const oldMeterReadingVal = bData.is_meter_reset && bData.old_meter_reading ? parseInt(bData.old_meter_reading) : null;
+      const newMeterStartVal = bData.is_meter_reset ? (parseInt(bData.previous_units) || 0) : null;
+      const additionalUnitsVal = bData.is_meter_reset ? (parseInt(bData.additional_units) || 0) : 0;
+
+      if (billMeterPhoto) {
+        const fd = new FormData();
+        fd.append("room", String(roomId));
+        fd.append("billing_month", bData.billing_month);
+        fd.append("current_units", String(parseInt(bData.current_units)));
+        fd.append("previous_units", String(previousUnitsVal));
+        fd.append("remarks", bData.remarks || "");
+        fd.append("is_meter_reset", String(Boolean(bData.is_meter_reset)));
+        fd.append("meter_reset_reason", bData.is_meter_reset ? (bData.meter_reset_reason || "") : "");
+        if (oldMeterReadingVal !== null) {
+          fd.append("old_meter_reading", String(oldMeterReadingVal));
+        }
+        if (newMeterStartVal !== null) {
+          fd.append("new_meter_start_reading", String(newMeterStartVal));
+        }
+        fd.append("additional_units", String(additionalUnitsVal));
+        fd.append("extra_charges", JSON.stringify(validExtraCharges));
+        fd.append("extra_charge", String(extraChargeTotal));
+        fd.append("extra_charge_label", extraChargeLabel);
+        fd.append("meter_photo", billMeterPhoto);
+        return paymentsApi.create(fd);
+      }
+
       return paymentsApi.create({
         room: roomId,
         billing_month: bData.billing_month,
         current_units: parseInt(bData.current_units),
-        previous_units: bData.is_meter_reset ? (parseInt(bData.previous_units) || 0) : nextPreviousUnits,
+        previous_units: previousUnitsVal,
         remarks: bData.remarks || "",
         is_meter_reset: Boolean(bData.is_meter_reset),
         meter_reset_reason: bData.is_meter_reset ? (bData.meter_reset_reason || "") : "",
-        old_meter_reading: bData.is_meter_reset && bData.old_meter_reading ? parseInt(bData.old_meter_reading) : null,
-        new_meter_start_reading: bData.is_meter_reset ? (parseInt(bData.previous_units) || 0) : null,
-        additional_units: bData.is_meter_reset ? (parseInt(bData.additional_units) || 0) : 0,
+        old_meter_reading: oldMeterReadingVal,
+        new_meter_start_reading: newMeterStartVal,
+        additional_units: additionalUnitsVal,
         extra_charges: validExtraCharges,
         extra_charge: extraChargeTotal,
-        extra_charge_label: validExtraCharges.map((i: { label: string }) => i.label).join(", ").slice(0, 100),
+        extra_charge_label: extraChargeLabel,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["room", roomId] });
+      clearBillMeterPhoto();
       setIsAddBillOpen(false);
       toast.success("New bill created successfully!");
     },
@@ -341,12 +543,56 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     onSuccess: (res: any) => {
       queryClient.invalidateQueries({ queryKey: ["room", roomId] });
       queryClient.invalidateQueries({ queryKey: ["room-emails", roomId] });
+      setSendingBill(null);
       toast.success(res?.message || "Bill invoice sent successfully!");
     },
     onError: (err: any) => {
       toast.error(err?.message || "Failed to send bill email.");
     },
   });
+
+  const handleSendPendingMessaging = async (channel: "whatsapp" | "viber") => {
+    setIsSendingPendingMessaging(true);
+    try {
+      const unpaidList = payments.filter((p: any) => p.status !== "Paid");
+      const portalUrl = getTenantPortalUrl(tenant?.portal_token);
+      const blob = await renderPendingNoticeCanvasBlob({
+        tenantName: tenant?.full_name || tenant?.name || undefined,
+        roomLabel: room?.room_name || (room?.room_number ? `Room ${room.room_number}` : undefined),
+        houseLabel: room?.house_name || undefined,
+        unpaidBills: unpaidList,
+        openingDue: Number(openingBalanceRemaining || 0),
+        totalPending: Number(totalAmountToReceive || 0),
+        qrUrl: pendingPreview?.qr_image_url ? getMediaUrl(pendingPreview.qr_image_url) : null,
+      });
+
+      const summary = [
+        pendingEmailMessage || `GharHisab Pending Bills Notice (${formatCurrency(totalAmountToReceive)})`,
+        portalUrl ? `\nView online bill & QR: ${portalUrl}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      const result = await deliverImageToMessagingApp({
+        channel,
+        blob,
+        filename: `pending-bills-${room?.room_number || roomId}.png`,
+        summary,
+        phone: tenant?.contact,
+        title: pendingEmailSubject || "Pending Bills Notice",
+      });
+
+      if (result === "native_share") {
+        toast.success(t("sendBill.sentViaNative"));
+      } else if (result === "clipboard_and_link") {
+        toast.success(t("sendBill.imageCopiedOpened"));
+      } else if (result === "download_and_link") {
+        toast.success(t("sendBill.imageDownloadedOpened"));
+      }
+    } finally {
+      setIsSendingPendingMessaging(false);
+    }
+  };
 
   const sendPendingSmsMutation = useMutation({
     mutationFn: () => smsApi.sendPendingBills(roomId),
@@ -383,6 +629,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         internet_price: parseFloat(tData.internet_price) || 0,
         initial_unit: parseInt(String(tData.initial_unit)) || 0,
         opening_balance: parseFloat(tData.opening_balance) || 0,
+        security_deposit: parseFloat(tData.security_deposit) || 0,
         room: roomId,
       };
       if (tenant?.id) {
@@ -935,6 +1182,21 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <h3 className="font-display text-base font-bold text-slate-900">{payment.billing_month}</h3>
+                          {payment.meter_photo && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPreviewMeterPhoto({
+                                  url: getMediaUrl(payment.meter_photo),
+                                  title: `${payment.billing_month} — ${t("meterPhoto.modalTitle")}`,
+                                })
+                              }
+                              className="inline-flex items-center gap-1 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold text-sky-800 border border-sky-200 hover:bg-sky-200 transition cursor-pointer"
+                            >
+                              <Camera className="h-2.5 w-2.5 text-sky-600" />
+                              {t("meterPhoto.viewProof")}
+                            </button>
+                          )}
                           {payment.is_meter_reset && (
                             <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-300">
                               <RotateCcw className="h-2.5 w-2.5 text-amber-600" />
@@ -1072,7 +1334,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         )}
                       </button>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
                           onClick={() => setViewingBill(payment)}
                           className="inline-flex min-h-10 items-center gap-1 rounded-xl bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-700 hover:bg-sky-100 active:scale-95 transition cursor-pointer"
@@ -1080,6 +1342,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         >
                           <Eye className="h-3.5 w-3.5" />
                           <span>{t("common.view")}</span>
+                        </button>
+                        <button
+                          onClick={() => setSharingBill(payment)}
+                          className="inline-flex min-h-10 items-center gap-1 rounded-xl bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 active:scale-95 transition cursor-pointer"
+                          title={t("shareCard.share")}
+                        >
+                          <Share2 className="h-3.5 w-3.5" />
+                          <span>{t("shareCard.share")}</span>
                         </button>
                         <button
                           onClick={() => openEditBill(payment)}
@@ -1090,10 +1360,10 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           <span>{t("common.edit")}</span>
                         </button>
                         <button
-                          onClick={() => sendSingleBillMutation.mutate(payment.id)}
-                          disabled={payment.status === "Paid" || sendSingleBillMutation.isPending}
+                          onClick={() => setSendingBill(payment)}
+                          disabled={sendSingleBillMutation.isPending}
                           className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700 hover:bg-sky-100 disabled:opacity-40 active:scale-95 transition cursor-pointer"
-                          title={t("roomDetail.sendEmailAction")}
+                          title={t("roomDetail.sendBillAction")}
                         >
                           <Send className="h-4 w-4" />
                         </button>
@@ -1176,18 +1446,27 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             {/* Tenant Profile Card */}
             {tenant ? (
               <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <h2 className="font-display text-lg font-bold text-slate-900">{tenant.name || tenant.full_name}</h2>
                     <p className="text-xs text-slate-500">{tenant.client_code ? `Code: ${tenant.client_code}` : t("roomDetail.tenantProfile")}</p>
                   </div>
-                  <button
-                    onClick={openTenantModal}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                    {t("roomDetail.editTenant")}
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setIsMoveOutOpen(true)}
+                      className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      {t("moveOut.buttonLabel")}
+                    </button>
+                    <button
+                      onClick={openTenantModal}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      {t("roomDetail.editTenant")}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Direct Contact Buttons */}
@@ -1250,7 +1529,25 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       <p className="font-bold text-rose-700">Rs. {openingBalance}</p>
                     </div>
                   )}
+                  {parseFloat(tenant.security_deposit || "0") > 0 && (
+                    <div className="rounded-lg bg-emerald-50 p-2.5 text-xs">
+                      <span className="text-[11px] font-semibold uppercase text-emerald-700">{t("moveOut.securityDeposit")}</span>
+                      <p className="font-bold text-emerald-800">{formatCurrency(tenant.security_deposit)}</p>
+                    </div>
+                  )}
                 </div>
+                <TenantPortalLinkBox
+                  portalToken={tenant.portal_token}
+                  portalUrl={getTenantPortalUrl(tenant.portal_token)}
+                  tenantName={tenant.full_name || tenant.name}
+                  houseName={room?.house_name}
+                  roomNumber={room?.room_number}
+                  isRegenerating={regeneratePortalTokenMutation.isPending}
+                  onCopy={() => copyTenantPortalLink(tenant.portal_token)}
+                  onRegenerate={() => regeneratePortalTokenMutation.mutate(tenant.id)}
+                  t={t}
+                  compact
+                />
               </div>
             ) : (
               <div className="rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center">
@@ -1284,6 +1581,25 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
               </div>
             </div>
+
+            {pastTenants.length > 0 && (
+              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+                <h3 className="font-display text-sm font-bold text-slate-900 mb-2">{t("moveOut.pastTenants")}</h3>
+                <div className="space-y-2">
+                  {pastTenants.map((pt: any) => (
+                    <div key={pt.id} className="rounded-lg bg-slate-50 p-2.5 text-xs flex items-center justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-slate-800">{pt.full_name || pt.name}</p>
+                        <p className="text-[11px] text-slate-500">{pt.phone_number || pt.contact || "-"}</p>
+                      </div>
+                      <span className="text-[11px] font-medium text-slate-600">
+                        {t("moveOut.movedOutOn")}: {pt.moved_out_date || "-"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -1432,6 +1748,12 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 <span className="h-2 w-2 rounded-full bg-emerald-600"></span>{t("houses.active")}
               </span>
               <button
+                onClick={() => setIsMoveOutOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 cursor-pointer"
+              >
+                <LogOut className="h-4 w-4" />{t("moveOut.buttonLabel")}
+              </button>
+              <button
                 onClick={openTenantModal}
                 className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
               >
@@ -1450,6 +1772,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               { label: t("roomDetail.electricity"), value: `Rs. ${tenant.electricity_price_per_unit || tenant.electricityPricePerUnit || 0}/unit`, border: "border-amber-500", color: "text-orange-600" },
               { label: t("roomDetail.waterWasteInternet"), value: `Rs. ${tenant.water_price || 0} + ${tenant.waste_price || 0} + ${tenant.internet_price || 0}`, border: "border-cyan-500", color: "text-cyan-600" },
               { label: t("roomDetail.openingBalance"), value: `Rs. ${openingBalance}`, border: "border-rose-500", color: parseFloat(openingBalance) > 0 ? "text-red-600" : "text-slate-600" },
+              { label: t("moveOut.securityDeposit"), value: formatCurrency(tenant.security_deposit || 0), border: "border-teal-500", color: parseFloat(tenant.security_deposit || "0") > 0 ? "text-emerald-700" : "text-slate-600" },
             ].map((item) => (
               <div key={item.label} className={`border-l-4 ${item.border} pl-4`}>
                 <p className="section-header">{item.label}</p>
@@ -1457,6 +1780,35 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             ))}
           </div>
+          <TenantPortalLinkBox
+            portalToken={tenant.portal_token}
+            portalUrl={getTenantPortalUrl(tenant.portal_token)}
+            tenantName={tenant.full_name || tenant.name}
+            houseName={room?.house_name}
+            roomNumber={room?.room_number}
+            isRegenerating={regeneratePortalTokenMutation.isPending}
+            onCopy={() => copyTenantPortalLink(tenant.portal_token)}
+            onRegenerate={() => regeneratePortalTokenMutation.mutate(tenant.id)}
+            t={t}
+          />
+          {pastTenants.length > 0 && (
+            <div className="mt-6 border-t border-slate-100 pt-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{t("moveOut.pastTenants")}</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {pastTenants.map((pt: any) => (
+                  <div key={pt.id} className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs flex items-center justify-between gap-2">
+                    <div>
+                      <p className="font-bold text-slate-800">{pt.full_name || pt.name}</p>
+                      <p className="text-[11px] text-slate-500">{pt.phone_number || pt.contact || "-"}</p>
+                    </div>
+                    <span className="text-[11px] font-medium text-slate-600">
+                      {t("moveOut.movedOutOn")}: {pt.moved_out_date || "-"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1631,6 +1983,22 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     <td className="px-4 py-4 font-semibold text-slate-700">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span>{payment.billing_month}</span>
+                        {payment.meter_photo && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPreviewMeterPhoto({
+                                url: getMediaUrl(payment.meter_photo),
+                                title: `${payment.billing_month} — ${t("meterPhoto.modalTitle")}`,
+                              })
+                            }
+                            className="inline-flex items-center gap-1 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold text-sky-800 border border-sky-200 hover:bg-sky-200 transition cursor-pointer"
+                            title={t("meterPhoto.viewProof")}
+                          >
+                            <Camera className="h-2.5 w-2.5 text-sky-600" />
+                            {t("meterPhoto.viewProof")}
+                          </button>
+                        )}
                         {payment.is_meter_reset && (
                           <span
                             className="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-300"
@@ -1705,11 +2073,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         <button onClick={() => setViewingBill(payment)} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50">
                           <Eye className="h-3.5 w-3.5" />{t("common.view")}
                         </button>
+                        <button onClick={() => setSharingBill(payment)} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-50">
+                          <Share2 className="h-3.5 w-3.5" />{t("shareCard.share")}
+                        </button>
                         <button onClick={() => openEditBill(payment)} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50">
                           <Pencil className="h-3.5 w-3.5" />{t("common.edit")}
                         </button>
-                        <button onClick={() => sendSingleBillMutation.mutate(payment.id)} disabled={payment.status === "Paid" || sendSingleBillMutation.isPending} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50 disabled:opacity-50">
-                          <Send className="h-3.5 w-3.5" />{t("roomDetail.sendEmailAction")}
+                        <button onClick={() => setSendingBill(payment)} disabled={sendSingleBillMutation.isPending} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50 disabled:opacity-50">
+                          <Send className="h-3.5 w-3.5" />{t("roomDetail.sendBillAction")}
                         </button>
                         <button onClick={() => sendSingleBillSmsMutation.mutate(payment.id)} disabled={payment.status === "Paid" || sendSingleBillSmsMutation.isPending || !tenant?.contact} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
                           <MessageSquare className="h-3.5 w-3.5" />{t("roomDetail.sendSmsAction")}
@@ -2282,6 +2653,57 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               />
             </div>
 
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-900/50">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    {t("meterPhoto.label")}
+                  </Label>
+                  <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                    {t("meterPhoto.hint")}
+                  </p>
+                </div>
+                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-xs font-semibold text-sky-700 shadow-xs transition hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-950 dark:text-sky-300 dark:hover:bg-sky-950/60">
+                  <Camera className="h-3.5 w-3.5" />
+                  <span>{billMeterPhoto ? t("meterPhoto.change") : t("meterPhoto.attach")}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={(e) => handleBillMeterPhotoChange(e.target.files?.[0] || null)}
+                  />
+                </label>
+              </div>
+
+              {billMeterPhotoPreview && (
+                <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={billMeterPhotoPreview}
+                    alt={t("meterPhoto.label")}
+                    className="h-14 w-14 rounded-md object-cover border border-slate-200 dark:border-slate-800"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium text-slate-800 dark:text-slate-200">
+                      {billMeterPhoto?.name}
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                      {billMeterPhoto ? `${Math.max(1, Math.round(billMeterPhoto.size / 1024))} KB` : ""}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={clearBillMeterPhoto}
+                    className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/50 cursor-pointer"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    {t("meterPhoto.remove")}
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
               <Button type="button" variant="outline" onClick={() => setIsAddBillOpen(false)}>
                 {t("common.cancel")}
@@ -2456,9 +2878,29 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <Button
                     type="button"
                     variant="outline"
+                    onClick={() => handleSendPendingMessaging("whatsapp")}
+                    disabled={isSendingPendingMessaging}
+                    className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                  >
+                    <Share2 className="h-4 w-4 mr-1.5" />
+                    {t("sendBill.sendNoticeWhatsApp")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleSendPendingMessaging("viber")}
+                    disabled={isSendingPendingMessaging}
+                    className="border-violet-300 text-violet-700 hover:bg-violet-50"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-1.5" />
+                    {t("sendBill.sendNoticeViber")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => sendPendingSmsMutation.mutate()}
                     disabled={sendPendingSmsMutation.isPending || !tenant?.contact}
-                    className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                    className="border-sky-300 text-sky-700 hover:bg-sky-50"
                   >
                     <MessageSquare className="h-4 w-4 mr-1.5" />
                     {sendPendingSmsMutation.isPending ? t("roomDetail.sendingSms") : t("roomDetail.sendSmsNotice")}
@@ -2468,7 +2910,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     disabled={sendPendingMutation.isPending || !tenant?.email}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white"
                   >
-                    {sendPendingMutation.isPending ? t("roomDetail.sendingNotice") : t("roomDetail.sendNotice")}
+                    <Mail className="h-4 w-4 mr-1.5" />
+                    {sendPendingMutation.isPending ? t("roomDetail.sendingNotice") : `${t("roomDetail.sendNotice")} (${t("sendBill.defaultBadge")})`}
                   </Button>
                 </div>
               </form>
@@ -2663,6 +3106,16 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     className="mt-1"
                   />
                   <p className="mt-1 text-xs text-slate-600">{t("roomDetail.owedBeforeFirst")}</p>
+                </div>
+                <div>
+                  <Label>{t("moveOut.securityDeposit")}</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={tenantForm.security_deposit}
+                    onChange={(e) => setTenantForm({ ...tenantForm, security_deposit: e.target.value })}
+                    className="mt-1"
+                  />
                 </div>
               </div>
             </div>
@@ -2882,6 +3335,45 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <p className="text-sm">{viewingBill.remarks}</p>
                 </div>
               )}
+              {viewingBill.meter_photo && (
+                <div className="rounded-xl border border-sky-200/80 bg-sky-50/60 p-3 dark:border-sky-900/50 dark:bg-sky-950/30">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-800 dark:text-sky-200">
+                      <Camera className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+                      {t("meterPhoto.modalTitle")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPreviewMeterPhoto({
+                          url: getMediaUrl(viewingBill.meter_photo),
+                          title: `${viewingBill.billing_month} — ${t("meterPhoto.modalTitle")}`,
+                        })
+                      }
+                      className="text-xs font-semibold text-sky-700 hover:underline dark:text-sky-300 cursor-pointer"
+                    >
+                      {t("meterPhoto.viewProof")}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPreviewMeterPhoto({
+                        url: getMediaUrl(viewingBill.meter_photo),
+                        title: `${viewingBill.billing_month} — ${t("meterPhoto.modalTitle")}`,
+                      })
+                    }
+                    className="block w-full overflow-hidden rounded-lg border border-sky-200 bg-white dark:border-sky-800 dark:bg-slate-900 cursor-pointer"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={getMediaUrl(viewingBill.meter_photo)}
+                      alt={t("meterPhoto.modalTitle")}
+                      className="max-h-48 w-full object-contain"
+                    />
+                  </button>
+                </div>
+              )}
               <div className="sticky bottom-0 bg-white z-10 pt-3 border-t border-slate-100 flex gap-2">
                 <Button variant="outline" onClick={() => { openEditBill(viewingBill); }} className="flex-1">
                   <Pencil className="mr-2 h-4 w-4" />{t("roomDetail.editBill")}
@@ -2889,13 +3381,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 <Button
                   variant="outline"
                   onClick={() => {
-                    sendSingleBillMutation.mutate(viewingBill.id);
+                    setSendingBill(viewingBill);
                     setViewingBill(null);
                   }}
-                  disabled={viewingBill.status === "Paid" || sendSingleBillMutation.isPending}
+                  disabled={sendSingleBillMutation.isPending}
                   className="flex-1"
                 >
-                  <Send className="mr-2 h-4 w-4" />{t("roomDetail.sendEmailAction")}
+                  <Send className="mr-2 h-4 w-4" />{t("roomDetail.sendBillAction")}
                 </Button>
               </div>
             </div>
@@ -3489,11 +3981,72 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         </DialogContent>
       </Dialog>
 
+      <ShareCardDialog
+        open={!!sharingBill}
+        onOpenChange={(open) => !open && setSharingBill(null)}
+        mode="bill"
+        bill={sharingBill}
+        roomLabel={room?.room_number ? String(room.room_number) : undefined}
+        houseLabel={room?.house_name || undefined}
+        tenantName={tenant?.full_name || tenant?.name || undefined}
+        tenantPhone={tenant?.contact || null}
+        portalUrl={getTenantPortalUrl(tenant?.portal_token)}
+      />
+
+      <SendBillDialog
+        open={!!sendingBill}
+        onOpenChange={(open) => !open && setSendingBill(null)}
+        bill={sendingBill}
+        roomLabel={room?.room_number ? String(room.room_number) : undefined}
+        houseLabel={room?.house_name || undefined}
+        tenantName={tenant?.full_name || tenant?.name || undefined}
+        tenantEmail={tenant?.email || null}
+        tenantPhone={tenant?.contact || null}
+        portalUrl={getTenantPortalUrl(tenant?.portal_token)}
+        isSendingEmail={sendSingleBillMutation.isPending}
+        onSendEmail={(paymentId) => sendSingleBillMutation.mutate(paymentId)}
+      />
+
+      <MoveOutModal
+        open={isMoveOutOpen}
+        onOpenChange={setIsMoveOutOpen}
+        roomId={roomId}
+        tenant={tenant || null}
+        todayNepaliDate={todayNepaliDate}
+        nextPreviousUnits={nextPreviousUnits}
+        onCompleted={() => queryClient.invalidateQueries({ queryKey: ["room", roomId] })}
+      />
+
+      <Dialog open={!!previewMeterPhoto} onOpenChange={(open) => !open && setPreviewMeterPhoto(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Camera className="h-4 w-4 text-sky-600" />
+              <span>{previewMeterPhoto?.title || t("meterPhoto.modalTitle")}</span>
+            </DialogTitle>
+          </DialogHeader>
+          {previewMeterPhoto && (
+            <div className="mt-2 overflow-hidden rounded-xl border border-slate-200 bg-slate-950/5 dark:border-slate-800">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewMeterPhoto.url}
+                alt={previewMeterPhoto.title}
+                className="max-h-[70vh] w-full object-contain"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Mobile Thumb-Zone Quick Action Dock */}
       {mobileTab === "bills" &&
         !isAddBillOpen &&
         !isPaymentOpen &&
         !viewingBill &&
+        !sharingBill &&
+        !sendingBill &&
+        !previewMeterPhoto &&
+        !isMoveOutOpen &&
         !editingBill &&
         !isTenantModalOpen &&
         !isPendingEmailModalOpen && (

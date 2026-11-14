@@ -258,7 +258,7 @@ export const paymentsApi = {
   create: (data: any) =>
     request<any>("/api/payment-histories/", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: typeof FormData !== "undefined" && data instanceof FormData ? data : JSON.stringify(data),
       token: getAccessToken() || undefined,
     }),
 
@@ -284,7 +284,7 @@ export const paymentsApi = {
   update: (id: number, data: any) =>
     request<any>(`/api/payment-histories/${id}/`, {
       method: "PATCH",
-      body: JSON.stringify(data),
+      body: typeof FormData !== "undefined" && data instanceof FormData ? data : JSON.stringify(data),
       token: getAccessToken() || undefined,
     }),
 
@@ -435,4 +435,184 @@ export const profileApi = {
       body: data instanceof FormData ? data : JSON.stringify(data),
       token: getAccessToken() || undefined,
     }),
+};
+
+// Bulk Monthly Billing API
+export const bulkBillingApi = {
+  preview: (houseId: number, includeVacant = false) =>
+    request<any>(
+      `/api/custom/houses/${houseId}/bulk-billing/${includeVacant ? "?include_vacant=true" : ""}`,
+      { token: getAccessToken() || undefined }
+    ),
+
+  create: (
+    houseId: number,
+    data:
+      | FormData
+      | {
+          billing_month: string;
+          entries: Array<{
+            room_id: number;
+            current_units: number;
+            remarks?: string;
+            extra_charge?: string | number;
+            extra_charge_label?: string;
+          }>;
+        }
+  ) =>
+    request<any>(`/api/custom/houses/${houseId}/bulk-billing/`, {
+      method: "POST",
+      body: typeof FormData !== "undefined" && data instanceof FormData ? data : JSON.stringify(data),
+      token: getAccessToken() || undefined,
+    }),
+};
+
+// Batch Pending Reminders API
+export const batchRemindersApi = {
+  preview: (houseId?: number | string) => {
+    const query = houseId ? `?house_id=${houseId}` : "";
+    return request<any>(`/api/custom/batch-reminders/preview/${query}`, {
+      token: getAccessToken() || undefined,
+    });
+  },
+
+  send: (data: {
+    channel: "email" | "sms";
+    language?: "en" | "ne";
+    house_id?: number | string;
+    room_ids?: number[];
+  }) =>
+    request<any>("/api/custom/batch-reminders/send/", {
+      method: "POST",
+      body: JSON.stringify(data),
+      token: getAccessToken() || undefined,
+    }),
+};
+
+// House Expenses API
+export const expensesApi = {
+  list: (params?: { house_id?: string | number; month?: string; category?: string; search?: string }) => {
+    const qs = new URLSearchParams();
+    if (params?.house_id && params.house_id !== "all") qs.set("house_id", String(params.house_id));
+    if (params?.month && params.month !== "all") qs.set("month", params.month);
+    if (params?.category && params.category !== "all") qs.set("category", params.category);
+    if (params?.search) qs.set("search", params.search);
+    const query = qs.toString();
+    return request<any[]>(`/api/expenses/${query ? `?${query}` : ""}`, {
+      token: getAccessToken() || undefined,
+    });
+  },
+
+  summary: (params?: { house_id?: string | number; month?: string; category?: string }) => {
+    const qs = new URLSearchParams();
+    if (params?.house_id && params.house_id !== "all") qs.set("house_id", String(params.house_id));
+    if (params?.month && params.month !== "all") qs.set("month", params.month);
+    if (params?.category && params.category !== "all") qs.set("category", params.category);
+    const query = qs.toString();
+    return request<any>(`/api/expenses/summary/${query ? `?${query}` : ""}`, {
+      token: getAccessToken() || undefined,
+    });
+  },
+
+  create: (data: {
+    house: number;
+    category: string;
+    title: string;
+    amount: string | number;
+    expense_date: string;
+    notes?: string;
+  }) =>
+    request<any>("/api/expenses/", {
+      method: "POST",
+      body: JSON.stringify(data),
+      token: getAccessToken() || undefined,
+    }),
+
+  update: (id: number, data: Partial<{
+    house: number;
+    category: string;
+    title: string;
+    amount: string | number;
+    expense_date: string;
+    notes: string;
+  }>) =>
+    request<any>(`/api/expenses/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+      token: getAccessToken() || undefined,
+    }),
+
+  delete: (id: number) =>
+    request<void>(`/api/expenses/${id}/`, {
+      method: "DELETE",
+      token: getAccessToken() || undefined,
+    }),
+};
+
+// Move-Out Settlement API
+export const moveOutApi = {
+  preview: (
+    roomId: number,
+    params?: {
+      final_units?: string | number;
+      include_final_bill?: boolean;
+      final_rent?: string | number;
+      extra_deduction?: string | number;
+    }
+  ) => {
+    const qs = new URLSearchParams();
+    if (params?.final_units !== undefined && params.final_units !== "") {
+      qs.set("final_units", String(params.final_units));
+    }
+    if (params?.include_final_bill) qs.set("include_final_bill", "true");
+    if (params?.final_rent !== undefined && params.final_rent !== "") {
+      qs.set("final_rent", String(params.final_rent));
+    }
+    if (params?.extra_deduction !== undefined && params.extra_deduction !== "") {
+      qs.set("extra_deduction", String(params.extra_deduction));
+    }
+    const query = qs.toString();
+    return request<any>(`/api/custom/rooms/${roomId}/move-out/${query ? `?${query}` : ""}`, {
+      token: getAccessToken() || undefined,
+    });
+  },
+
+  execute: (
+    roomId: number,
+    data: {
+      move_out_date: string;
+      include_final_bill: boolean;
+      final_units?: number;
+      final_rent?: string | number;
+      extra_deduction?: string | number;
+      deduction_label?: string;
+      settled_amount?: string | number;
+      notes?: string;
+    }
+  ) =>
+    request<any>(`/api/custom/rooms/${roomId}/move-out/`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      token: getAccessToken() || undefined,
+    }),
+};
+
+// Tenant Read-Only Portal API
+export const tenantPortalApi = {
+  regenerateToken: (tenantId: number) =>
+    request<{ portal_token: string }>(`/api/custom/tenants/${tenantId}/portal-token/`, {
+      method: "POST",
+      token: getAccessToken() || undefined,
+    }),
+
+  getPublicPortal: async (token: string) => {
+    const res = await fetch(`${API_BASE}/api/custom/portal/${encodeURIComponent(token)}/`, {
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || err.detail || "Portal link not found or expired.");
+    }
+    return res.json();
+  },
 };

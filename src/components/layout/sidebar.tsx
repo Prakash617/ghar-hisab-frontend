@@ -7,11 +7,14 @@ import { useTranslation } from "@/i18n/provider";
 import { useAuthStore } from "@/stores/auth";
 import { LanguageSwitcher } from "./language-switcher";
 import { ThemeToggle } from "./theme-toggle";
+import { BrandMark } from "@/components/brand-logo";
 import {
   LayoutDashboard,
   Home,
   DoorOpen,
+  ClipboardList,
   CreditCard,
+  Receipt,
   Mail,
   Settings,
   LogOut,
@@ -21,7 +24,9 @@ const navItems = [
   { href: "/dashboard", key: "nav.dashboard", icon: LayoutDashboard },
   { href: "/houses", key: "nav.houses", icon: Home },
   { href: "/rooms", key: "nav.rooms", icon: DoorOpen },
+  { href: "/bulk-billing", key: "nav.bulkBilling", icon: ClipboardList },
   { href: "/payments", key: "nav.payments", icon: CreditCard },
+  { href: "/expenses", key: "nav.expenses", icon: Receipt },
   { href: "/emails", key: "nav.emails", icon: Mail },
   { href: "/settings", key: "nav.settings", icon: Settings },
 ];
@@ -45,17 +50,13 @@ export function Sidebar({ className, onNavigate }: SidebarProps = {}) {
     >
       <div className="flex flex-col flex-1 min-h-0">
         <div className="flex items-center gap-3 px-4 py-4 border-b border-slate-100">
-          <img
-            src="/icons/icon-192.png"
-            alt="Ghar Hisaab"
-            className="h-10 w-10 rounded-xl shadow-xs object-contain"
-          />
+          <BrandMark className="h-10 w-10 rounded-xl shadow-xs" />
           <div>
-            <h2 className="text-base font-bold text-slate-900 tracking-tight leading-tight">
-              Ghar Hisaab
+            <h2 className="font-display text-base font-extrabold text-slate-900 tracking-tight leading-tight">
+              Ghar <span className="text-sky-600 dark:text-sky-400">Hisaab</span>
             </h2>
-            <p className="text-xs font-medium text-slate-600">
-              Rental Management
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              Smart Rental Ledger
             </p>
           </div>
         </div>

@@ -1,11 +1,25 @@
-<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ghar Hisaab favicon">
-  <rect width="64" height="64" rx="16" fill="#FFFFFF"/>
-  <path d="M10 27L32 11L54 27" stroke="#1AA3E8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M15 25V50H49V25" fill="#2AB8EE"/>
-  <path d="M23 32H39V50H23V32Z" fill="#E8F8FF"/>
-  <rect x="26" y="37" width="10" height="2" rx="1" fill="#1F4F67"/>
-  <rect x="26" y="41" width="10" height="2" rx="1" fill="#1F4F67"/>
-  <rect x="26" y="45" width="10" height="2" rx="1" fill="#1F4F67"/>
-  <rect x="38" y="29" width="15" height="15" rx="4" fill="#19D39B"/>
-  <path d="M42 36.5L45 39.5L51 33" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ghar Hisaab logo">
+  <defs>
+    <linearGradient id="gh-bg" x1="8" y1="6" x2="58" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0EA5E9"/>
+      <stop offset="55%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#1E3A8A"/>
+    </linearGradient>
+    <linearGradient id="gh-accent" x1="36" y1="40" x2="46" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="100%" stop-color="#10B981"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#gh-bg)"/>
+  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="15.25" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="1.5"/>
+  <!-- Architectural Roofline -->
+  <path d="M15 29.5L32 16L49 29.5" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Smart Home / Ledger Frame -->
+  <path d="M20 29V45.5C20 47.433 21.567 49 23.5 49H40.5C42.433 49 44 47.433 44 45.5V29" fill="#FFFFFF" fill-opacity="0.14"/>
+  <path d="M20 30V45.2C20 47.299 21.701 49 23.8 49H40.2C42.299 49 44 47.299 44 45.2V30" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Balanced Ledger Bars -->
+  <rect x="25.5" y="33.5" width="13" height="3.2" rx="1.6" fill="#FFFFFF"/>
+  <rect x="25.5" y="40" width="8.5" height="3.2" rx="1.6" fill="#BAE6FD"/>
+  <!-- Verified Balance Node -->
+  <circle cx="38" cy="41.6" r="2.6" fill="url(#gh-accent)"/>
 </svg>

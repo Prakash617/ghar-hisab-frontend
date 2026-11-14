@@ -31,6 +31,7 @@ import {
   TrendingUp,
   RefreshCw,
   Eye,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -71,6 +72,8 @@ export default function DashboardPage() {
     internet_total: "0.00",
     total_billed: "0.00",
     total_collected: "0.00",
+    total_expenses: "0.00",
+    net_profit: "0.00",
     has_internet: false,
     bills_count: 0,
     paid_count: 0,
@@ -380,6 +383,60 @@ export default function DashboardPage() {
           </div>
         </div>
       </Card>
+
+      {/* Expenses & Net Profit Summary Strip */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="stat-card flex items-center justify-between gap-3 border-emerald-200/80 bg-emerald-50/40">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+              {t("expenses.collectedIncome")}
+            </p>
+            <p className="mt-1 font-display text-xl sm:text-2xl font-extrabold text-emerald-800">
+              {formatCurrency(utilitySummary.total_collected || "0")}
+            </p>
+          </div>
+          <div className="rounded-xl bg-emerald-100 p-2.5 text-emerald-700">
+            <TrendingUp className="h-5 w-5" />
+          </div>
+        </div>
+
+        <div className="stat-card flex items-center justify-between gap-3 border-rose-200/80 bg-rose-50/40">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-rose-700">
+              {t("expenses.totalExpenses")}
+            </p>
+            <p className="mt-1 font-display text-xl sm:text-2xl font-extrabold text-rose-800">
+              {formatCurrency(utilitySummary.total_expenses || "0")}
+            </p>
+          </div>
+          <div className="rounded-xl bg-rose-100 p-2.5 text-rose-700">
+            <Wallet className="h-5 w-5" />
+          </div>
+        </div>
+
+        <Link
+          href="/expenses"
+          className="stat-card group flex items-center justify-between gap-3 border-sky-200/80 bg-gradient-to-br from-sky-50/70 to-indigo-50/40 hover:border-sky-300 hover:shadow-sm transition-all"
+        >
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-sky-700">
+              {t("expenses.netProfit")}
+            </p>
+            <p
+              className={`mt-1 font-display text-xl sm:text-2xl font-extrabold ${
+                parseFloat(utilitySummary.net_profit || "0") >= 0
+                  ? "text-sky-900"
+                  : "text-rose-700"
+              }`}
+            >
+              {formatCurrency(utilitySummary.net_profit || "0")}
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1 rounded-lg bg-sky-100 px-2.5 py-1.5 text-xs font-semibold text-sky-800 group-hover:bg-sky-200 transition">
+            {t("nav.expenses")}
+          </span>
+        </Link>
+      </div>
 
       {/* Utility Cards: Electricity (units & price collected), Water, Waste, and conditional Internet */}
       <div

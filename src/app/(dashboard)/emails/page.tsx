@@ -1,15 +1,16 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { emailApi } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDateTime } from "@/lib/utils";
-import { Mail, CheckCircle, Trash2, X } from "lucide-react";
+import { Mail, CheckCircle, Trash2, X, Send } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/components/ui/toast";
 import { useTranslation } from "@/i18n/provider";
+import { BatchReminderModal } from "@/components/notices/batch-reminder-modal";
 
 function EmailHistoryContent() {
   const searchParams = useSearchParams();
@@ -17,6 +18,8 @@ function EmailHistoryContent() {
   const roomId = roomIdParam ? parseInt(roomIdParam) : undefined;
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+
+  const [isBatchOpen, setIsBatchOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["email-history", roomId],
@@ -38,19 +41,29 @@ function EmailHistoryContent() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{t("emails.title")}</h1>
           <p className="text-xs sm:text-sm text-slate-500">{t("emails.subtitle")}</p>
         </div>
-        {roomId && (
-          <Link
-            href="/emails"
-            className="inline-flex min-h-10 items-center gap-1.5 text-xs font-semibold text-sky-700 bg-sky-50 px-3 py-2 rounded-xl hover:bg-sky-100 self-start"
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setIsBatchOpen(true)}
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-sky-600 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-sky-700 active:scale-95 transition cursor-pointer"
           >
-            {t("emails.filteredByRoom")} #{roomId} <X className="h-3.5 w-3.5" /> {t("emails.clearFilter")}
-          </Link>
-        )}
+            <Send className="h-4 w-4" />
+            <span>{t("batchNotice.buttonLabel")}</span>
+          </button>
+          {roomId && (
+            <Link
+              href="/emails"
+              className="inline-flex min-h-10 items-center gap-1.5 text-xs font-semibold text-sky-700 bg-sky-50 px-3 py-2 rounded-xl hover:bg-sky-100"
+            >
+              {t("emails.filteredByRoom")} #{roomId} <X className="h-3.5 w-3.5" /> {t("emails.clearFilter")}
+            </Link>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -182,6 +195,8 @@ function EmailHistoryContent() {
           </Card>
         </>
       )}
+
+      <BatchReminderModal open={isBatchOpen} onOpenChange={setIsBatchOpen} />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { roomsApi, housesApi } from "@/lib/api";
 import { useTranslation } from "@/i18n/provider";
-import { DoorOpen, Search, Filter, Home, CheckCircle2, AlertCircle, ArrowRight, Plus, Loader2, X } from "lucide-react";
+import { DoorOpen, Search, Filter, Home, CheckCircle2, AlertCircle, ArrowRight, Plus, Loader2, X, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/components/ui/toast";
 import { compareRoomNumbers } from "@/lib/utils";
@@ -109,7 +109,7 @@ function RoomsContent() {
     <section className="space-y-4 sm:space-y-6 pb-8">
       {/* Header */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight truncate">
               {t("rooms.title")}
@@ -119,18 +119,29 @@ function RoomsContent() {
             </p>
           </div>
 
-          {/* Add Room button */}
-          <button
-            onClick={() => {
-              const defaultHouse = selectedHouse !== "all" ? selectedHouse : (houses?.[0]?.id ? String(houses[0].id) : "");
-              setAddForm({ house: defaultHouse, room_number: "", room_name: "" });
-              setIsAddOpen(true);
-            }}
-            className="inline-flex min-h-11 sm:min-h-9 items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm shadow-sky-200 hover:bg-sky-700 active:scale-95 transition-all shrink-0 cursor-pointer"
-          >
-            <Plus className="h-4 w-4" />
-            <span>{t("rooms.addRoom")}</span>
-          </button>
+          {/* Quick action buttons */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Link
+              href={selectedHouse !== "all" ? `/bulk-billing?house_id=${selectedHouse}` : "/bulk-billing"}
+              className="inline-flex h-10 sm:h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition-all"
+            >
+              <ClipboardList className="h-4 w-4 text-sky-600" />
+              <span>{t("nav.bulkBilling")}</span>
+            </Link>
+
+            {/* Add Room button */}
+            <button
+              onClick={() => {
+                const defaultHouse = selectedHouse !== "all" ? selectedHouse : (houses?.[0]?.id ? String(houses[0].id) : "");
+                setAddForm({ house: defaultHouse, room_number: "", room_name: "" });
+                setIsAddOpen(true);
+              }}
+              className="inline-flex h-10 sm:h-9 items-center gap-1.5 rounded-xl bg-sky-600 px-3.5 text-xs sm:text-sm font-semibold text-white shadow-sm shadow-sky-200 hover:bg-sky-700 active:scale-95 transition-all shrink-0 cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              <span>{t("rooms.addRoom")}</span>
+            </button>
+          </div>
         </div>
 
         {/* Quick occupancy stat cards */}
@@ -272,24 +283,35 @@ function RoomsContent() {
               <Link
                 key={room.id}
                 href={`/rooms/${room.id}`}
-                className="group block rounded-2xl border border-slate-200/90 bg-white p-3.5 sm:p-4 shadow-2xs transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md active:scale-[0.98]"
+                className="group block rounded-2xl border border-slate-200/90 bg-white p-4 shadow-2xs transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md active:scale-[0.98]"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <span className="font-display text-base sm:text-lg font-bold text-slate-900 group-hover:text-sky-600 transition-colors line-clamp-1 break-words">
-                      {room.room_name || `${t("rooms.room")} ${room.room_number}`}
-                    </span>
-                    <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500 flex-wrap">
-                      <div className="inline-flex items-center gap-1 min-w-0">
-                        <Home className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                        <span className="truncate max-w-[140px] sm:max-w-none font-medium text-slate-600">
-                          {room.house_name || "-"}
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                    <div
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${
+                        room.is_occupied
+                          ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                          : "bg-slate-100 border-slate-200 text-slate-600"
+                      }`}
+                    >
+                      <DoorOpen className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-display text-base sm:text-lg font-bold text-slate-900 group-hover:text-sky-600 transition-colors line-clamp-1 break-words">
+                        {room.room_name || `${t("rooms.room")} ${room.room_number}`}
+                      </span>
+                      <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500 flex-wrap">
+                        <div className="inline-flex items-center gap-1 min-w-0">
+                          <Home className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                          <span className="truncate max-w-[140px] sm:max-w-none font-medium text-slate-600">
+                            {room.house_name || "-"}
+                          </span>
+                        </div>
+                        <span className="text-slate-300">&middot;</span>
+                        <span className="font-semibold text-slate-700 shrink-0 tabular-nums">
+                          #{room.room_number}
                         </span>
                       </div>
-                      <span className="text-slate-300">&middot;</span>
-                      <span className="font-semibold text-slate-700 shrink-0">
-                        {t("houseDetail.roomNumberLabel")} #{room.room_number}
-                      </span>
                     </div>
                   </div>
 
@@ -310,7 +332,13 @@ function RoomsContent() {
                     {t("rooms.viewDetails")}
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                   </span>
-                  <span className="text-xs text-slate-600 font-medium">
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      room.is_active
+                        ? "bg-slate-100 text-slate-700"
+                        : "bg-rose-50 text-rose-700"
+                    }`}
+                  >
                     {room.is_active ? t("houses.active") : t("houses.inactive")}
                   </span>
                 </div>

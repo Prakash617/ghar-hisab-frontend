@@ -13,10 +13,12 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  Download,
 } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/provider";
+import { downloadCsv } from "@/lib/csv";
 
 export default function PaymentsPage() {
   const [activeTab, setActiveTab] = useState<"receipts" | "bills">("receipts");
@@ -60,6 +62,81 @@ export default function PaymentsPage() {
       payment.status?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleExportCsv = () => {
+    if (activeTab === "receipts") {
+      downloadCsv(
+        `payment-receipts-${new Date().toISOString().slice(0, 10)}.csv`,
+        [
+          "Receipt #",
+          "Received Date (BS)",
+          "House",
+          "Room",
+          "Tenant",
+          "Total Received (Rs)",
+          "Allocated (Rs)",
+          "Unapplied Credit (Rs)",
+          "Remarks",
+          "Reversed",
+        ],
+        (receiptItems || []).map((r: any) => [
+          r.id,
+          r.received_date,
+          r.house_name || "",
+          r.room_number || "",
+          r.tenant_name || "",
+          r.total_received,
+          r.allocated_amount,
+          r.unapplied_amount,
+          r.remarks || "",
+          r.is_reversed ? "Yes" : "No",
+        ])
+      );
+      return;
+    }
+
+    downloadCsv(
+      `monthly-bills-${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        "Bill #",
+        "Billing Month (BS)",
+        "Room",
+        "Tenant",
+        "Prev Units",
+        "Curr Units",
+        "Units Used",
+        "Rent (Rs)",
+        "Electricity (Rs)",
+        "Water (Rs)",
+        "Waste (Rs)",
+        "Internet (Rs)",
+        "Additional (Rs)",
+        "Total (Rs)",
+        "Paid (Rs)",
+        "Remaining (Rs)",
+        "Status",
+      ],
+      (filteredPayments || []).map((p: any) => [
+        p.id,
+        p.billing_month,
+        p.room_number || p.roomName || "",
+        p.tenant_name || "",
+        p.previous_units ?? 0,
+        p.current_units ?? 0,
+        p.electricity_units ?? 0,
+        p.rent_amount ?? 0,
+        p.electricity_amount ?? 0,
+        p.water_amount ?? 0,
+        p.waste_amount ?? 0,
+        p.internet_amount ?? 0,
+        p.additional_cost ?? 0,
+        p.total_amount ?? 0,
+        p.paid_amount ?? 0,
+        p.remaining_amount ?? 0,
+        p.status || "",
+      ])
+    );
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -72,38 +149,49 @@ export default function PaymentsPage() {
           </p>
         </div>
 
-        {/* Section Switcher: Receive History vs Bills Ledger */}
-        <div className="inline-flex rounded-2xl border border-slate-200 bg-slate-100 p-1 shadow-inner self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           <button
             type="button"
-            onClick={() => setActiveTab("receipts")}
-            className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3.5 text-xs font-semibold transition cursor-pointer ${
-              activeTab === "receipts"
-                ? "bg-white text-slate-900 shadow-sm font-bold"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
+            onClick={handleExportCsv}
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition cursor-pointer"
           >
-            <Banknote className="h-4 w-4 text-emerald-600" />
-            <span>{t("payments.receiveHistoryTab")}</span>
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
-              {receiptSummary.total_count || 0}
-            </span>
+            <Download className="h-4 w-4 text-emerald-600" />
+            <span>{t("expenses.exportCsv")}</span>
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("bills")}
-            className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3.5 text-xs font-semibold transition cursor-pointer ${
-              activeTab === "bills"
-                ? "bg-white text-slate-900 shadow-sm font-bold"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <FileText className="h-4 w-4 text-sky-600" />
-            <span>{t("payments.billsTab")}</span>
-            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-700">
-              {payments?.length || 0}
-            </span>
-          </button>
+
+          {/* Section Switcher: Receive History vs Bills Ledger */}
+          <div className="inline-flex rounded-2xl border border-slate-200 bg-slate-100 p-1 shadow-inner">
+            <button
+              type="button"
+              onClick={() => setActiveTab("receipts")}
+              className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3.5 text-xs font-semibold transition cursor-pointer ${
+                activeTab === "receipts"
+                  ? "bg-white text-slate-900 shadow-sm font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Banknote className="h-4 w-4 text-emerald-600" />
+              <span>{t("payments.receiveHistoryTab")}</span>
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
+                {receiptSummary.total_count || 0}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("bills")}
+              className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3.5 text-xs font-semibold transition cursor-pointer ${
+                activeTab === "bills"
+                  ? "bg-white text-slate-900 shadow-sm font-bold"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <FileText className="h-4 w-4 text-sky-600" />
+              <span>{t("payments.billsTab")}</span>
+              <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-700">
+                {payments?.length || 0}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 

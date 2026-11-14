@@ -790,54 +790,34 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       <div className="md:hidden space-y-4">
         {mobileTab === "bills" && (
           <div className="space-y-3.5 pb-16">
-            {/* Quick Action Bar */}
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
+            {/* Secondary Quick Action Pills (Primary Add Bill & Record Payment live in the bottom dock) */}
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              {unpaidCount > 0 && (
                 <button
-                  onClick={() => openAddBillModal(false)}
-                  className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 active:scale-[0.98] transition cursor-pointer"
+                  onClick={() => setIsPendingEmailModalOpen(true)}
+                  className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 font-semibold text-sky-700 shadow-2xs hover:bg-sky-100 active:scale-95 transition cursor-pointer"
                 >
-                  <Plus className="h-4 w-4" />
-                  {t("roomDetail.addNewBill")}
+                  <Mail className="h-3.5 w-3.5 shrink-0" />
+                  <span>{t("roomDetail.sendBillsNotice")}</span>
                 </button>
+              )}
+              {unpaidCount > 0 && (
                 <button
-                  onClick={openPaymentModal}
-                  className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-sky-700 active:scale-[0.98] transition cursor-pointer"
+                  onClick={() => sendPendingSmsMutation.mutate()}
+                  disabled={sendPendingSmsMutation.isPending || !tenant?.contact}
+                  className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 font-semibold text-emerald-700 shadow-2xs hover:bg-emerald-100 active:scale-95 transition disabled:opacity-50 cursor-pointer"
                 >
-                  <Banknote className="h-4 w-4" />
-                  {t("roomDetail.recordPayment")}
+                  <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+                  <span>{sendPendingSmsMutation.isPending ? t("roomDetail.sendingSms") : t("roomDetail.sendSmsNotice")}</span>
                 </button>
-              </div>
-
-              {/* Secondary Quick Action Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-xs">
-                {unpaidCount > 0 && (
-                  <button
-                    onClick={() => setIsPendingEmailModalOpen(true)}
-                    className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 font-semibold text-sky-700 shadow-2xs hover:bg-sky-100 active:scale-95 transition cursor-pointer"
-                  >
-                    <Mail className="h-3.5 w-3.5" />
-                    {t("roomDetail.sendBillsNotice")}
-                  </button>
-                )}
-                {unpaidCount > 0 && (
-                  <button
-                    onClick={() => sendPendingSmsMutation.mutate()}
-                    disabled={sendPendingSmsMutation.isPending || !tenant?.contact}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1.5 font-semibold text-emerald-700 shadow-2xs hover:bg-emerald-100 disabled:opacity-50"
-                  >
-                    <MessageSquare className="h-3.5 w-3.5" />
-                    {sendPendingSmsMutation.isPending ? t("roomDetail.sendingSms") : t("roomDetail.sendSmsNotice")}
-                  </button>
-                )}
-                <button
-                  onClick={() => setIsEmailHistoryOpen(true)}
-                  className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-violet-300 bg-violet-50 px-2.5 py-1.5 font-semibold text-violet-700 shadow-2xs hover:bg-violet-100"
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  {t("roomDetail.sentEmailsHistory")}
-                </button>
-              </div>
+              )}
+              <button
+                onClick={() => setIsEmailHistoryOpen(true)}
+                className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-violet-300 bg-violet-50 px-3 py-2 font-semibold text-violet-700 shadow-2xs hover:bg-violet-100 active:scale-95 transition cursor-pointer"
+              >
+                <FileText className="h-3.5 w-3.5 shrink-0" />
+                <span>{t("roomDetail.sentEmailsHistory")}</span>
+              </button>
             </div>
 
             {/* Total Amount to Receive Card */}

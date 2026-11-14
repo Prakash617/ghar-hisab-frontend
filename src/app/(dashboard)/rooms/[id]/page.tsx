@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { formatCurrency, formatDateTime, getMediaUrl } from "@/lib/utils";
+import { ReceiptHistoryPanel } from "@/components/payments/receipt-history-panel";
 import { getTodayNepaliDate } from "@/lib/nepaliDate";
 import Link from "next/link";
 import {
@@ -54,7 +55,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   // Navigation & Display State
   const [showTenantProfile, setShowTenantProfile] = useState(false);
   const [viewingBill, setViewingBill] = useState<any>(null);
-  const [mobileTab, setMobileTab] = useState<"bills" | "tenant" | "docs">("bills");
+  const [mobileTab, setMobileTab] = useState<"bills" | "receipts" | "tenant" | "docs">("bills");
   const [expandedBillId, setExpandedBillId] = useState<number | null>(null);
 
   // 1) Record Payment Modal State (defaults to today's Nepali BS date)
@@ -134,9 +135,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   const [docName, setDocName] = useState("");
   const [docFile, setDocFile] = useState<File | null>(null);
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
-
-  // Receipt Reversal State
-  const [reversingReceipt, setReversingReceipt] = useState<any>(null);
 
   // Queries
   const { data, isLoading } = useQuery({
@@ -399,18 +397,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     },
     onError: (err: any) => {
       toast.error(err?.message || "Failed to save tenant information.");
-    },
-  });
-
-  const reverseReceiptMutation = useMutation({
-    mutationFn: (receiptId: number) => paymentsApi.reverseReceipt(receiptId),
-    onSuccess: (res: any) => {
-      queryClient.invalidateQueries({ queryKey: ["room", roomId] });
-      setReversingReceipt(null);
-      toast.success(res?.message || "Payment receipt reversed successfully! Outstanding balances restored.");
-    },
-    onError: (err: any) => {
-      toast.error(err?.message || "Failed to reverse receipt.");
     },
   });
 
@@ -734,20 +720,20 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
       {/* Mobile Segmented Tab Controls (md:hidden) */}
       <div className="md:hidden">
-        <div className="flex rounded-2xl bg-slate-100 p-1 text-xs font-semibold text-slate-600 shadow-inner">
+        <div className="grid grid-cols-4 gap-1 rounded-2xl bg-slate-100 p-1 text-[11px] font-semibold text-slate-600 shadow-inner">
           <button
             type="button"
             onClick={() => setMobileTab("bills")}
-            className={`flex-1 min-h-11 flex items-center justify-center gap-1.5 rounded-xl py-2 transition-all cursor-pointer ${
+            className={`min-h-11 flex items-center justify-center gap-1 rounded-xl px-1.5 py-2 transition-all cursor-pointer ${
               mobileTab === "bills"
                 ? "bg-white text-slate-900 shadow-sm font-bold"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <FileText className="h-4 w-4 text-sky-600" />
-            <span>{t("roomDetail.tabBills")}</span>
+            <FileText className="h-3.5 w-3.5 shrink-0 text-sky-600" />
+            <span className="truncate">{t("roomDetail.tabBills")}</span>
             {unpaidCount > 0 && (
-              <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">
+              <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700 shrink-0">
                 {unpaidCount}
               </span>
             )}
@@ -755,30 +741,48 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
           <button
             type="button"
+            onClick={() => setMobileTab("receipts")}
+            className={`min-h-11 flex items-center justify-center gap-1 rounded-xl px-1.5 py-2 transition-all cursor-pointer ${
+              mobileTab === "receipts"
+                ? "bg-white text-slate-900 shadow-sm font-bold"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Banknote className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+            <span className="truncate">{t("roomDetail.tabReceipts")}</span>
+            {recentReceipts.length > 0 && (
+              <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800 shrink-0">
+                {recentReceipts.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setMobileTab("tenant")}
-            className={`flex-1 min-h-11 flex items-center justify-center gap-1.5 rounded-xl py-2 transition-all cursor-pointer ${
+            className={`min-h-11 flex items-center justify-center gap-1 rounded-xl px-1.5 py-2 transition-all cursor-pointer ${
               mobileTab === "tenant"
                 ? "bg-white text-slate-900 shadow-sm font-bold"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <User className="h-4 w-4 text-emerald-600" />
-            <span>{t("roomDetail.tabTenant")}</span>
+            <User className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+            <span className="truncate">{t("roomDetail.tabTenant")}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setMobileTab("docs")}
-            className={`flex-1 min-h-11 flex items-center justify-center gap-1.5 rounded-xl py-2 transition-all cursor-pointer ${
+            className={`min-h-11 flex items-center justify-center gap-1 rounded-xl px-1.5 py-2 transition-all cursor-pointer ${
               mobileTab === "docs"
                 ? "bg-white text-slate-900 shadow-sm font-bold"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <FolderOpen className="h-4 w-4 text-sky-600" />
-            <span>{t("roomDetail.tabDocs")}</span>
+            <FolderOpen className="h-3.5 w-3.5 shrink-0 text-sky-600" />
+            <span className="truncate">{t("roomDetail.tabDocs")}</span>
             {documents.length > 0 && (
-              <span className="rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-700">
+              <span className="rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 shrink-0">
                 {documents.length}
               </span>
             )}
@@ -894,21 +898,24 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             )}
 
-            {/* Latest receipt preview with undo */}
+            {/* Latest receipt quick preview */}
             {latestReceipt && (
               <div className="rounded-xl border border-indigo-200 bg-indigo-50/80 p-3 shadow-xs">
-                <div className="flex items-center justify-between text-xs">
-                  <div>
-                    <span className="font-bold text-indigo-900">Latest Receipt #{latestReceipt.id}</span>
-                    <p className="text-[11px] text-indigo-700 mt-0.5">Rs. {latestReceipt.amount} &middot; {latestReceipt.received_date}</p>
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <div className="min-w-0">
+                    <span className="font-bold text-indigo-900">
+                      {t("payments.receiptNumber")} #{latestReceipt.id}
+                    </span>
+                    <p className="text-xs text-indigo-700 mt-0.5 tabular-nums">
+                      {formatCurrency(latestReceipt.amount)} · {latestReceipt.received_date}
+                    </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setReversingReceipt(latestReceipt)}
-                    className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-white px-2 py-1 text-[11px] font-bold text-rose-700 shadow-2xs hover:bg-rose-50"
+                    onClick={() => setMobileTab("receipts")}
+                    className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg border border-indigo-200 bg-white px-2.5 py-1 text-xs font-bold text-indigo-700 shadow-2xs hover:bg-indigo-50"
                   >
-                    <RotateCcw className="h-3 w-3" />
-                    Undo
+                    {t("payments.showMoreAllocations")} ({recentReceipts.length})
                   </button>
                 </div>
               </div>
@@ -1280,6 +1287,38 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
+        {mobileTab === "receipts" && (
+          <div className="space-y-3.5 pb-6">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <h3 className="font-display text-base font-bold text-slate-900">
+                  {t("payments.receiveHistoryTitle")}
+                </h3>
+                <p className="text-xs text-slate-600">
+                  {recentReceipts.length} {t("payments.totalReceipts").toLowerCase()} ·{" "}
+                  <span className="font-semibold text-emerald-700 tabular-nums">
+                    {formatCurrency(totalPaidAll)}
+                  </span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={openPaymentModal}
+                className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl bg-sky-600 px-3 text-xs font-bold text-white shadow-xs hover:bg-sky-700 active:scale-95 transition cursor-pointer"
+              >
+                <Banknote className="h-4 w-4" />
+                {t("roomDetail.recordPayment")}
+              </button>
+            </div>
+
+            <ReceiptHistoryPanel
+              receipts={recentReceipts}
+              showRoomInfo={false}
+              onChanged={() => queryClient.invalidateQueries({ queryKey: ["room", roomId] })}
+            />
+          </div>
+        )}
+
         {mobileTab === "docs" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -1491,84 +1530,29 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
-      {/* Latest Receipt */}
-      {latestReceipt && (
-        <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">Latest payment receipt</p>
-              <p className="mt-1 text-sm font-semibold text-indigo-900">
-                Amount: Rs. {latestReceipt.amount} | Allocated: Rs. {latestReceipt.allocated_amount} | Unapplied: Rs. {latestReceipt.unapplied_amount}
-              </p>
-              <p className="mt-1 text-xs text-indigo-700">
-                Received: {latestReceipt.received_date}{latestReceipt.remarks ? ` | Remarks: ${latestReceipt.remarks}` : ""}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setReversingReceipt(latestReceipt)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 shadow-sm transition hover:bg-rose-50 w-fit"
-              title="Undo this payment and restore bills"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              Undo payment
-            </button>
-          </div>
-          {latestReceipt.allocations && latestReceipt.allocations.length > 0 && (
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {latestReceipt.allocations.map((alloc: any, idx: number) => (
-                <div key={idx} className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-xs text-slate-700">
-                  <span className="font-semibold">{alloc.billing_month || alloc.payment_history?.billing_month}</span>
-                  <span className="mx-1">-</span>
-                  <span>Rs. {alloc.allocated_amount}</span>
-                  <span className="ml-1 text-slate-500">({alloc.payment_status || alloc.status || alloc.payment_history?.status})</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Recent Receipts History */}
+      {/* Desktop Payment Receive History Section */}
       {recentReceipts.length > 0 && (
-        <details className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm" open={recentReceipts.length > 0 && !latestReceipt}>
-          <summary className="cursor-pointer text-sm font-semibold text-slate-700">
-            Payment receipt history (last {recentReceipts.length})
-          </summary>
-          <div className="mt-3 space-y-2">
-            {recentReceipts.map((receipt: any, idx: number) => (
-              <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
-                      Receipt #{receipt.id} &middot; {receipt.received_date} | Rs. {receipt.amount}
-                    </p>
-                    <p className="text-xs text-slate-600">
-                      Allocated: Rs. {receipt.allocated_amount} | Unapplied: Rs. {receipt.unapplied_amount}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setReversingReceipt(receipt)}
-                    className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 w-fit"
-                    title="Undo this payment and restore bills"
-                  >
-                    <RotateCcw className="h-3 w-3" />
-                    Undo receipt
-                  </button>
-                </div>
-                {receipt.allocations && receipt.allocations.length > 0 && (
-                  <p className="mt-2 text-xs text-slate-600">
-                    {receipt.allocations.slice(0, 4).map((a: any) =>
-                      `${a.billing_month || a.payment_history?.billing_month}: Rs. ${a.allocated_amount}`
-                    ).join(", ")}
-                    {receipt.allocations.length > 4 ? "..." : ""}
-                  </p>
-                )}
-              </div>
-            ))}
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="font-display text-lg font-bold text-slate-900">
+                {t("payments.receiveHistoryTitle")} ({recentReceipts.length})
+              </h2>
+              <p className="text-xs text-slate-600">{t("payments.receiveHistorySubtitle")}</p>
+            </div>
+            <Link
+              href="/payments"
+              className="text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline"
+            >
+              {t("payments.receiveHistoryTab")} →
+            </Link>
           </div>
-        </details>
+          <ReceiptHistoryPanel
+            receipts={recentReceipts}
+            showRoomInfo={false}
+            onChanged={() => queryClient.invalidateQueries({ queryKey: ["room", roomId] })}
+          />
+        </div>
       )}
 
       {/* Billing History Section */}
@@ -1870,72 +1854,56 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       </div>
       </div>
 
-      {/* 1) Record Lump-Sum Payment Modal */}
+      {/* 1) Record Payment Modal (Simple) */}
       <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
-        <DialogContent className="max-w-lg rounded-xl">
+        <DialogContent className="max-w-md rounded-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t("roomDetail.recordLumpSumTitle")}</DialogTitle>
+            <DialogTitle>{t("roomDetail.recordPaymentTitle")}</DialogTitle>
             <p className="text-xs text-slate-500">
-              {t("roomDetail.recordLumpSumDesc")}
+              {parseFloat(totalAmountToReceive) > 0
+                ? `${t("roomDetail.totalPending")}: ${formatCurrency(totalAmountToReceive)} · `
+                : ""}
+              {t("roomDetail.autoApplyOldestShort")}
             </p>
           </DialogHeader>
 
-          {/* Previous receipts & Undo section (Matches Django lump_sum_payment_form.html) */}
-          {recentReceipts.length > 0 && (
-            <details className="rounded-xl border border-slate-200 bg-slate-50 p-3" open={recentReceipts.length <= 3}>
-              <summary className="cursor-pointer text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center justify-between">
-                <span>{t("roomDetail.previousReceipts")} ({recentReceipts.length})</span>
-                <span className="text-[11px] font-normal text-rose-600">{t("roomDetail.clickUndoToReverse")}</span>
-              </summary>
-              <div className="mt-2.5 max-h-48 space-y-2 overflow-y-auto pr-1">
-                {recentReceipts.map((rcpt: any) => (
-                  <div key={rcpt.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5 text-xs shadow-xs">
-                    <div className="min-w-0 pr-2">
-                      <p className="font-bold text-slate-900 truncate">
-                        {t("roomDetail.receipt")} #{rcpt.id} &middot; {rcpt.received_date} &middot; Rs. {rcpt.amount}
-                      </p>
-                      <p className="mt-0.5 text-[11px] text-slate-500">
-                        {t("roomDetail.allocated")}: Rs. {rcpt.allocated_amount} &middot; {t("roomDetail.unapplied")}: Rs. {rcpt.unapplied_amount}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setReversingReceipt(rcpt);
-                      }}
-                      className="inline-flex shrink-0 items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-bold text-rose-700 hover:bg-rose-100 hover:text-rose-800"
-                      title="Undo this payment and restore bills"
-                    >
-                      <RotateCcw className="h-3 w-3" />
-                      {t("roomDetail.undo")}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </details>
-          )}
-
-          <form onSubmit={handlePaymentSubmit} className="space-y-4">
+          <form onSubmit={handlePaymentSubmit} className="space-y-4 pt-1">
             <div>
-              <Label htmlFor="pay-amount">{t("roomDetail.amountReceived")}</Label>
+              <Label htmlFor="pay-amount">{t("roomDetail.amountSimple")}</Label>
               <Input
                 id="pay-amount"
                 type="number"
+                inputMode="decimal"
                 step="0.01"
                 min="1"
+                autoFocus
                 value={paymentData.amount}
                 onChange={(e) => setPaymentData({ ...paymentData, amount: e.target.value })}
                 required
-                placeholder="e.g. 15000"
-                className="mt-1"
+                placeholder="0"
+                className="mt-1.5 h-11 text-base font-bold"
               />
-              <div className="mt-2 flex flex-wrap gap-2">
-                {[5000, 8000, 10000, 15000].map((amt) => (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {parseFloat(totalAmountToReceive) > 0 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPaymentData({
+                        ...paymentData,
+                        amount: String(Number(parseFloat(totalAmountToReceive).toFixed(2))),
+                      })
+                    }
+                    className="rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-700 hover:bg-sky-100"
+                  >
+                    {t("roomDetail.fullDue")} ({formatCurrency(totalAmountToReceive)})
+                  </button>
+                )}
+                {[5000, 10000].map((amt) => (
                   <button
                     key={amt}
                     type="button"
                     onClick={() => setPaymentData({ ...paymentData, amount: String(amt) })}
-                    className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                    className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100"
                   >
                     Rs. {amt.toLocaleString()}
                   </button>
@@ -1945,14 +1913,16 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
             <div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="pay-date">{t("roomDetail.paymentReceivedDateBS")}</Label>
-                <button
-                  type="button"
-                  onClick={() => setPaymentData({ ...paymentData, payment_received_date: todayNepaliDate })}
-                  className="text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline"
-                >
-                  {t("roomDetail.resetToToday")} ({todayNepaliDate})
-                </button>
+                <Label htmlFor="pay-date">{t("roomDetail.dateBS")}</Label>
+                {paymentData.payment_received_date !== todayNepaliDate && (
+                  <button
+                    type="button"
+                    onClick={() => setPaymentData({ ...paymentData, payment_received_date: todayNepaliDate })}
+                    className="text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline"
+                  >
+                    {t("roomDetail.todayShort")} ({todayNepaliDate})
+                  </button>
+                )}
               </div>
               <Input
                 id="pay-date"
@@ -1960,30 +1930,23 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 value={paymentData.payment_received_date}
                 onChange={(e) => setPaymentData({ ...paymentData, payment_received_date: e.target.value })}
                 required
-                placeholder="YYYY-MM-DD (e.g. 2083-05-21)"
-                className="mt-1 font-semibold text-slate-900"
+                placeholder="YYYY-MM-DD"
+                className="mt-1.5 font-semibold"
               />
-              <p className="mt-1 text-xs text-slate-500">
-                {t("roomDetail.autoFilledNepaliDate")} (<strong>{todayNepaliDate}</strong>).
-              </p>
             </div>
 
             <div>
-              <Label htmlFor="pay-remarks">{t("roomDetail.remarksReceipt")}</Label>
+              <Label htmlFor="pay-remarks">{t("roomDetail.noteOptional")}</Label>
               <Input
                 id="pay-remarks"
                 value={paymentData.remarks}
                 onChange={(e) => setPaymentData({ ...paymentData, remarks: e.target.value })}
-                placeholder="Optional note for this receipt (e.g. cash, eSewa)"
-                className="mt-1"
+                placeholder={t("roomDetail.notePlaceholder")}
+                className="mt-1.5"
               />
             </div>
 
-            <div className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800">
-              {t("roomDetail.fifoPaymentNote")}
-            </div>
-
-            <div className="sticky bottom-0 bg-white z-10 pt-3 border-t border-slate-100 flex justify-end gap-2">
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
               <Button type="button" variant="outline" onClick={() => setIsPaymentOpen(false)}>
                 {t("common.cancel")}
               </Button>
@@ -1995,12 +1958,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         </DialogContent>
       </Dialog>
 
-      {/* 2) Add New Monthly Bill Modal */}
+      {/* 2) Add New Monthly Bill Modal (Simple) */}
       <Dialog open={isAddBillOpen} onOpenChange={setIsAddBillOpen}>
-        <DialogContent className="max-w-lg rounded-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md rounded-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t("roomDetail.addNewBillTitle")}</DialogTitle>
-            <p className="text-xs text-slate-500">{t("roomDetail.addNewBillDesc")}</p>
+            <DialogTitle>{t("roomDetail.addBillTitle")}</DialogTitle>
           </DialogHeader>
           <form
             onSubmit={(e) => {
@@ -2008,191 +1970,247 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               if (!isUnitValid) return;
               createBillMutation.mutate(addBillForm);
             }}
-            className="space-y-4"
+            className="space-y-4 pt-1"
           >
-            {/* Meter Reset / Damage Toggle */}
-            <div className="rounded-xl border border-amber-300 bg-amber-50/80 p-3.5 shadow-2xs">
-              <label className="flex items-center justify-between cursor-pointer">
-                <div className="flex items-start gap-2.5">
-                  <RotateCcw className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                  <div>
-                    <span className="text-sm font-bold text-amber-950">{t("roomDetail.meterDamagedToggle")}</span>
-                    <p className="text-xs text-amber-700">
-                      {t("roomDetail.meterDamagedToggleDesc")}
-                    </p>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={addBillForm.is_meter_reset}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setAddBillForm({
-                      ...addBillForm,
-                      is_meter_reset: checked,
-                      previous_units: checked ? "0" : String(nextPreviousUnits),
-                      old_meter_reading: checked ? String(nextPreviousUnits) : "",
-                      additional_units: "0",
-                      meter_reset_reason: checked
-                        ? (addBillForm.meter_reset_reason || "Meter damaged and replaced with new meter")
-                        : "",
-                    });
-                  }}
-                  className="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500 cursor-pointer ml-2"
-                />
-              </label>
-
-              {addBillForm.is_meter_reset && (
-                <div className="mt-3 space-y-3 border-t border-amber-200 pt-3 text-xs">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-amber-950 font-semibold">{t("roomDetail.newMeterStart")}</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={addBillForm.previous_units}
-                        onChange={(e) => setAddBillForm({ ...addBillForm, previous_units: e.target.value })}
-                        placeholder="Usually 0 for new meter"
-                        className="mt-1 bg-white border-amber-300"
-                        required
-                      />
-                      <p className="mt-1 text-[11px] text-amber-700">{t("roomDetail.newMeterStartDesc")}</p>
-                    </div>
-
-                    <div>
-                      <Label className="text-amber-950 font-semibold">{t("roomDetail.damagedMeterFinalOptional")}</Label>
-                      <Input
-                        type="number"
-                        min={nextPreviousUnits}
-                        value={addBillForm.old_meter_reading}
-                        onChange={(e) => {
-                          const oldVal = e.target.value;
-                          const oldNum = parseInt(oldVal);
-                          const addUnits = !isNaN(oldNum) && oldNum >= nextPreviousUnits ? oldNum - nextPreviousUnits : 0;
-                          setAddBillForm({
-                            ...addBillForm,
-                            old_meter_reading: oldVal,
-                            additional_units: String(addUnits),
-                          });
-                        }}
-                        placeholder={`e.g. ${nextPreviousUnits}`}
-                        className="mt-1 bg-white border-amber-300"
-                      />
-                      <p className="mt-1 text-[11px] text-amber-700">
-                        {t("roomDetail.previousBaselineWas")} {nextPreviousUnits}.
-                        {parseInt(addBillForm.additional_units) > 0 && ` (+${addBillForm.additional_units} ${t("roomDetail.oldMeterUnits")})`}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-amber-950 font-semibold">{t("roomDetail.additionalUnitsDamaged")}</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={addBillForm.additional_units}
-                        onChange={(e) => setAddBillForm({ ...addBillForm, additional_units: e.target.value })}
-                        className="mt-1 bg-white border-amber-300"
-                      />
-                      <p className="mt-1 text-[11px] text-amber-700">{t("roomDetail.additionalOldUnitsDesc")}</p>
-                    </div>
-
-                    <div>
-                      <Label className="text-amber-950 font-semibold">{t("roomDetail.reasonForMeterReset")}</Label>
-                      <Input
-                        value={addBillForm.meter_reset_reason}
-                        onChange={(e) => setAddBillForm({ ...addBillForm, meter_reset_reason: e.target.value })}
-                        placeholder="e.g. Meter damaged by surge, replaced"
-                        className="mt-1 bg-white border-amber-300"
-                      />
-                      <p className="mt-1 text-[11px] text-amber-700">{t("roomDetail.resetReasonDesc")}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {!addBillForm.is_meter_reset && (
-              <div>
-                <Label>{t("roomDetail.previousElectricityUnits")}</Label>
-                <Input
-                  value={nextPreviousUnits}
-                  readOnly
-                  disabled
-                  className="mt-1 bg-slate-100 text-slate-700 font-semibold cursor-not-allowed"
-                />
-                <p className="mt-1 text-xs text-slate-400">{t("roomDetail.prevUnitsFromInitial")}</p>
+            {/* Primary reading */}
+            <div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="bill-curr-units">
+                  {addBillForm.is_meter_reset
+                    ? t("roomDetail.currentReadingNewMeter")
+                    : t("roomDetail.currentUnits")}
+                </Label>
+                <span className="text-xs text-slate-500">
+                  {t("roomDetail.previousUnits")}: <strong>{effectivePreviousUnits}</strong>
+                </span>
               </div>
-            )}
-
-            <div>
-              <Label>{t("roomDetail.billingMonth")}</Label>
               <Input
-                value={addBillForm.billing_month}
-                onChange={(e) => setAddBillForm({ ...addBillForm, billing_month: e.target.value })}
-                required
-                placeholder="e.g. 2026-09 or 2026-09-01"
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <Label>
-                {addBillForm.is_meter_reset ? t("roomDetail.currentReadingNewMeter") : t("roomDetail.currentElectricityUnits")}
-              </Label>
-              <Input
+                id="bill-curr-units"
                 type="number"
+                inputMode="numeric"
                 min={effectivePreviousUnits}
+                autoFocus
                 value={addBillForm.current_units}
                 onChange={(e) => setAddBillForm({ ...addBillForm, current_units: e.target.value })}
                 required
-                placeholder={
-                  addBillForm.is_meter_reset
-                    ? `Current reading on new meter (>= ${effectivePreviousUnits})`
-                    : `Must be greater than ${nextPreviousUnits}`
-                }
-                className="mt-1"
+                placeholder={`> ${effectivePreviousUnits}`}
+                className="mt-1.5 h-11 text-base font-bold"
               />
               {!isUnitValid && addBillForm.current_units && (
-                <p className="mt-1 text-xs text-rose-600 font-medium">
+                <p className="mt-1 text-xs text-rose-500 font-medium">
                   {addBillForm.is_meter_reset
-                    ? `Current units must be greater than or equal to new meter starting units (${effectivePreviousUnits}).`
-                    : `Current units must be greater than previous units (${nextPreviousUnits}).`}
+                    ? `Must be >= ${effectivePreviousUnits}`
+                    : `Must be > ${nextPreviousUnits}`}
                 </p>
               )}
             </div>
 
-            {/* Optional Additional / Custom Costs */}
-            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
-              <label className="flex items-center justify-between cursor-pointer">
-                <div>
-                  <span className="text-sm font-semibold text-slate-900">{t("roomDetail.addExtraCostToggle")}</span>
-                  <p className="text-xs text-slate-500">{t("roomDetail.addExtraCostToggleDesc")}</p>
+            {/* Compact Date & Previous Units */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="bill-month">{t("roomDetail.dateBS")}</Label>
+                  {addBillForm.billing_month !== todayNepaliDate && (
+                    <button
+                      type="button"
+                      onClick={() => setAddBillForm({ ...addBillForm, billing_month: todayNepaliDate })}
+                      className="text-[11px] font-semibold text-sky-500 hover:underline"
+                    >
+                      {t("roomDetail.todayShort")}
+                    </button>
+                  )}
                 </div>
-                <input
-                  type="checkbox"
-                  checked={addBillForm.has_extra_cost}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setAddBillForm({
-                      ...addBillForm,
-                      has_extra_cost: checked,
-                      extra_charges: checked
-                        ? (addBillForm.extra_charges.length > 0 ? addBillForm.extra_charges : [{ label: "", amount: "" }])
-                        : [],
-                    });
-                  }}
-                  className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer ml-2"
+                <Input
+                  id="bill-month"
+                  value={addBillForm.billing_month}
+                  onChange={(e) => setAddBillForm({ ...addBillForm, billing_month: e.target.value })}
+                  required
+                  placeholder="YYYY-MM-DD"
+                  className="mt-1.5 font-semibold"
                 />
-              </label>
+              </div>
 
-              {addBillForm.has_extra_cost && (
-                <div className="mt-3 space-y-2.5 border-t border-slate-200 pt-3">
-                  {addBillForm.extra_charges.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-1 sm:grid-cols-[1fr_140px_auto] gap-2 items-end">
+              <div>
+                <Label>{t("roomDetail.previousUnits")}</Label>
+                <Input
+                  value={effectivePreviousUnits}
+                  readOnly
+                  disabled
+                  className="mt-1.5 font-semibold opacity-75 cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            {/* Compact Live Estimate + Expandable Breakdown */}
+            <details className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 px-3.5 py-2.5">
+              <summary className="cursor-pointer list-none flex items-center justify-between gap-2 text-sm">
+                <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                  <Calculator className="h-4 w-4 text-sky-500" />
+                  <span className="font-semibold">{t("roomDetail.estimatedBillCalc")}</span>
+                  <span className="text-xs text-slate-400">
+                    ({unitsUsed} u)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
+                    Rs. {estimatedTotal.toFixed(2)}
+                  </span>
+                  <span className="text-[11px] text-sky-500 underline">{t("roomDetail.breakdown")}</span>
+                </div>
+              </summary>
+              <div className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-2 gap-1.5 text-xs">
+                <div>
+                  <span className="text-slate-500">{t("roomDetail.rentCol")}:</span>{" "}
+                  <span className="font-semibold">Rs. {estimatedRent}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500">{t("dashboard.electricity")}:</span>{" "}
+                  <span className="font-semibold text-sky-600 dark:text-sky-400">
+                    Rs. {estimatedElectricity.toFixed(2)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500">{t("roomDetail.waterCol")}:</span>{" "}
+                  <span className="font-semibold">Rs. {estimatedWater}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500">{t("roomDetail.wasteCol")}:</span>{" "}
+                  <span className="font-semibold">Rs. {estimatedWaste}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500">{t("dashboard.internet")}:</span>{" "}
+                  <span className="font-semibold">Rs. {estimatedInternet}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500">{t("roomDetail.unitsUsed")}:</span>{" "}
+                  <span className="font-semibold">{unitsUsed}</span>
+                </div>
+                {estimatedExtraCharges.map((item, idx) => (
+                  <div key={idx} className="col-span-2 text-amber-600 dark:text-amber-400 font-medium">
+                    + {item.label?.trim() || t("roomDetail.extraCost")}: Rs. {(parseFloat(item.amount) || 0).toFixed(2)}
+                  </div>
+                ))}
+              </div>
+            </details>
+
+            {/* Optional Toggles (Compact 1-line triggers) */}
+            <div className="space-y-2">
+              {/* Meter Reset Toggle */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 px-3.5 py-2.5">
+                <label className="flex items-center justify-between cursor-pointer text-sm">
+                  <span className="flex items-center gap-2 font-medium">
+                    <RotateCcw className="h-3.5 w-3.5 text-amber-500" />
+                    {t("roomDetail.meterReset")}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={addBillForm.is_meter_reset}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setAddBillForm({
+                        ...addBillForm,
+                        is_meter_reset: checked,
+                        previous_units: checked ? "0" : String(nextPreviousUnits),
+                        old_meter_reading: checked ? String(nextPreviousUnits) : "",
+                        additional_units: "0",
+                        meter_reset_reason: checked
+                          ? addBillForm.meter_reset_reason || "Meter damaged and replaced with new meter"
+                          : "",
+                      });
+                    }}
+                    className="h-4 w-4 rounded border-slate-300 text-amber-600 cursor-pointer"
+                  />
+                </label>
+
+                {addBillForm.is_meter_reset && (
+                  <div className="mt-3 space-y-2.5 border-t border-slate-200 dark:border-slate-800 pt-2.5 text-xs">
+                    <div className="grid grid-cols-2 gap-2.5">
                       <div>
-                        <Label className="text-xs">{t("roomDetail.extraCostLabel")}</Label>
+                        <Label className="text-xs">{t("roomDetail.newMeterStart")}</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={addBillForm.previous_units}
+                          onChange={(e) => setAddBillForm({ ...addBillForm, previous_units: e.target.value })}
+                          className="mt-1"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">{t("roomDetail.oldMeterReading")}</Label>
+                        <Input
+                          type="number"
+                          min={nextPreviousUnits}
+                          value={addBillForm.old_meter_reading}
+                          onChange={(e) => {
+                            const oldVal = e.target.value;
+                            const oldNum = parseInt(oldVal);
+                            const addUnits = !isNaN(oldNum) && oldNum >= nextPreviousUnits ? oldNum - nextPreviousUnits : 0;
+                            setAddBillForm({
+                              ...addBillForm,
+                              old_meter_reading: oldVal,
+                              additional_units: String(addUnits),
+                            });
+                          }}
+                          placeholder={String(nextPreviousUnits)}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <Label className="text-xs">{t("roomDetail.additionalUnits")}</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={addBillForm.additional_units}
+                          onChange={(e) => setAddBillForm({ ...addBillForm, additional_units: e.target.value })}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">{t("roomDetail.reasonForMeterReset")}</Label>
+                        <Input
+                          value={addBillForm.meter_reset_reason}
+                          onChange={(e) => setAddBillForm({ ...addBillForm, meter_reset_reason: e.target.value })}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Extra Cost Toggle */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 px-3.5 py-2.5">
+                <label className="flex items-center justify-between cursor-pointer text-sm">
+                  <span className="flex items-center gap-2 font-medium">
+                    <Plus className="h-3.5 w-3.5 text-sky-500" />
+                    {t("roomDetail.extraCost")}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={addBillForm.has_extra_cost}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setAddBillForm({
+                        ...addBillForm,
+                        has_extra_cost: checked,
+                        extra_charges: checked
+                          ? addBillForm.extra_charges.length > 0
+                            ? addBillForm.extra_charges
+                            : [{ label: "", amount: "" }]
+                          : [],
+                      });
+                    }}
+                    className="h-4 w-4 rounded border-slate-300 text-sky-600 cursor-pointer"
+                  />
+                </label>
+
+                {addBillForm.has_extra_cost && (
+                  <div className="mt-3 space-y-2 border-t border-slate-200 dark:border-slate-800 pt-2.5">
+                    {addBillForm.extra_charges.map((item, idx) => (
+                      <div key={idx} className="grid grid-cols-[1fr_110px_auto] gap-2 items-center">
                         <Input
                           value={item.label}
                           onChange={(e) => {
@@ -2201,11 +2219,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             setAddBillForm({ ...addBillForm, extra_charges: updated });
                           }}
                           placeholder={t("roomDetail.extraCostLabelPlaceholder")}
-                          className="mt-1 bg-white"
                         />
-                      </div>
-                      <div>
-                        <Label className="text-xs">{t("roomDetail.extraCostAmount")}</Label>
                         <Input
                           type="number"
                           min="0"
@@ -2216,116 +2230,59 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             updated[idx] = { ...updated[idx], amount: e.target.value };
                             setAddBillForm({ ...addBillForm, extra_charges: updated });
                           }}
-                          placeholder="0.00"
-                          className="mt-1 bg-white"
+                          placeholder="0"
                           required
                         />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const updated = addBillForm.extra_charges.filter((_, i) => i !== idx);
+                            setAddBillForm({
+                              ...addBillForm,
+                              has_extra_cost: updated.length > 0,
+                              extra_charges: updated,
+                            });
+                          }}
+                          className="text-slate-400 hover:text-rose-600 h-9 w-9"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          const updated = addBillForm.extra_charges.filter((_, i) => i !== idx);
-                          setAddBillForm({
-                            ...addBillForm,
-                            has_extra_cost: updated.length > 0,
-                            extra_charges: updated,
-                          });
-                        }}
-                        className="text-slate-400 hover:text-rose-600 h-9 w-9"
-                        title={t("roomDetail.removeCost")}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setAddBillForm({
-                        ...addBillForm,
-                        extra_charges: [...addBillForm.extra_charges, { label: "", amount: "" }],
-                      })
-                    }
-                    className="w-full border-dashed border-slate-300 text-slate-700 hover:bg-white"
-                  >
-                    <Plus className="mr-1.5 h-3.5 w-3.5" />
-                    {t("roomDetail.addAnotherCost")}
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Live Auto-Calculation Breakdown */}
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
-              <div className="flex items-center justify-between text-xs font-semibold uppercase text-slate-600">
-                <div className="flex items-center gap-1.5">
-                  <Calculator className="h-3.5 w-3.5" />
-                  <span>{t("roomDetail.estimatedBillCalc")}</span>
-                </div>
-                {addBillForm.is_meter_reset && (
-                  <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
-                    {t("roomDetail.meterResetMode")}
-                  </span>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded bg-white p-2 border border-slate-100">
-                  <span className="text-slate-600">{t("roomDetail.unitsUsed")}:</span>{" "}
-                  <span className="font-semibold text-slate-900">{unitsUsed}</span>
-                  {addBillForm.is_meter_reset && (
-                    <span className="block text-xs text-amber-700">
-                      ({newMeterUnits} new + {additionalOldUnits} old)
-                    </span>
-                  )}
-                </div>
-                <div className="rounded bg-white p-2 border border-slate-100">
-                  <span className="text-slate-500">{t("dashboard.electricity")}:</span>{" "}
-                  <span className="font-bold text-sky-700">Rs. {estimatedElectricity.toFixed(2)}</span>
-                </div>
-                <div className="rounded bg-white p-2 border border-slate-100">
-                  <span className="text-slate-500">{t("roomDetail.rentCol")}:</span>{" "}
-                  <span className="font-semibold text-slate-900">Rs. {estimatedRent}</span>
-                </div>
-                <div className="rounded bg-white p-2 border border-slate-100">
-                  <span className="text-slate-500">{t("roomDetail.waterCol")}:</span>{" "}
-                  <span className="font-semibold text-slate-900">Rs. {estimatedWater}</span>
-                </div>
-                <div className="rounded bg-white p-2 border border-slate-100">
-                  <span className="text-slate-500">{t("roomDetail.wasteCol")}:</span>{" "}
-                  <span className="font-semibold text-slate-900">Rs. {estimatedWaste}</span>
-                </div>
-                <div className="rounded bg-white p-2 border border-slate-100">
-                  <span className="text-slate-500">{t("dashboard.internet")}:</span>{" "}
-                  <span className="font-semibold text-slate-900">Rs. {estimatedInternet}</span>
-                </div>
-                {estimatedExtraCharges.map((item, idx) => (
-                  <div key={idx} className="rounded bg-white p-2 border border-amber-200">
-                    <span className="text-slate-500">{item.label?.trim() || t("roomDetail.extraCost")}:</span>{" "}
-                    <span className="font-semibold text-amber-700">Rs. {(parseFloat(item.amount) || 0).toFixed(2)}</span>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setAddBillForm({
+                          ...addBillForm,
+                          extra_charges: [...addBillForm.extra_charges, { label: "", amount: "" }],
+                        })
+                      }
+                      className="w-full border-dashed"
+                    >
+                      <Plus className="mr-1.5 h-3.5 w-3.5" />
+                      {t("roomDetail.addAnotherCost")}
+                    </Button>
                   </div>
-                ))}
-              </div>
-              <div className="border-t border-slate-200 pt-2 flex items-center justify-between text-sm">
-                <span className="font-bold text-slate-900">{t("roomDetail.totalCalculatedBill")}:</span>
-                <span className="font-extrabold text-emerald-700 text-base">Rs. {estimatedTotal.toFixed(2)}</span>
+                )}
               </div>
             </div>
 
             <div>
-              <Label>{t("roomDetail.remarksOptional")}</Label>
+              <Label htmlFor="bill-remarks">{t("roomDetail.noteOptional")}</Label>
               <Input
+                id="bill-remarks"
                 value={addBillForm.remarks}
                 onChange={(e) => setAddBillForm({ ...addBillForm, remarks: e.target.value })}
-                placeholder="Optional remarks"
-                className="mt-1"
+                placeholder={t("roomDetail.remarksOptional")}
+                className="mt-1.5"
               />
             </div>
 
-            <div className="sticky bottom-0 bg-white z-10 pt-3 border-t border-slate-100 flex justify-end gap-2">
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
               <Button type="button" variant="outline" onClick={() => setIsAddBillOpen(false)}>
                 {t("common.cancel")}
               </Button>
@@ -3336,32 +3293,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </Button>
             </div>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reverse Receipt Confirmation Modal */}
-      <Dialog open={!!reversingReceipt} onOpenChange={() => setReversingReceipt(null)}>
-        <DialogContent className="rounded-xl">
-          <DialogHeader>
-            <DialogTitle>{t("roomDetail.reverseReceiptTitle")}</DialogTitle>
-            <p className="text-sm text-slate-600">
-              {locale === "ne"
-                ? `के तपाईं रसिद #${reversingReceipt?.id} (रु. ${reversingReceipt?.amount}, मिति: ${reversingReceipt?.received_date}) उल्ट्याउन निश्चित हुनुहुन्छ? यसले बिलहरूबाट भुक्तानी हटाउनेछ र बाँकी रकम पूर्ववत गर्नेछ।`
-                : `Are you sure you want to reverse receipt #${reversingReceipt?.id} of Rs. ${reversingReceipt?.amount} received on ${reversingReceipt?.received_date}? This will unallocate payments from bills and restore outstanding balances.`}
-            </p>
-          </DialogHeader>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button type="button" variant="outline" onClick={() => setReversingReceipt(null)}>
-              {t("common.cancel")}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => reversingReceipt && reverseReceiptMutation.mutate(reversingReceipt.id)}
-              disabled={reverseReceiptMutation.isPending}
-            >
-              {reverseReceiptMutation.isPending ? t("roomDetail.reversing") : t("roomDetail.confirmReversal")}
-            </Button>
-          </div>
         </DialogContent>
       </Dialog>
 

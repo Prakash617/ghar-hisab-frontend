@@ -295,6 +295,43 @@ export const paymentsApi = {
     }),
 };
 
+// Receipts / Payment Receive History API
+export const receiptsApi = {
+  list: (params?: {
+    room_id?: number;
+    house_id?: number;
+    search?: string;
+    status?: string;
+    page?: number;
+    page_size?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.room_id) searchParams.set("room_id", String(params.room_id));
+    if (params?.house_id) searchParams.set("house_id", String(params.house_id));
+    if (params?.search) searchParams.set("search", params.search);
+    if (params?.status) searchParams.set("status", params.status);
+    if (params?.page) searchParams.set("page", String(params.page));
+    if (params?.page_size) searchParams.set("page_size", String(params.page_size));
+    const q = searchParams.toString();
+    return request<any>(`/api/custom/receipts/${q ? `?${q}` : ""}`, {
+      token: getAccessToken() || undefined,
+    });
+  },
+
+  update: (receiptId: number, data: { received_date?: string; remarks?: string }) =>
+    request<any>(`/api/custom/receipts/${receiptId}/`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+      token: getAccessToken() || undefined,
+    }),
+
+  reverse: (receiptId: number) =>
+    request<any>(`/api/custom/receipts/${receiptId}/reverse/`, {
+      method: "POST",
+      token: getAccessToken() || undefined,
+    }),
+};
+
 // Dashboard API
 export const dashboardApi = {
   get: (params?: { month?: string; status?: string; search?: string; house?: string | number }) => {

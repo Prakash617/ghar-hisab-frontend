@@ -75,6 +75,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     previous_units: "",
     old_meter_reading: "",
     additional_units: "0",
+    has_extra_cost: false,
+    extra_charges: [] as { label: string; amount: string }[],
   });
 
   // 3) Send Pending Bills Modal State
@@ -114,6 +116,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     water: "",
     waste: "",
     internet: "",
+    extra_charges: [] as { label: string; amount: string }[],
     status: "Unpaid" as "Paid" | "Unpaid" | "Partially Paid",
     total_paid: "0",
     payment_received_date: "",
@@ -256,6 +259,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       previous_units: isReset ? "0" : String(nextPreviousUnits),
       old_meter_reading: isReset ? String(nextPreviousUnits) : "",
       additional_units: "0",
+      has_extra_cost: false,
+      extra_charges: [],
     });
     setIsAddBillOpen(true);
   };
@@ -279,8 +284,20 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   });
 
   const createBillMutation = useMutation({
-    mutationFn: (bData: any) =>
-      paymentsApi.create({
+    mutationFn: (bData: any) => {
+      const validExtraCharges = bData.has_extra_cost
+        ? (bData.extra_charges || [])
+            .map((item: { label: string; amount: string }) => ({
+              label: item.label?.trim() || "Additional Cost",
+              amount: parseFloat(item.amount) || 0,
+            }))
+            .filter((item: { label: string; amount: number }) => item.amount > 0)
+        : [];
+      const extraChargeTotal = validExtraCharges.reduce(
+        (sum: number, item: { amount: number }) => sum + item.amount,
+        0
+      );
+      return paymentsApi.create({
         room: roomId,
         billing_month: bData.billing_month,
         current_units: parseInt(bData.current_units),
@@ -291,7 +308,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         old_meter_reading: bData.is_meter_reset && bData.old_meter_reading ? parseInt(bData.old_meter_reading) : null,
         new_meter_start_reading: bData.is_meter_reset ? (parseInt(bData.previous_units) || 0) : null,
         additional_units: bData.is_meter_reset ? (parseInt(bData.additional_units) || 0) : 0,
-      }),
+        extra_charges: validExtraCharges,
+        extra_charge: extraChargeTotal,
+        extra_charge_label: validExtraCharges.map((i: { label: string }) => i.label).join(", ").slice(0, 100),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["room", roomId] });
       setIsAddBillOpen(false);
@@ -472,6 +493,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   const handleEditBillSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingBill) return;
+    const validExtraCharges = (editForm.extra_charges || [])
+      .map((item) => ({
+        label: item.label?.trim() || "Additional Cost",
+        amount: parseFloat(item.amount) || 0,
+      }))
+      .filter((item) => item.amount > 0);
+    const extraChargeTotal = validExtraCharges.reduce((sum, item) => sum + item.amount, 0);
     updateBillMutation.mutate({
       id: editingBill.id,
       data: {
@@ -483,6 +511,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         water: parseFloat(editForm.water) || 0,
         waste: parseFloat(editForm.waste) || 0,
         internet: parseFloat(editForm.internet) || 0,
+        extra_charges: validExtraCharges,
+        extra_charge: extraChargeTotal,
+        extra_charge_label: validExtraCharges.map((i) => i.label).join(", ").slice(0, 100),
         status: editForm.status,
         total_paid: parseFloat(editForm.total_paid) || 0,
         payment_received_date: editForm.payment_received_date || null,
@@ -506,6 +537,15 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       water: String(bill.water ?? 0),
       waste: String(bill.waste ?? 0),
       internet: String(bill.internet ?? 0),
+      extra_charges:
+        Array.isArray(bill.extra_charges) && bill.extra_charges.length > 0
+          ? bill.extra_charges.map((item: any) => ({
+              label: item.label || "",
+              amount: String(item.amount ?? ""),
+            }))
+          : Number(bill.extra_charge) > 0
+          ? [{ label: bill.extra_charge_label || "", amount: String(bill.extra_charge) }]
+          : [],
       status: (bill.status as "Paid" | "Unpaid" | "Partially Paid") || "Unpaid",
       total_paid: String(bill.total_paid ?? 0),
       payment_received_date: bill.payment_received_date || "",
@@ -592,7 +632,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   const estimatedWater = parseFloat(tenant?.water_price || "0");
   const estimatedWaste = parseFloat(tenant?.waste_price || "0");
   const estimatedInternet = parseFloat(tenant?.internet_price || "0");
-  const estimatedTotal = estimatedElectricity + estimatedRent + estimatedWater + estimatedWaste + estimatedInternet;
+  const estimatedExtraCharges = addBillForm.has_extra_cost
+    ? addBillForm.extra_charges.filter((item) => (parseFloat(item.amount) || 0) > 0)
+    : [];
+  const estimatedExtraCharge = estimatedExtraCharges.reduce(
+    (sum, item) => sum + (parseFloat(item.amount) || 0),
+    0
+  );
+  const estimatedTotal = estimatedElectricity + estimatedRent + estimatedWater + estimatedWaste + estimatedInternet + estimatedExtraCharge;
   const isUnitValid = addBillForm.is_meter_reset
     ? (!isNaN(parsedCurrentUnits) && parsedCurrentUnits >= effectivePreviousUnits)
     : (!isNaN(parsedCurrentUnits) && parsedCurrentUnits > nextPreviousUnits);
@@ -980,6 +1027,21 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             <span className="text-[10px] uppercase text-purple-700">{t("dashboard.internet")}</span>
                             <p className="font-bold text-purple-800">Rs. {payment.internet}</p>
                           </div>
+                          {Array.isArray(payment.extra_charges) && payment.extra_charges.length > 0 ? (
+                            payment.extra_charges.map((item: any, idx: number) => (
+                              <div key={idx} className="rounded-lg bg-amber-50/70 p-2">
+                                <span className="text-[10px] uppercase text-amber-700">{item.label || t("roomDetail.extraCost")}</span>
+                                <p className="font-bold text-amber-800">Rs. {item.amount}</p>
+                              </div>
+                            ))
+                          ) : (
+                            Number(payment.extra_charge) > 0 && (
+                              <div className="rounded-lg bg-amber-50/70 p-2">
+                                <span className="text-[10px] uppercase text-amber-700">{payment.extra_charge_label || t("roomDetail.extraCost")}</span>
+                                <p className="font-bold text-amber-800">Rs. {payment.extra_charge}</p>
+                              </div>
+                            )
+                          )}
                         </div>
                         {payment.waste > 0 && (
                           <p className="text-[11px] text-slate-500">{t("roomDetail.wasteCol")}: Rs. {payment.waste}</p>
@@ -1575,6 +1637,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 <th className="section-header px-4 py-4 text-right">{t("roomDetail.waterCol")}</th>
                 <th className="section-header px-4 py-4 text-right">{t("roomDetail.wasteCol")}</th>
                 <th className="section-header px-4 py-4 text-right">{t("dashboard.internet")}</th>
+                {payments.some((p: any) => Number(p.extra_charge) > 0) && (
+                  <th className="section-header px-4 py-4 text-right">{t("roomDetail.extraCost")}</th>
+                )}
                 <th className="section-header px-4 py-4 text-right font-bold">{t("dashboard.billed")}</th>
                 <th className="section-header px-4 py-4 text-right">{t("roomDetail.paidCol")}</th>
                 <th className="section-header px-4 py-4 text-center">{t("roomDetail.statusCol")}</th>
@@ -1620,6 +1685,26 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     <td className="px-4 py-4 text-right text-slate-900">Rs. {payment.water}</td>
                     <td className="px-4 py-4 text-right text-slate-900">Rs. {payment.waste}</td>
                     <td className="px-4 py-4 text-right text-slate-900">Rs. {payment.internet}</td>
+                    {payments.some((p: any) => Number(p.extra_charge) > 0) && (
+                      <td className="px-4 py-4 text-right text-amber-700">
+                        {Number(payment.extra_charge) > 0 ? (
+                          <div className="flex flex-col items-end">
+                            <span className="font-semibold">Rs. {payment.extra_charge}</span>
+                            {Array.isArray(payment.extra_charges) && payment.extra_charges.length > 0 ? (
+                              <span className="text-[11px] text-slate-500">
+                                {payment.extra_charges.map((i: any) => `${i.label || t("roomDetail.extraCost")}: ${i.amount}`).join(", ")}
+                              </span>
+                            ) : (
+                              payment.extra_charge_label && (
+                                <span className="text-[11px] text-slate-500">{payment.extra_charge_label}</span>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">-</span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-4 py-4 text-right text-lg font-bold text-slate-900">Rs. {payment.total}</td>
                     <td className="px-4 py-4 text-right font-semibold text-emerald-600">Rs. {payment.total_paid}</td>
                     <td className="px-4 py-4 text-center">
@@ -2088,6 +2173,102 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               )}
             </div>
 
+            {/* Optional Additional / Custom Costs */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
+              <label className="flex items-center justify-between cursor-pointer">
+                <div>
+                  <span className="text-sm font-semibold text-slate-900">{t("roomDetail.addExtraCostToggle")}</span>
+                  <p className="text-xs text-slate-500">{t("roomDetail.addExtraCostToggleDesc")}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={addBillForm.has_extra_cost}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setAddBillForm({
+                      ...addBillForm,
+                      has_extra_cost: checked,
+                      extra_charges: checked
+                        ? (addBillForm.extra_charges.length > 0 ? addBillForm.extra_charges : [{ label: "", amount: "" }])
+                        : [],
+                    });
+                  }}
+                  className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer ml-2"
+                />
+              </label>
+
+              {addBillForm.has_extra_cost && (
+                <div className="mt-3 space-y-2.5 border-t border-slate-200 pt-3">
+                  {addBillForm.extra_charges.map((item, idx) => (
+                    <div key={idx} className="grid grid-cols-1 sm:grid-cols-[1fr_140px_auto] gap-2 items-end">
+                      <div>
+                        <Label className="text-xs">{t("roomDetail.extraCostLabel")}</Label>
+                        <Input
+                          value={item.label}
+                          onChange={(e) => {
+                            const updated = [...addBillForm.extra_charges];
+                            updated[idx] = { ...updated[idx], label: e.target.value };
+                            setAddBillForm({ ...addBillForm, extra_charges: updated });
+                          }}
+                          placeholder={t("roomDetail.extraCostLabelPlaceholder")}
+                          className="mt-1 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">{t("roomDetail.extraCostAmount")}</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.amount}
+                          onChange={(e) => {
+                            const updated = [...addBillForm.extra_charges];
+                            updated[idx] = { ...updated[idx], amount: e.target.value };
+                            setAddBillForm({ ...addBillForm, extra_charges: updated });
+                          }}
+                          placeholder="0.00"
+                          className="mt-1 bg-white"
+                          required
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const updated = addBillForm.extra_charges.filter((_, i) => i !== idx);
+                          setAddBillForm({
+                            ...addBillForm,
+                            has_extra_cost: updated.length > 0,
+                            extra_charges: updated,
+                          });
+                        }}
+                        className="text-slate-400 hover:text-rose-600 h-9 w-9"
+                        title={t("roomDetail.removeCost")}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setAddBillForm({
+                        ...addBillForm,
+                        extra_charges: [...addBillForm.extra_charges, { label: "", amount: "" }],
+                      })
+                    }
+                    className="w-full border-dashed border-slate-300 text-slate-700 hover:bg-white"
+                  >
+                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    {t("roomDetail.addAnotherCost")}
+                  </Button>
+                </div>
+              )}
+            </div>
+
             {/* Live Auto-Calculation Breakdown */}
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
               <div className="flex items-center justify-between text-xs font-semibold uppercase text-slate-600">
@@ -2131,6 +2312,12 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <span className="text-slate-500">{t("dashboard.internet")}:</span>{" "}
                   <span className="font-semibold text-slate-900">Rs. {estimatedInternet}</span>
                 </div>
+                {estimatedExtraCharges.map((item, idx) => (
+                  <div key={idx} className="rounded bg-white p-2 border border-amber-200">
+                    <span className="text-slate-500">{item.label?.trim() || t("roomDetail.extraCost")}:</span>{" "}
+                    <span className="font-semibold text-amber-700">Rs. {(parseFloat(item.amount) || 0).toFixed(2)}</span>
+                  </div>
+                ))}
               </div>
               <div className="border-t border-slate-200 pt-2 flex items-center justify-between text-sm">
                 <span className="font-bold text-slate-900">{t("roomDetail.totalCalculatedBill")}:</span>
@@ -2700,6 +2887,21 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <p className="text-xs uppercase text-purple-700">{t("dashboard.internet")}</p>
                   <p className="font-bold text-purple-700">Rs. {viewingBill.internet}</p>
                 </div>
+                {Array.isArray(viewingBill.extra_charges) && viewingBill.extra_charges.length > 0 ? (
+                  viewingBill.extra_charges.map((item: any, idx: number) => (
+                    <div key={idx} className="rounded-lg bg-amber-50 p-3">
+                      <p className="text-xs uppercase text-amber-700">{item.label || t("roomDetail.extraCost")}</p>
+                      <p className="font-bold text-amber-700">Rs. {item.amount}</p>
+                    </div>
+                  ))
+                ) : (
+                  Number(viewingBill.extra_charge) > 0 && (
+                    <div className="rounded-lg bg-amber-50 p-3">
+                      <p className="text-xs uppercase text-amber-700">{viewingBill.extra_charge_label || t("roomDetail.extraCost")}</p>
+                      <p className="font-bold text-amber-700">Rs. {viewingBill.extra_charge}</p>
+                    </div>
+                  )
+                )}
                 <div className="rounded-lg bg-slate-50 p-3">
                   <p className="text-xs uppercase text-slate-500">{t("roomDetail.paymentDate")}</p>
                   <p className="font-semibold">{viewingBill.payment_received_date || "-"}</p>
@@ -2857,10 +3059,74 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       (parseFloat(editForm.rent) || 0) +
                       (parseFloat(editForm.water) || 0) +
                       (parseFloat(editForm.waste) || 0) +
-                      (parseFloat(editForm.internet) || 0)
+                      (parseFloat(editForm.internet) || 0) +
+                      editForm.extra_charges.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0)
                     ).toFixed(2)}
                   </span>
                 </div>
+              </div>
+
+              {/* Extra Custom Costs in Edit Modal */}
+              <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-700">{t("roomDetail.extraCost")}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setEditForm({
+                        ...editForm,
+                        extra_charges: [...editForm.extra_charges, { label: "", amount: "" }],
+                      })
+                    }
+                    className="h-7 text-xs"
+                  >
+                    <Plus className="mr-1 h-3 w-3" />
+                    {t("roomDetail.addAnotherCost")}
+                  </Button>
+                </div>
+                {editForm.extra_charges.map((item, idx) => (
+                  <div key={idx} className="grid grid-cols-[1fr_120px_auto] gap-2 items-center">
+                    <Input
+                      value={item.label}
+                      onChange={(e) => {
+                        const updated = [...editForm.extra_charges];
+                        updated[idx] = { ...updated[idx], label: e.target.value };
+                        setEditForm({ ...editForm, extra_charges: updated });
+                      }}
+                      placeholder={t("roomDetail.extraCostLabelPlaceholder")}
+                      className="bg-white h-8 text-xs"
+                    />
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={item.amount}
+                      onChange={(e) => {
+                        const updated = [...editForm.extra_charges];
+                        updated[idx] = { ...updated[idx], amount: e.target.value };
+                        setEditForm({ ...editForm, extra_charges: updated });
+                      }}
+                      placeholder="0.00"
+                      className="bg-white h-8 text-xs"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setEditForm({
+                          ...editForm,
+                          extra_charges: editForm.extra_charges.filter((_, i) => i !== idx),
+                        });
+                      }}
+                      className="h-8 w-8 text-slate-400 hover:text-rose-600"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -2879,7 +3145,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         (parseFloat(editForm.rent) || 0) +
                         (parseFloat(editForm.water) || 0) +
                         (parseFloat(editForm.waste) || 0) +
-                        (parseFloat(editForm.internet) || 0)
+                        (parseFloat(editForm.internet) || 0) +
+                        editForm.extra_charges.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0)
                       );
                       if (newStatus === "Paid") {
                         setEditForm({
@@ -2930,7 +3197,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           (parseFloat(editForm.rent) || 0) +
                           (parseFloat(editForm.water) || 0) +
                           (parseFloat(editForm.waste) || 0) +
-                          (parseFloat(editForm.internet) || 0)
+                          (parseFloat(editForm.internet) || 0) +
+                          editForm.extra_charges.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0)
                         );
                         setEditForm({
                           ...editForm,

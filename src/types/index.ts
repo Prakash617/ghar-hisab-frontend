@@ -107,6 +107,9 @@ export interface PaymentHistory {
   rent?: string;
   waste?: string;
   internet?: string;
+  extra_charge?: string;
+  extra_charge_label?: string;
+  extra_charges?: { label: string; amount: string | number }[];
   status?: "Unpaid" | "Partially Paid" | "Paid" | string;
   payment_date?: string;
   payment_received_date?: string;

@@ -140,6 +140,7 @@ export default function DashboardPage() {
       "Water (NPR)",
       "Waste (NPR)",
       ...(hasInternet ? ["Internet (NPR)"] : []),
+      ...(items.some((p: any) => parseFloat(p.extra_charge || "0") > 0) ? ["Additional Cost (NPR)"] : []),
       "Total Billed (NPR)",
       "Status",
     ];
@@ -159,6 +160,7 @@ export default function DashboardPage() {
         `"${p.water || "0"}"`,
         `"${p.waste || "0"}"`,
         ...(hasInternet ? [`"${p.internet || "0"}"`] : []),
+        ...(items.some((i: any) => parseFloat(i.extra_charge || "0") > 0) ? [`"${p.extra_charge || "0"}"`] : []),
         `"${p.amount || p.total || "0"}"`,
         `"${p.status || ""}"`,
       ];
@@ -610,6 +612,9 @@ export default function DashboardPage() {
                   {hasInternet && (
                     <th className="px-4 py-3 text-right">{t("dashboard.internet")}</th>
                   )}
+                  {dashboard.recent_payments.some((p: any) => parseFloat(p.extra_charge || "0") > 0) && (
+                    <th className="px-4 py-3 text-right">{t("roomDetail.extraCost")}</th>
+                  )}
                   <th className="px-4 py-3 text-right font-bold text-slate-900">
                     {t("dashboard.billed")}
                   </th>
@@ -663,6 +668,20 @@ export default function DashboardPage() {
                       {hasInternet && (
                         <td className="px-4 py-3 text-right text-slate-700">
                           {formatCurrency(payment.internet)}
+                        </td>
+                      )}
+                      {dashboard.recent_payments.some((p: any) => parseFloat(p.extra_charge || "0") > 0) && (
+                        <td className="px-4 py-3 text-right text-amber-700">
+                          {parseFloat(payment.extra_charge || "0") > 0 ? (
+                            <div className="flex flex-col items-end">
+                              <span className="font-medium">{formatCurrency(payment.extra_charge)}</span>
+                              {payment.extra_charge_label && (
+                                <span className="text-[11px] text-slate-400">{payment.extra_charge_label}</span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">-</span>
+                          )}
                         </td>
                       )}
                       <td className="px-4 py-3 text-right font-display font-bold text-slate-900">

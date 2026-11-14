@@ -451,11 +451,16 @@ export async function deliverImageToMessagingApp({
   phone?: string | null;
   title?: string;
 }): Promise<"native_share" | "clipboard_and_link" | "download_and_link" | "aborted"> {
+  const digits = formatMessagingPhone(phone);
+  const hasDirectRecipient = Boolean(digits);
+
   const isMobileUa =
     typeof navigator !== "undefined" &&
     /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
-  if (blob && isMobileUa && typeof navigator !== "undefined" && "share" in navigator) {
+  // Only use the generic OS share sheet when no tenant phone number is available;
+  // when a number exists, message that tenant directly via WhatsApp / Viber deep link.
+  if (!hasDirectRecipient && blob && isMobileUa && typeof navigator !== "undefined" && "share" in navigator) {
     const file = new File([blob], filename, { type: "image/png" });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
@@ -481,10 +486,19 @@ export async function deliverImageToMessagingApp({
     typeof ClipboardItem !== "undefined"
   ) {
     try {
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      const clipboardData: Record<string, Blob> = { "image/png": blob };
+      if (channel === "viber" && hasDirectRecipient && summary) {
+        clipboardData["text/plain"] = new Blob([summary], { type: "text/plain" });
+      }
+      await navigator.clipboard.write([new ClipboardItem(clipboardData)]);
       copiedImage = true;
     } catch {
-      copiedImage = false;
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        copiedImage = true;
+      } catch {
+        copiedImage = false;
+      }
     }
   }
 
@@ -492,13 +506,20 @@ export async function deliverImageToMessagingApp({
     triggerPngDownload(blob, filename);
   }
 
-  const digits = formatMessagingPhone(phone);
   const targetUrl =
     channel === "whatsapp"
-      ? `https://wa.me/${digits}?text=${encodeURIComponent(summary)}`
-      : `viber://forward?text=${encodeURIComponent(summary)}`;
+      ? digits
+        ? `https://wa.me/${digits}?text=${encodeURIComponent(summary)}`
+        : `https://wa.me/?text=${encodeURIComponent(summary)}`
+      : digits
+        ? `viber://chat?number=%2B${digits}`
+        : `viber://forward?text=${encodeURIComponent(summary)}`;
 
-  window.open(targetUrl, "_blank", "noopener,noreferrer");
+  if (channel === "viber") {
+    window.location.href = targetUrl;
+  } else {
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
+  }
 
   return copiedImage ? "clipboard_and_link" : "download_and_link";
 }

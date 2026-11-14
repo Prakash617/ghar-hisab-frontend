@@ -33,6 +33,7 @@ interface ReceiptHistoryPanelProps {
   receipts: any[];
   isLoading?: boolean;
   showRoomInfo?: boolean;
+  tenantPhone?: string | null;
   onChanged?: () => void;
 }
 
@@ -40,6 +41,7 @@ export function ReceiptHistoryPanel({
   receipts,
   isLoading = false,
   showRoomInfo = false,
+  tenantPhone = null,
   onChanged,
 }: ReceiptHistoryPanelProps) {
   const { t } = useTranslation();
@@ -507,6 +509,7 @@ export function ReceiptHistoryPanel({
         onOpenChange={(open) => !open && setSharingReceipt(null)}
         mode="receipt"
         receipt={sharingReceipt}
+        tenantPhone={sharingReceipt?.tenant_contact || tenantPhone || null}
       />
     </>
   );

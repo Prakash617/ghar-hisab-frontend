@@ -19,7 +19,11 @@ import { ReceiptHistoryPanel } from "@/components/payments/receipt-history-panel
 import { ShareCardDialog } from "@/components/payments/share-card-dialog";
 import { SendBillDialog } from "@/components/payments/send-bill-dialog";
 import { MoveOutModal } from "@/components/rooms/move-out-modal";
-import { deliverImageToMessagingApp, renderPendingNoticeCanvasBlob } from "@/lib/share-bill";
+import {
+  deliverImageToMessagingApp,
+  formatMessagingPhone,
+  renderPendingNoticeCanvasBlob,
+} from "@/lib/share-bill";
 import { getTodayNepaliDate } from "@/lib/nepaliDate";
 import Link from "next/link";
 import {
@@ -62,6 +66,7 @@ function TenantPortalLinkBox({
   portalToken,
   portalUrl,
   tenantName,
+  tenantPhone,
   houseName,
   roomNumber,
   isRegenerating,
@@ -73,6 +78,7 @@ function TenantPortalLinkBox({
   portalToken?: string | null;
   portalUrl: string;
   tenantName?: string;
+  tenantPhone?: string | null;
   houseName?: string;
   roomNumber?: string | number;
   isRegenerating: boolean;
@@ -83,9 +89,15 @@ function TenantPortalLinkBox({
 }) {
   if (!portalToken) return null;
 
-  const whatsappText = encodeURIComponent(
-    `${tenantName ? `Namaste ${tenantName},\n` : ""}Ghar Hisaab - ${houseName || "Room"} #${roomNumber ?? ""}\nView your monthly bills, meter proof, receipts & payment QR:\n${portalUrl}`
-  );
+  const portalMessage = `${tenantName ? `Namaste ${tenantName},\n` : ""}Ghar Hisaab - ${houseName || "Room"} #${roomNumber ?? ""}\nView your monthly bills, meter proof, receipts & payment QR:\n${portalUrl}`;
+  const encodedMessage = encodeURIComponent(portalMessage);
+  const digits = formatMessagingPhone(tenantPhone);
+  const whatsappUrl = digits
+    ? `https://wa.me/${digits}?text=${encodedMessage}`
+    : `https://wa.me/?text=${encodedMessage}`;
+  const viberUrl = digits
+    ? `viber://chat?number=%2B${digits}`
+    : `viber://forward?text=${encodedMessage}`;
 
   return (
     <div
@@ -130,13 +142,27 @@ function TenantPortalLinkBox({
         </a>
 
         <a
-          href={`https://wa.me/?text=${whatsappText}`}
+          href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex h-8 items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60"
         >
           <Share2 className="h-3.5 w-3.5" />
           {t("portal.shareWhatsApp")}
+        </a>
+
+        <a
+          href={viberUrl}
+          onClick={() => {
+            if (digits && typeof navigator !== "undefined" && navigator.clipboard) {
+              navigator.clipboard.writeText(portalMessage).catch(() => {});
+              toast.success(t("portal.linkCopied"));
+            }
+          }}
+          className="inline-flex h-8 items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-100 dark:border-violet-900 dark:bg-violet-950/60 dark:text-violet-300 dark:hover:bg-violet-900/60"
+        >
+          <MessageCircle className="h-3.5 w-3.5" />
+          Viber
         </a>
 
         <Button
@@ -1540,6 +1566,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   portalToken={tenant.portal_token}
                   portalUrl={getTenantPortalUrl(tenant.portal_token)}
                   tenantName={tenant.full_name || tenant.name}
+                  tenantPhone={tenant.contact}
                   houseName={room?.house_name}
                   roomNumber={room?.room_number}
                   isRegenerating={regeneratePortalTokenMutation.isPending}
@@ -1630,6 +1657,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             <ReceiptHistoryPanel
               receipts={recentReceipts}
               showRoomInfo={false}
+              tenantPhone={tenant?.contact || null}
               onChanged={() => queryClient.invalidateQueries({ queryKey: ["room", roomId] })}
             />
           </div>
@@ -1784,6 +1812,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             portalToken={tenant.portal_token}
             portalUrl={getTenantPortalUrl(tenant.portal_token)}
             tenantName={tenant.full_name || tenant.name}
+            tenantPhone={tenant.contact}
             houseName={room?.house_name}
             roomNumber={room?.room_number}
             isRegenerating={regeneratePortalTokenMutation.isPending}
@@ -1902,6 +1931,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           <ReceiptHistoryPanel
             receipts={recentReceipts}
             showRoomInfo={false}
+            tenantPhone={tenant?.contact || null}
             onChanged={() => queryClient.invalidateQueries({ queryKey: ["room", roomId] })}
           />
         </div>

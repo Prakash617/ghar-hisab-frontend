@@ -49,7 +49,17 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || error.message || error.error || "Request failed");
+    let message = error.detail || error.message || error.error;
+    if (!message && error && typeof error === "object") {
+      const firstKey = Object.keys(error)[0];
+      const firstVal = firstKey ? error[firstKey] : null;
+      if (Array.isArray(firstVal) && firstVal.length > 0) {
+        message = `${firstKey}: ${String(firstVal[0])}`;
+      } else if (typeof firstVal === "string" && firstVal) {
+        message = `${firstKey}: ${firstVal}`;
+      }
+    }
+    throw new Error(message || `Request failed (${response.status})`);
   }
 
   if (response.status === 204) {

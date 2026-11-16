@@ -372,6 +372,7 @@
     "step2PreviousDue": "Step 2: Previous Due (Opening Balance)",
     "totalPayableStep": "Total Payable Now (Step 1 + Step 2):",
     "roomsIncluded": "Rooms included in this notice:",
+    "pendingBillsCol": "Pending Bills",
     "messageLanguage": "Message Language",
     "switchUpdatesDefault": "Switching updates default subject and message text.",
     "sendNotice": "Send Email",

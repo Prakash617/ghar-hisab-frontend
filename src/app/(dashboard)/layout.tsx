@@ -8,30 +8,32 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import Link from "next/link";
 import {
-  LayoutDashboard,
-  Home,
-  DoorOpen,
-  CreditCard,
-  Mail,
-} from "lucide-react";
+  ALL_MOBILE_NAV_OPTIONS,
+  useMobileNavStore,
+} from "@/stores/mobile-nav";
 
-const mobileNavItems = [
-  { href: "/dashboard", key: "nav.dashboard", icon: LayoutDashboard },
-  { href: "/houses", key: "nav.houses", icon: Home },
-  { href: "/rooms", key: "nav.rooms", icon: DoorOpen },
-  { href: "/payments", key: "nav.payments", icon: CreditCard },
-  { href: "/emails", key: "nav.emails", icon: Mail },
-];
+const GRID_COLS_CLASS: Record<number, string> = {
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+  5: "grid-cols-5",
+};
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, loadUser } = useAuthStore();
+  const { hrefs: mobileNavHrefs, hydrate: hydrateMobileNav } = useMobileNavStore();
   const { t } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     loadUser();
-  }, [loadUser]);
+    hydrateMobileNav();
+  }, [loadUser, hydrateMobileNav]);
+
+  const mobileNavItems = mobileNavHrefs
+    .map((href) => ALL_MOBILE_NAV_OPTIONS.find((opt) => opt.href === href))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -66,7 +68,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         aria-label="Mobile Navigation"
         className="fixed inset-x-0 bottom-0 z-40 px-2.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 md:hidden pointer-events-none"
       >
-        <div className="pointer-events-auto mx-auto grid max-w-lg grid-cols-5 gap-1 rounded-2xl border border-slate-200/90 bg-white/95 p-1.5 backdrop-blur-xl shadow-xl ring-1 ring-black/5">
+        <div
+          className={`pointer-events-auto mx-auto grid max-w-lg ${
+            GRID_COLS_CLASS[mobileNavItems.length] || "grid-cols-5"
+          } gap-1 rounded-2xl border border-slate-200/90 bg-white/95 p-1.5 backdrop-blur-xl shadow-xl ring-1 ring-black/5`}
+        >
           {mobileNavItems.map((item) => {
             const isActive =
               pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));

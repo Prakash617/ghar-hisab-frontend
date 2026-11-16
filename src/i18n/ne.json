@@ -372,6 +372,7 @@
     "step2PreviousDue": "चरण २: अघिल्लो बाँकी बक्यौता",
     "totalPayableStep": "हाल तिर्नुपर्ने कुल रकम (चरण १ + २):",
     "roomsIncluded": "यस सूचनामा समावेश कोठाहरू:",
+    "pendingBillsCol": "बाँकी बिलहरू",
     "messageLanguage": "सन्देशको भाषा",
     "switchUpdatesDefault": "भाषा बदल्दा पूर्वनिर्धारित विषय र सन्देश अद्यावधिक हुन्छ।",
     "sendNotice": "इमेल पठाउनुहोस्",

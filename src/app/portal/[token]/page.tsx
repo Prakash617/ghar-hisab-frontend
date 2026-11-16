@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import {
   AlertCircle,
-  Banknote,
   Camera,
   CheckCircle2,
   FileText,
@@ -62,7 +61,7 @@ export default function TenantPortalPage({ params }: { params: Promise<{ token: 
     );
   }
 
-  const { tenant, room, landlord, summary, bills = [], receipts = [] } = data;
+  const { tenant, room, landlord, summary, bills = [] } = data;
   const qrUrl = landlord?.payment_qr_url ? getMediaUrl(landlord.payment_qr_url) : "";
   const pendingAmt = parseFloat(summary?.total_pending || "0");
 
@@ -303,43 +302,6 @@ export default function TenantPortalPage({ params }: { params: Promise<{ token: 
                   </div>
                 );
               })}
-            </div>
-          )}
-        </section>
-
-        {/* Payment Receipts History */}
-        <section className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Banknote className="h-4 w-4 text-emerald-600" />
-            <h2 className="font-display text-base font-bold text-slate-900">
-              {t("portal.receiptsTitle")} ({receipts.length})
-            </h2>
-          </div>
-
-          {receipts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-xs text-slate-500">
-              {t("payments.noReceipts")}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {receipts.map((r: any) => (
-                <div
-                  key={r.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs flex items-center justify-between gap-3"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-900">
-                      Receipt #{r.id} · {r.received_date}
-                    </p>
-                    <p className="text-xs text-slate-500 truncate">
-                      {r.remarks || t("payments.allocated")}
-                    </p>
-                  </div>
-                  <p className="font-display text-base font-extrabold text-emerald-700 tabular-nums shrink-0">
-                    {formatCurrency(r.amount || "0")}
-                  </p>
-                </div>
-              ))}
             </div>
           )}
         </section>

@@ -416,23 +416,23 @@ export default function DashboardPage() {
 
         <Link
           href="/expenses"
-          className="stat-card group flex items-center justify-between gap-3 border-sky-200/80 bg-gradient-to-br from-sky-50/70 to-indigo-50/40 hover:border-sky-300 hover:shadow-sm transition-all"
+          className="stat-card group flex items-center justify-between gap-3 border-sky-200/80 dark:border-sky-800/70 bg-gradient-to-br from-sky-50/70 to-indigo-50/40 dark:from-sky-950/60 dark:to-indigo-950/40 hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-sm transition-all"
         >
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-sky-700">
+            <p className="text-xs font-semibold uppercase tracking-wider text-sky-700 dark:text-sky-300">
               {t("expenses.netProfit")}
             </p>
             <p
               className={`mt-1 font-display text-xl sm:text-2xl font-extrabold ${
                 parseFloat(utilitySummary.net_profit || "0") >= 0
-                  ? "text-sky-900"
-                  : "text-rose-700"
+                  ? "text-sky-900 dark:text-sky-100"
+                  : "text-rose-700 dark:text-rose-300"
               }`}
             >
               {formatCurrency(utilitySummary.net_profit || "0")}
             </p>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-lg bg-sky-100 px-2.5 py-1.5 text-xs font-semibold text-sky-800 group-hover:bg-sky-200 transition">
+          <span className="inline-flex items-center gap-1 rounded-lg bg-sky-100 dark:bg-sky-900/60 px-2.5 py-1.5 text-xs font-semibold text-sky-800 dark:text-sky-200 group-hover:bg-sky-200 dark:group-hover:bg-sky-800/70 transition">
             {t("nav.expenses")}
           </span>
         </Link>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { batchRemindersApi, housesApi } from "@/lib/api";
+import { formatMessagingPhone } from "@/lib/share-bill";
 import { useTranslation } from "@/i18n/provider";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
@@ -30,9 +31,10 @@ export function BatchReminderModal({
   const queryClient = useQueryClient();
 
   const [houseId, setHouseId] = useState<string>(initialHouseId);
-  const [channel, setChannel] = useState<"email" | "sms">("email");
+  const [channel, setChannel] = useState<"email" | "sms" | "whatsapp">("email");
   const [language, setLanguage] = useState<"ne" | "en">(locale === "ne" ? "ne" : "en");
   const [selectedRoomIds, setSelectedRoomIds] = useState<number[]>([]);
+  const [whatsappSentIds, setWhatsappSentIds] = useState<number[]>([]);
 
   useEffect(() => {
     if (open) {
@@ -57,16 +59,53 @@ export function BatchReminderModal({
   useEffect(() => {
     const eligible = (preview?.items || [])
       .filter((item: Record<string, any>) =>
-        channel === "email" ? item.can_email : item.can_sms
+        channel === "email"
+          ? item.can_email
+          : channel === "sms"
+            ? item.can_sms
+            : item.can_whatsapp
       )
       .map((item: Record<string, any>) => item.room_id as number);
     setSelectedRoomIds(eligible);
   }, [preview, channel]);
 
+  const handleSendSingleWhatsapp = (item: Record<string, any>) => {
+    const digits = formatMessagingPhone(item.contact);
+    if (!digits) {
+      toast.error("Valid tenant phone number is missing.");
+      return;
+    }
+    const baseMsg =
+      language === "ne" ? item.whatsapp_message_ne : item.whatsapp_message_en;
+    const portalUrl =
+      item.portal_token && typeof window !== "undefined"
+        ? `${window.location.origin}/portal/${item.portal_token}`
+        : "";
+    const text = [
+      baseMsg,
+      portalUrl ? `\nView online bill & QR: ${portalUrl}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const url = `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+    const isMobile =
+      typeof navigator !== "undefined" &&
+      /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = url;
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+    setWhatsappSentIds((prev) =>
+      prev.includes(item.room_id) ? prev : [...prev, item.room_id]
+    );
+  };
+
   const sendMutation = useMutation({
     mutationFn: () =>
       batchRemindersApi.send({
-        channel,
+        channel: channel === "sms" ? "sms" : "email",
         language,
         house_id: houseId === "all" ? undefined : houseId,
         room_ids: selectedRoomIds,
@@ -120,11 +159,11 @@ export function BatchReminderModal({
 
             <div>
               <label className="text-xs font-semibold text-slate-600">{t("batchNotice.channel")}</label>
-              <div className="mt-1 grid grid-cols-2 gap-1 rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+              <div className="mt-1 grid grid-cols-3 gap-1 rounded-lg border border-slate-200 p-0.5 bg-slate-50">
                 <button
                   type="button"
                   onClick={() => setChannel("email")}
-                  className={`flex items-center justify-center gap-1 rounded-md py-1.5 text-xs font-semibold ${
+                  className={`flex items-center justify-center gap-1 rounded-md py-1.5 text-[11px] font-semibold ${
                     channel === "email" ? "bg-sky-600 text-white" : "text-slate-600"
                   }`}
                 >
@@ -134,12 +173,22 @@ export function BatchReminderModal({
                 <button
                   type="button"
                   onClick={() => setChannel("sms")}
-                  className={`flex items-center justify-center gap-1 rounded-md py-1.5 text-xs font-semibold ${
+                  className={`flex items-center justify-center gap-1 rounded-md py-1.5 text-[11px] font-semibold ${
                     channel === "sms" ? "bg-sky-600 text-white" : "text-slate-600"
                   }`}
                 >
                   <MessageSquare className="h-3.5 w-3.5" />
                   SMS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChannel("whatsapp")}
+                  className={`flex items-center justify-center gap-1 rounded-md py-1.5 text-[11px] font-semibold ${
+                    channel === "whatsapp" ? "bg-emerald-600 text-white" : "text-slate-600"
+                  }`}
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  WA
                 </button>
               </div>
             </div>
@@ -191,9 +240,52 @@ export function BatchReminderModal({
           ) : (
             <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
               {items.map((item) => {
-                const canSend = channel === "email" ? item.can_email : item.can_sms;
+                const canSend =
+                  channel === "email"
+                    ? item.can_email
+                    : channel === "sms"
+                      ? item.can_sms
+                      : item.can_whatsapp;
                 const checked = selectedRoomIds.includes(item.room_id);
                 const target = channel === "email" ? item.email : item.contact;
+                const waSent = whatsappSentIds.includes(item.room_id);
+
+                if (channel === "whatsapp") {
+                  return (
+                    <div
+                      key={item.room_id}
+                      className={`flex items-center justify-between gap-2 rounded-xl border p-2.5 text-xs ${
+                        canSend ? "border-slate-200 bg-white" : "border-slate-100 bg-slate-50 opacity-65"
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-900 truncate">
+                          {item.room_name || item.room_number} · {item.house_name}
+                        </p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {item.tenant_name} ·{" "}
+                          {target || <span className="text-rose-500">{t("batchNotice.missingContact")}</span>}
+                          {" · "}
+                          <strong className="text-rose-600">{formatCurrency(item.due_amount)}</strong>
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={!canSend}
+                        onClick={() => handleSendSingleWhatsapp(item)}
+                        className={`shrink-0 h-8 text-xs ${
+                          waSent
+                            ? "bg-slate-100 text-emerald-700 hover:bg-slate-200 border border-emerald-200"
+                            : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        }`}
+                      >
+                        {waSent ? "Sent ✓" : "Send WhatsApp"}
+                      </Button>
+                    </div>
+                  );
+                }
+
                 return (
                   <label
                     key={item.room_id}
@@ -233,25 +325,27 @@ export function BatchReminderModal({
 
           <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {t("common.cancel")}
+              {channel === "whatsapp" ? t("common.close") : t("common.cancel")}
             </Button>
-            <Button
-              type="button"
-              onClick={() => sendMutation.mutate()}
-              disabled={sendMutation.isPending || selectedRoomIds.length === 0}
-            >
-              {sendMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                  {t("batchNotice.sending")}
-                </>
-              ) : (
-                <>
-                  <Send className="mr-1.5 h-4 w-4" />
-                  {t("batchNotice.sendAll").replace("{count}", String(selectedRoomIds.length))}
-                </>
-              )}
-            </Button>
+            {channel !== "whatsapp" && (
+              <Button
+                type="button"
+                onClick={() => sendMutation.mutate()}
+                disabled={sendMutation.isPending || selectedRoomIds.length === 0}
+              >
+                {sendMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    {t("batchNotice.sending")}
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-1.5 h-4 w-4" />
+                    {t("batchNotice.sendAll").replace("{count}", String(selectedRoomIds.length))}
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

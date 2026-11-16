@@ -589,7 +589,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         unpaidBills: unpaidList,
         openingDue: Number(openingBalanceRemaining || 0),
         totalPending: Number(totalAmountToReceive || 0),
-        qrUrl: pendingPreview?.qr_image_url ? getMediaUrl(pendingPreview.qr_image_url) : null,
+        qrUrl: pendingPreview?.payment_qr_url ? getMediaUrl(pendingPreview.payment_qr_url) : null,
       });
 
       const summary = [
@@ -2828,7 +2828,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       <tr className="border-b border-blue-200 text-blue-800">
                         <th className="py-1">{t("rooms.room")}</th>
                         <th className="py-1">{t("roomDetail.house")}</th>
-                        <th className="py-1 text-center">{t("payments.month")}</th>
+                        <th className="py-1 text-center">{t("roomDetail.pendingBillsCol")}</th>
                         <th className="py-1 text-right">{t("roomDetail.dueCol")}</th>
                       </tr>
                     </thead>

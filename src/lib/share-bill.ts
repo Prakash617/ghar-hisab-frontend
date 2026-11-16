@@ -312,7 +312,7 @@ export async function renderCardCanvasBlob({
 }
 
 /**
- * Render a combined Pending Bills Statement PNG image for pending-notice WhatsApp / Viber sends.
+ * Render a properly formatted Pending Bills Invoice PNG image for WhatsApp / Viber sends.
  */
 export async function renderPendingNoticeCanvasBlob({
   tenantName,
@@ -323,44 +323,33 @@ export async function renderPendingNoticeCanvasBlob({
   totalPending = 0,
   qrUrl,
 }: PendingNoticeCardInput): Promise<Blob | null> {
-  const rows: Array<{ label: string; value: string; highlight?: boolean }> = [];
-  if (tenantName) rows.push({ label: "Tenant", value: tenantName });
-  if (roomLabel) {
-    rows.push({
-      label: "Room",
-      value: `${roomLabel}${houseLabel ? ` (${houseLabel})` : ""}`,
-    });
-  }
-  if (openingDue > 0) {
-    rows.push({ label: "Opening Balance Due", value: formatCurrency(openingDue) });
-  }
-  for (const bill of unpaidBills.slice(0, 8)) {
+  const qrImg = await loadImageForCanvas(qrUrl);
+  const width = 800;
+  const pad = 36;
+  const visibleBills = unpaidBills.slice(0, 10);
+  const hasOverflow = unpaidBills.length > 10;
+
+  // Compute bills subtotal
+  let billsSubtotal = 0;
+  for (const bill of unpaidBills) {
     const due = Math.max(
       (parseFloat(bill.amount || bill.total || "0") || 0) -
         (parseFloat(bill.total_paid || "0") || 0),
       0
     );
-    rows.push({
-      label: `Bill ${bill.billing_month || "-"} (${bill.status || "Unpaid"})`,
-      value: formatCurrency(due),
-    });
+    billsSubtotal += due;
   }
-  if (unpaidBills.length > 8) {
-    rows.push({
-      label: `+ ${unpaidBills.length - 8} more pending bill(s)`,
-      value: "...",
-    });
-  }
-  rows.push({
-    label: "Total Amount Due",
-    value: formatCurrency(totalPending),
-    highlight: true,
-  });
 
-  const qrImg = await loadImageForCanvas(qrUrl);
-  const width = 760;
-  const qrBlockHeight = qrImg ? 230 : 0;
-  const height = 160 + rows.length * 44 + qrBlockHeight + 60;
+  // Dynamic height calculation
+  const headerH = 112;
+  const metaH = 92;
+  const tableHeaderH = 38;
+  const rowH = 44;
+  const tableRowsH = visibleBills.length * rowH + (hasOverflow ? 32 : 0);
+  const summaryH = (openingDue > 0 ? 116 : 82) + 16;
+  const qrH = qrImg ? 225 : 0;
+  const footerH = 46;
+  const height = headerH + metaH + tableHeaderH + tableRowsH + summaryH + qrH + footerH;
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -368,54 +357,172 @@ export async function renderPendingNoticeCanvasBlob({
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
 
+  // Background
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, width, height);
 
-  ctx.fillStyle = "#0369a1";
-  ctx.fillRect(0, 0, width, 108);
+  // Header Banner
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(0, 0, width, headerH);
+  ctx.fillStyle = "#0ea5e9";
+  ctx.fillRect(0, headerH - 5, width, 5);
 
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 28px sans-serif";
-  ctx.fillText("GharHisab", 36, 48);
-  ctx.font = "18px sans-serif";
-  ctx.fillStyle = "#e0f2fe";
-  ctx.fillText("Pending Rent & Utility Bills Notice", 36, 82);
+  ctx.fillText("GharHisab", pad, 46);
+  ctx.font = "15px sans-serif";
+  ctx.fillStyle = "#94a3b8";
+  ctx.fillText("RENT & UTILITY INVOICE", pad, 76);
 
-  let y = 148;
-  for (const row of rows) {
-    if (row.highlight) {
-      ctx.fillStyle = "#fff1f2";
-      ctx.fillRect(28, y - 28, width - 56, 40);
+  // Right side of header: Date & Total Due pill
+  const todayStr = new Date().toISOString().slice(0, 10);
+  ctx.font = "14px sans-serif";
+  ctx.fillStyle = "#cbd5e1";
+  const dateText = `Date: ${todayStr}`;
+  ctx.fillText(dateText, width - pad - ctx.measureText(dateText).width, 40);
+
+  ctx.font = "bold 22px sans-serif";
+  ctx.fillStyle = "#34d399";
+  const heroAmt = formatCurrency(totalPending);
+  ctx.fillText(heroAmt, width - pad - ctx.measureText(heroAmt).width, 76);
+
+  // Tenant / Room Meta Box
+  let y = headerH + 20;
+  ctx.fillStyle = "#f8fafc";
+  ctx.fillRect(pad, y, width - pad * 2, 62);
+  ctx.strokeStyle = "#e2e8f0";
+  ctx.strokeRect(pad, y, width - pad * 2, 62);
+
+  ctx.fillStyle = "#64748b";
+  ctx.font = "bold 11px sans-serif";
+  ctx.fillText("BILLED TO", pad + 16, y + 20);
+  ctx.fillText("ROOM / PROPERTY", width / 2, y + 20);
+
+  ctx.fillStyle = "#0f172a";
+  ctx.font = "bold 17px sans-serif";
+  ctx.fillText(tenantName || "Tenant", pad + 16, y + 45);
+  const roomText = `${roomLabel || "-"}${houseLabel ? ` (${houseLabel})` : ""}`;
+  ctx.fillText(roomText, width / 2, y + 45);
+
+  // Table Header
+  y += 78;
+  ctx.fillStyle = "#f1f5f9";
+  ctx.fillRect(pad, y, width - pad * 2, tableHeaderH);
+  ctx.strokeStyle = "#cbd5e1";
+  ctx.beginPath();
+  ctx.moveTo(pad, y + tableHeaderH);
+  ctx.lineTo(width - pad, y + tableHeaderH);
+  ctx.stroke();
+
+  const colMonth = pad + 14;
+  const colUnits = pad + 185;
+  const colBill = width - pad - 180;
+  const colDue = width - pad - 14;
+
+  ctx.fillStyle = "#475569";
+  ctx.font = "bold 12px sans-serif";
+  ctx.fillText("MONTH", colMonth, y + 24);
+  ctx.fillText("UNITS", colUnits, y + 24);
+  const billHdr = "BILL";
+  ctx.fillText(billHdr, colBill - ctx.measureText(billHdr).width, y + 24);
+  const dueHdr = "DUE";
+  ctx.fillText(dueHdr, colDue - ctx.measureText(dueHdr).width, y + 24);
+
+  y += tableHeaderH;
+
+  // Table Rows
+  for (let i = 0; i < visibleBills.length; i++) {
+    const bill = visibleBills[i];
+    const total = parseFloat(bill.amount || bill.total || "0") || 0;
+    const paid = parseFloat(bill.total_paid || "0") || 0;
+    const due = Math.max(total - paid, 0);
+    const prevU = bill.previous_units ?? 0;
+    const currU = bill.current_units ?? 0;
+    const usedU = currU - prevU;
+
+    if (i % 2 === 1) {
+      ctx.fillStyle = "#fafafa";
+      ctx.fillRect(pad, y, width - pad * 2, rowH);
     }
-    ctx.font = row.highlight ? "bold 19px sans-serif" : "17px sans-serif";
-    ctx.fillStyle = row.highlight ? "#be123c" : "#475569";
-    ctx.fillText(row.label, 38, y);
 
-    ctx.font = row.highlight ? "bold 21px sans-serif" : "bold 17px sans-serif";
-    ctx.fillStyle = row.highlight ? "#9f1239" : "#1e293b";
-    const textWidth = ctx.measureText(row.value).width;
-    ctx.fillText(row.value, width - 38 - textWidth, y);
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "bold 15px sans-serif";
+    ctx.fillText(String(bill.billing_month || "-"), colMonth, y + 27);
+
+    ctx.fillStyle = "#475569";
+    ctx.font = "14px sans-serif";
+    ctx.fillText(`${prevU} -> ${currU} (${usedU}u)`, colUnits, y + 27);
+
+    ctx.fillStyle = "#334155";
+    ctx.font = "14px sans-serif";
+    const billStr = formatCurrency(total);
+    ctx.fillText(billStr, colBill - ctx.measureText(billStr).width, paid > 0 ? y + 21 : y + 27);
+    if (paid > 0) {
+      ctx.fillStyle = "#16a34a";
+      ctx.font = "11px sans-serif";
+      const paidStr = `Paid ${formatCurrency(paid)}`;
+      ctx.fillText(paidStr, colBill - ctx.measureText(paidStr).width, y + 36);
+    }
+
+    ctx.fillStyle = "#be123c";
+    ctx.font = "bold 15px sans-serif";
+    const dueStr = formatCurrency(due);
+    ctx.fillText(dueStr, colDue - ctx.measureText(dueStr).width, y + 27);
 
     ctx.strokeStyle = "#e2e8f0";
     ctx.beginPath();
-    ctx.moveTo(36, y + 14);
-    ctx.lineTo(width - 36, y + 14);
+    ctx.moveTo(pad, y + rowH);
+    ctx.lineTo(width - pad, y + rowH);
     ctx.stroke();
 
-    y += 44;
+    y += rowH;
   }
 
+  if (hasOverflow) {
+    ctx.fillStyle = "#64748b";
+    ctx.font = "italic 13px sans-serif";
+    ctx.fillText(`+ ${unpaidBills.length - 10} more unpaid bill(s) — see portal for full list`, colMonth, y + 22);
+    y += 32;
+  }
+
+  // Summary Box
+  y += 16;
+  const drawSummaryRow = (label: string, val: string, isTotal = false) => {
+    if (isTotal) {
+      ctx.fillStyle = "#ecfdf5";
+      ctx.fillRect(pad, y, width - pad * 2, 42);
+      ctx.strokeStyle = "#10b981";
+      ctx.strokeRect(pad, y, width - pad * 2, 42);
+    }
+    ctx.fillStyle = isTotal ? "#065f46" : "#475569";
+    ctx.font = isTotal ? "bold 17px sans-serif" : "15px sans-serif";
+    ctx.fillText(label, pad + 16, y + (isTotal ? 27 : 22));
+
+    ctx.fillStyle = isTotal ? "#047857" : "#0f172a";
+    ctx.font = isTotal ? "bold 20px sans-serif" : "bold 15px sans-serif";
+    ctx.fillText(val, width - pad - 16 - ctx.measureText(val).width, y + (isTotal ? 28 : 22));
+    y += isTotal ? 48 : 32;
+  };
+
+  drawSummaryRow("Bills Subtotal", formatCurrency(billsSubtotal));
+  if (openingDue > 0) {
+    drawSummaryRow("Previous Balance (Opening Due)", formatCurrency(openingDue));
+  }
+  drawSummaryRow("Total Payable Now", formatCurrency(totalPending), true);
+
+  // Payment QR
   if (qrImg) {
     ctx.fillStyle = "#334155";
-    ctx.font = "bold 16px sans-serif";
+    ctx.font = "bold 14px sans-serif";
     const caption = "Scan QR to Pay";
-    ctx.fillText(caption, (width - ctx.measureText(caption).width) / 2, y + 22);
-    ctx.drawImage(qrImg, (width - 170) / 2, y + 36, 170, 170);
+    ctx.fillText(caption, (width - ctx.measureText(caption).width) / 2, y + 20);
+    ctx.drawImage(qrImg, (width - 170) / 2, y + 32, 170, 170);
   }
 
+  // Footer
   ctx.fillStyle = "#94a3b8";
-  ctx.font = "13px sans-serif";
-  ctx.fillText("Generated by GharHisab", 36, height - 22);
+  ctx.font = "12px sans-serif";
+  ctx.fillText("Thank you for your prompt payment. • Generated by GharHisab", pad, height - 18);
 
   return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
 }
@@ -454,9 +561,15 @@ export async function deliverImageToMessagingApp({
   const digits = formatMessagingPhone(phone);
   const hasDirectRecipient = Boolean(digits);
 
-  const isMobileUa =
+  const isIos =
     typeof navigator !== "undefined" &&
-    /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    (/iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+
+  const isMobileUa =
+    isIos ||
+    (typeof navigator !== "undefined" &&
+      /Android|Mobile/i.test(navigator.userAgent));
 
   // Only use the generic OS share sheet when no tenant phone number is available;
   // when a number exists, message that tenant directly via WhatsApp / Viber deep link.
@@ -502,7 +615,7 @@ export async function deliverImageToMessagingApp({
     }
   }
 
-  if (blob && !copiedImage) {
+  if (blob && !copiedImage && !isIos) {
     triggerPngDownload(blob, filename);
   }
 
@@ -515,7 +628,9 @@ export async function deliverImageToMessagingApp({
         ? `viber://chat?number=%2B${digits}`
         : `viber://forward?text=${encodeURIComponent(summary)}`;
 
-  if (channel === "viber") {
+  // iOS Safari blocks window.open() after async work (canvas/clipboard awaits).
+  // Navigating via location.href reliably hands off wa.me / viber:// to the native app.
+  if (channel === "viber" || isMobileUa) {
     window.location.href = targetUrl;
   } else {
     window.open(targetUrl, "_blank", "noopener,noreferrer");

@@ -59,30 +59,36 @@ export function PwaRegistrar() {
   };
 
   useEffect(() => {
-    // 1. Service Worker Registration
+    // 1. Service Worker Registration (production only; unregister stale SW in dev)
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("/sw.js")
-          .then((registration) => {
-            console.log("[PWA] ServiceWorker registered with scope:", registration.scope);
+      if (process.env.NODE_ENV !== "production") {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          regs.forEach((reg) => reg.unregister());
+        });
+      } else {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log("[PWA] ServiceWorker registered with scope:", registration.scope);
 
-            // Periodic update check
-            registration.onupdatefound = () => {
-              const installingWorker = registration.installing;
-              if (installingWorker) {
-                installingWorker.onstatechange = () => {
-                  if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
-                    console.log("[PWA] New content is available; please refresh.");
-                  }
-                };
-              }
-            };
-          })
-          .catch((error) => {
-            console.warn("[PWA] ServiceWorker registration failed:", error);
-          });
-      });
+              // Periodic update check
+              registration.onupdatefound = () => {
+                const installingWorker = registration.installing;
+                if (installingWorker) {
+                  installingWorker.onstatechange = () => {
+                    if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
+                      console.log("[PWA] New content is available; please refresh.");
+                    }
+                  };
+                }
+              };
+            })
+            .catch((error) => {
+              console.warn("[PWA] ServiceWorker registration failed:", error);
+            });
+        });
+      }
     }
 
     // 2. Standalone Mode Detection

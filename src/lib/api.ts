@@ -626,3 +626,54 @@ export const tenantPortalApi = {
     return res.json();
   },
 };
+
+export const backupsApi = {
+  exportOwnerJson: async () => {
+    const token = getAccessToken();
+    const res = await fetch(`${API_BASE}/api/custom/my-backup/export/`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) {
+      throw new Error("Failed to export data backup.");
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `gharhisab-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  list: () =>
+    request<{ items: any[] }>("/api/custom/backups/", {
+      token: getAccessToken() || undefined,
+    }),
+
+  createNow: () =>
+    request<any>("/api/custom/backups/", {
+      method: "POST",
+      token: getAccessToken() || undefined,
+    }),
+
+  download: async (id: number, filename: string) => {
+    const token = getAccessToken();
+    const res = await fetch(`${API_BASE}/api/custom/backups/${id}/download/`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) {
+      throw new Error("Failed to download backup file.");
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+};

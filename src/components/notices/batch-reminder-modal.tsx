@@ -163,12 +163,14 @@ export function BatchReminderModal({
       <DialogContent className="max-w-lg rounded-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("batchNotice.title")}</DialogTitle>
-          <p className="text-xs text-slate-500">{t("batchNotice.subtitle")}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Notify due rooms via Email, SMS, or WhatsApp.
+          </p>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Controls */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_1.4fr_1fr] gap-2.5 items-end">
             <div>
               <label className="text-xs font-semibold text-slate-600">{t("roomDetail.house")}</label>
               <select
@@ -186,37 +188,43 @@ export function BatchReminderModal({
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-600">{t("batchNotice.channel")}</label>
-              <div className="mt-1 grid grid-cols-3 gap-1 rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">{t("batchNotice.channel")}</label>
+              <div className="mt-1 grid grid-cols-3 gap-1 rounded-xl border border-slate-200 dark:border-slate-700 p-1 bg-slate-50 dark:bg-slate-800/70">
                 <button
                   type="button"
                   onClick={() => setChannel("email")}
-                  className={`flex items-center justify-center gap-1 rounded-md py-1.5 text-[11px] font-semibold ${
-                    channel === "email" ? "bg-sky-600 text-white" : "text-slate-600"
+                  className={`flex items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold transition cursor-pointer ${
+                    channel === "email"
+                      ? "bg-sky-600 text-white shadow-2xs"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  <Mail className="h-3.5 w-3.5" />
-                  Email
+                  <Mail className="h-3.5 w-3.5 shrink-0" />
+                  <span>Email</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setChannel("sms")}
-                  className={`flex items-center justify-center gap-1 rounded-md py-1.5 text-[11px] font-semibold ${
-                    channel === "sms" ? "bg-sky-600 text-white" : "text-slate-600"
+                  className={`flex items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold transition cursor-pointer ${
+                    channel === "sms"
+                      ? "bg-sky-600 text-white shadow-2xs"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  SMS
+                  <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+                  <span>SMS</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setChannel("whatsapp")}
-                  className={`flex items-center justify-center gap-1 rounded-md py-1.5 text-[11px] font-semibold ${
-                    channel === "whatsapp" ? "bg-emerald-600 text-white" : "text-slate-600"
+                  className={`flex items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold transition cursor-pointer ${
+                    channel === "whatsapp"
+                      ? "bg-emerald-600 text-white shadow-2xs"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  <Send className="h-3.5 w-3.5" />
-                  WA
+                  <Send className="h-3.5 w-3.5 shrink-0" />
+                  <span>WA</span>
                 </button>
               </div>
             </div>
@@ -266,7 +274,7 @@ export function BatchReminderModal({
               {t("batchNotice.noDueRooms")}
             </div>
           ) : (
-            <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+            <div className="max-h-60 overflow-y-auto space-y-2 pr-1.5">
               {items.map((item) => {
                 const canSend =
                   channel === "email"

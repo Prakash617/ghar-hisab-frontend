@@ -206,18 +206,18 @@ export default function DashboardPage() {
       <div className="space-y-6 animate-pulse p-1 sm:p-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-2">
-            <div className="h-8 bg-slate-200 rounded-lg w-56"></div>
-            <div className="h-4 bg-slate-200 rounded w-72"></div>
+            <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded-lg w-56"></div>
+            <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-72"></div>
           </div>
-          <div className="h-10 bg-slate-200 rounded-xl w-64"></div>
+          <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-xl w-64"></div>
         </div>
-        <div className="h-28 bg-slate-200/70 rounded-2xl"></div>
+        <div className="h-28 bg-slate-200/70 dark:bg-slate-800/70 rounded-2xl"></div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-40 bg-slate-200/80 rounded-2xl"></div>
+            <div key={i} className="h-40 bg-slate-200/80 dark:bg-slate-800/80 rounded-2xl"></div>
           ))}
         </div>
-        <div className="h-80 bg-slate-200/70 rounded-2xl"></div>
+        <div className="h-80 bg-slate-200/70 dark:bg-slate-800/70 rounded-2xl"></div>
       </div>
     );
   }

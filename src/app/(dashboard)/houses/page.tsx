@@ -275,9 +275,9 @@ export default function HousesPage() {
         {isLoading
           ? [...Array(6)].map((_, i) => (
               <div key={i} className="card p-4 animate-pulse space-y-3">
-                <div className="h-5 bg-slate-200 rounded w-28"></div>
-                <div className="h-4 bg-slate-200 rounded w-44"></div>
-                <div className="h-10 bg-slate-200 rounded"></div>
+                <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded w-28"></div>
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-44"></div>
+                <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded"></div>
               </div>
             ))
           : filteredHouses?.map((house: any) => (

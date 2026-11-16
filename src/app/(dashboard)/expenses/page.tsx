@@ -11,6 +11,7 @@ import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -300,9 +301,19 @@ export default function ExpensesPage() {
 
       {/* Expense List */}
       {isLoading ? (
-        <div className="py-12 text-center text-sm text-slate-500">
-          <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-sky-600" />
-          {t("common.loading")}
+        <div className="space-y-2.5">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 flex items-center justify-between gap-3"
+            >
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-44" />
+                <Skeleton className="h-3 w-28" />
+              </div>
+              <Skeleton className="h-6 w-24" />
+            </div>
+          ))}
         </div>
       ) : expenses.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500">

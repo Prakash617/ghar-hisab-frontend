@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertCircle,
   Camera,
@@ -41,10 +42,20 @@ export default function TenantPortalPage({ params }: { params: Promise<{ token: 
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
-        <div className="text-center space-y-2">
-          <Loader2 className="h-8 w-8 animate-spin text-sky-600 mx-auto" />
-          <p className="text-sm font-medium text-slate-600">{t("common.loading")}</p>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-12">
+        <div className="h-14 border-b border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 flex items-center justify-between">
+          <Skeleton className="h-7 w-32" />
+          <Skeleton className="h-8 w-16 rounded-full" />
+        </div>
+        <div className="mx-auto max-w-3xl p-4 space-y-4">
+          <Skeleton className="h-36 w-full rounded-2xl" />
+          <div className="grid grid-cols-2 gap-3">
+            <Skeleton className="h-20 rounded-2xl" />
+            <Skeleton className="h-20 rounded-2xl" />
+          </div>
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full rounded-2xl" />
+          ))}
         </div>
       </div>
     );

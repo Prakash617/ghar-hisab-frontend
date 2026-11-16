@@ -8,6 +8,7 @@ import { useTranslation } from "@/i18n/provider";
 import { formatCurrency } from "@/lib/utils";
 import { getTodayNepaliDate } from "@/lib/nepaliDate";
 import { toast } from "@/components/ui/toast";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -236,9 +237,20 @@ function BulkBillingContent() {
 
       {/* Rooms Entry List */}
       {loadingHouses || loadingPreview ? (
-        <div className="py-12 text-center text-sm text-slate-500">
-          <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-sky-600" />
-          {t("common.loading")}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3"
+            >
+              <div className="flex justify-between">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-6 w-24" />
+              </div>
+              <Skeleton className="h-11 w-full rounded-xl" />
+              <Skeleton className="h-4 w-40" />
+            </div>
+          ))}
         </div>
       ) : items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">

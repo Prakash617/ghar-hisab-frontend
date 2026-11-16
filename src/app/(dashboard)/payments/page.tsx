@@ -309,7 +309,7 @@ export default function PaymentsPage() {
       {isLoading ? (
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-24 bg-white border border-slate-200 rounded-2xl animate-pulse"></div>
+            <div key={i} className="h-24 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl animate-pulse"></div>
           ))}
         </div>
       ) : filteredPayments?.length === 0 ? (

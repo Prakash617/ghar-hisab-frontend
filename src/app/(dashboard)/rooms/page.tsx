@@ -273,10 +273,10 @@ function RoomsContent() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {roomsLoading
           ? [...Array(6)].map((_, i) => (
-              <div key={i} className="card p-4 animate-pulse space-y-3 rounded-2xl bg-white border border-slate-200">
-                <div className="h-5 bg-slate-200 rounded w-28"></div>
-                <div className="h-4 bg-slate-200 rounded w-40"></div>
-                <div className="h-8 bg-slate-100 rounded"></div>
+              <div key={i} className="card p-4 animate-pulse space-y-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded w-28"></div>
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-40"></div>
+                <div className="h-8 bg-slate-100 dark:bg-slate-800/70 rounded"></div>
               </div>
             ))
           : sortedRooms.map((room: any) => (

@@ -35,10 +35,14 @@ export function BatchReminderModal({
   const [language, setLanguage] = useState<"ne" | "en">(locale === "ne" ? "ne" : "en");
   const [selectedRoomIds, setSelectedRoomIds] = useState<number[]>([]);
   const [whatsappSentIds, setWhatsappSentIds] = useState<number[]>([]);
+  const [waQueueOrder, setWaQueueOrder] = useState<number[]>([]);
+  const [waQueuePos, setWaQueuePos] = useState<number>(0);
 
   useEffect(() => {
     if (open) {
       setHouseId(initialHouseId || "all");
+      setWaQueueOrder([]);
+      setWaQueuePos(0);
     }
   }, [open, initialHouseId]);
 
@@ -100,6 +104,30 @@ export function BatchReminderModal({
     setWhatsappSentIds((prev) =>
       prev.includes(item.room_id) ? prev : [...prev, item.room_id]
     );
+  };
+
+  const selectedWaItems = items.filter(
+    (item) => item.can_whatsapp && selectedRoomIds.includes(item.room_id)
+  );
+  const inWaQueue = channel === "whatsapp" && waQueueOrder.length > 0;
+  const waQueueDone = inWaQueue && waQueuePos >= waQueueOrder.length;
+  const nextWaRoomId = inWaQueue && !waQueueDone ? waQueueOrder[waQueuePos] : null;
+  const nextWaItem = nextWaRoomId
+    ? items.find((i) => i.room_id === nextWaRoomId)
+    : null;
+
+  const startWaQueue = () => {
+    if (selectedWaItems.length === 0) return;
+    const order = selectedWaItems.map((i) => i.room_id as number);
+    setWaQueueOrder(order);
+    handleSendSingleWhatsapp(selectedWaItems[0]);
+    setWaQueuePos(1);
+  };
+
+  const advanceWaQueue = () => {
+    if (!nextWaItem) return;
+    handleSendSingleWhatsapp(nextWaItem);
+    setWaQueuePos((p) => p + 1);
   };
 
   const sendMutation = useMutation({
@@ -258,16 +286,25 @@ export function BatchReminderModal({
                         canSend ? "border-slate-200 bg-white" : "border-slate-100 bg-slate-50 opacity-65"
                       }`}
                     >
-                      <div className="min-w-0">
-                        <p className="font-bold text-slate-900 truncate">
-                          {item.room_name || item.room_number} · {item.house_name}
-                        </p>
-                        <p className="text-[11px] text-slate-500 truncate">
-                          {item.tenant_name} ·{" "}
-                          {target || <span className="text-rose-500">{t("batchNotice.missingContact")}</span>}
-                          {" · "}
-                          <strong className="text-rose-600">{formatCurrency(item.due_amount)}</strong>
-                        </p>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={!canSend}
+                          onChange={() => canSend && toggleRoom(item.room_id)}
+                          className="h-4 w-4 rounded border-slate-300 text-emerald-600"
+                        />
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-900 truncate">
+                            {item.room_name || item.room_number} · {item.house_name}
+                          </p>
+                          <p className="text-[11px] text-slate-500 truncate">
+                            {item.tenant_name} ·{" "}
+                            {target || <span className="text-rose-500">{t("batchNotice.missingContact")}</span>}
+                            {" · "}
+                            <strong className="text-rose-600">{formatCurrency(item.due_amount)}</strong>
+                          </p>
+                        </div>
                       </div>
                       <Button
                         type="button"
@@ -323,11 +360,44 @@ export function BatchReminderModal({
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
+          <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-200">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               {channel === "whatsapp" ? t("common.close") : t("common.cancel")}
             </Button>
-            {channel !== "whatsapp" && (
+            {channel === "whatsapp" ? (
+              !inWaQueue ? (
+                <Button
+                  type="button"
+                  disabled={selectedWaItems.length === 0}
+                  onClick={startWaQueue}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <Send className="mr-1.5 h-4 w-4" />
+                  Start Queue ({selectedWaItems.length})
+                </Button>
+              ) : waQueueDone ? (
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setWaQueueOrder([]);
+                    setWaQueuePos(0);
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                  All {waQueueOrder.length} Opened ✓
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={advanceWaQueue}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <Send className="mr-1.5 h-4 w-4" />
+                  Next ({waQueuePos}/{waQueueOrder.length}): {nextWaItem?.tenant_name} →
+                </Button>
+              )
+            ) : (
               <Button
                 type="button"
                 onClick={() => sendMutation.mutate()}

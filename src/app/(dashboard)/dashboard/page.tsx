@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "@/lib/api";
 import { useTranslation } from "@/i18n/provider";
@@ -37,6 +38,7 @@ import Link from "next/link";
 
 export default function DashboardPage() {
   const { t, locale } = useTranslation();
+  const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [houseFilter, setHouseFilter] = useState<string>("");
@@ -80,6 +82,20 @@ export default function DashboardPage() {
     unpaid_count: 0,
     partial_count: 0,
   };
+
+  useEffect(() => {
+    if (!dashboard || isLoading) return;
+    const totalHouses = (dashboard?.houses || []).length;
+    const totalRooms = Number(dashboard?.total_rooms || 0);
+    if (
+      totalHouses === 0 &&
+      totalRooms === 0 &&
+      typeof window !== "undefined" &&
+      localStorage.getItem("gharhisab-onboarding-done") !== "true"
+    ) {
+      router.replace("/onboarding");
+    }
+  }, [dashboard, isLoading, router]);
 
   const activeMonth = selectedMonth || dashboard?.selected_nepali_month || "";
   const availableMonths: string[] = dashboard?.available_nepali_months || [];

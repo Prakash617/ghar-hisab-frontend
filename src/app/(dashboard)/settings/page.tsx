@@ -224,7 +224,7 @@ export default function SettingsPage() {
       <h1 className="text-2xl font-bold text-gray-900">{t("settings.title")}</h1>
 
       <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="flex w-full items-center justify-start overflow-x-auto flex-nowrap h-auto gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
+        <TabsList className="flex w-full items-center justify-start overflow-x-auto flex-nowrap h-auto gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsTrigger value="profile" className="gap-1.5 shrink-0">
             <User className="h-4 w-4" />
             {t("settings.profile")} &amp; QR
